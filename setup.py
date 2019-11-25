@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
         name='libpredweb',
-        version='1.00',
+        version='1.0.0',
         scripts=['src/clean_cached_result.py', 'src/clean_server_file.sh', 'src/nanjianglib.pl'] ,
         author="Nanjiang Shu",
         author_email="nanjiang.shu@gmail.com",
