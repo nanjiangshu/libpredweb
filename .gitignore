@@ -1,0 +1,22 @@
+# Compiled source
+*.pyc
+
+# SQLite 
+*.sqlite3
+*.sqlite
+
+# vim temp files
+.*.swp
+
+*.py.bak
+# backup folder
+bak/
+result/
+tmp/
+log/
+md5/
+env/
+bak.env/
+
+
+test.pl
