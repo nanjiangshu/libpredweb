@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
         name='libpredweb',
         version='1.00',
-        scripts=['src/clean_cached_result.py', 'src/clean_server_file.sh'] ,
+        scripts=['src/clean_cached_result.py', 'src/clean_server_file.sh', 'src/nanjianglib.pl'] ,
         author="Nanjiang Shu",
         author_email="nanjiang.shu@gmail.com",
         description="A library for the prediction protein web-server",
