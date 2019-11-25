@@ -15,9 +15,8 @@ setup(
         long_description_content_type="text/markdown",
         url="https://github.com/nanjiang/libpredweb",
         zip_safe=False,
-        packages=find_packages('src'),
+        packages=find_packages('libpredweb'),
         include_package_data=True,
-        package_dir={'': 'src'},
         classifiers=[
             "Programming Language :: Python :: 3",
             "License :: OSI Approved :: MIT License",
