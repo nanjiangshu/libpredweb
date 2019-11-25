@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-        name='lib-predweb',
+        name='libpredweb',
         version='1.00',
         scripts=['src/clean_cached_result.py', 'src/clean_server_file.sh'] ,
         author="Nanjiang Shu",
