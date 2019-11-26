@@ -45,6 +45,21 @@ sub WriteFile{ #content, outfile#{{{
     print OUT $content;
     close(OUT);
 }#}}}
+sub ReadList{ #infile#{{{
+    #Description: Read content of file into list, line by line
+    #usage: my @mylist = ReadList(infile);
+    my $infile = shift;
+    my @list=();
+    open (IN, "<", "$infile");
+    while (<IN>){
+        chomp;
+        if ($_){
+            push @list, $_;
+        }
+    }
+    close(IN);
+    return @list;
+}#}}}
 sub WriteDateTagFile{ #outfile #{{{
     # Write the current date to outfile
     my $outfile = shift;
