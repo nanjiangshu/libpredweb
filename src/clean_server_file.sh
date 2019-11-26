@@ -12,6 +12,8 @@ if [ "$1" == "" ];then
     exit 1
 fi
 
+path_static="$1"
+
 path_tmp=$path_static/tmp
 path_log=$path_static/log
 
