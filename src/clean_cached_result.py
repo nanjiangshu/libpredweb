@@ -10,8 +10,8 @@ import time
 from datetime import datetime
 from pytz import timezone
 import tempfile
-import myfunc
-import webserver_common as webcom
+from libpredweb import myfunc
+from libpredweb import webserver_common as webcom
 
 FORMAT_DATETIME = webcom.FORMAT_DATETIME
 TZ = webcom.TZ

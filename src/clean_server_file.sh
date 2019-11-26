@@ -2,10 +2,18 @@
 
 # Clean server files
 
-rundir=`dirname $0`
-rundir=`readlink -f $rundir`
-path_tmp=$rundir/../static/tmp
-path_log=$rundir/../static/log
+usage="
+USAGE: $0 path_static
+"
+
+if [ "$1" == "" ];then
+    echo "path_static not supplied!" >&2
+    echo "$usage" >&2
+    exit 1
+fi
+
+path_tmp=$path_static/tmp
+path_log=$path_static/log
 
 # 1. clean tmp folder
 cd $path_tmp
