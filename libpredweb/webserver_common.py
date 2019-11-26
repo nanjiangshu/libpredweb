@@ -21,7 +21,7 @@ import shutil
 import logging
 import subprocess
 import sqlite3
-from nanjianglib.timeit import timeit
+from .timeit import timeit
 
 
 TZ = "Europe/Stockholm"
