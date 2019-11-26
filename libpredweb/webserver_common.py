@@ -989,7 +989,7 @@ def CleanServerFile(logfile, errfile):#{{{
     msg = "CleanServerFile..."
     date_str = time.strftime(FORMAT_DATETIME)
     myfunc.WriteFile("[%s] %s\n"%(date_str, msg), logfile, "a", True)
-    cmd = ["bash", "clean_server_file.sh"]
+    cmd = ["clean_server_file.sh"]
     RunCmd(cmd, logfile, errfile)
 #}}}
 @timeit
@@ -999,7 +999,7 @@ def CleanCachedResult(logfile, errfile):#{{{
     msg = "Clean cached results..."
     date_str = time.strftime(FORMAT_DATETIME)
     myfunc.WriteFile("[%s] %s\n"%(date_str, msg), logfile, "a", True)
-    cmd = ["python", "clean_cached_result.py", "-max-keep-day", "480"]
+    cmd = ["clean_cached_result.py", "-max-keep-day", "480"]
     RunCmd(cmd, logfile, errfile)
 #}}}
 
