@@ -17,6 +17,8 @@ log/
 md5/
 env/
 bak.env/
+dist/
+*.egg-info/
 
 
 test.pl
