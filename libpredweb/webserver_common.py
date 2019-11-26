@@ -11,7 +11,6 @@
 import os
 import sys
 import re
-rundir = os.path.dirname(os.path.realpath(__file__))
 from . import myfunc
 import time
 from datetime import datetime
@@ -990,7 +989,7 @@ def CleanServerFile(logfile, errfile):#{{{
     msg = "CleanServerFile..."
     date_str = time.strftime(FORMAT_DATETIME)
     myfunc.WriteFile("[%s] %s\n"%(date_str, msg), logfile, "a", True)
-    cmd = ["bash", "%s/clean_server_file.sh"%(rundir)]
+    cmd = ["bash", "clean_server_file.sh"]
     RunCmd(cmd, logfile, errfile)
 #}}}
 @timeit
@@ -1000,7 +999,7 @@ def CleanCachedResult(logfile, errfile):#{{{
     msg = "Clean cached results..."
     date_str = time.strftime(FORMAT_DATETIME)
     myfunc.WriteFile("[%s] %s\n"%(date_str, msg), logfile, "a", True)
-    cmd = ["python", "%s/clean_cached_result.py"%(rundir), "-max-keep-day", "480"]
+    cmd = ["python", "clean_cached_result.py", "-max-keep-day", "480"]
     RunCmd(cmd, logfile, errfile)
 #}}}
 
