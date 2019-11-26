@@ -50,14 +50,18 @@ sub ReadList{ #infile#{{{
     #usage: my @mylist = ReadList(infile);
     my $infile = shift;
     my @list=();
-    open (IN, "<", "$infile");
-    while (<IN>){
-        chomp;
-        if ($_){
-            push @list, $_;
+    if (-e $infile && -r _ ){
+        open (IN, "<", "$infile");
+        while (<IN>){
+            chomp;
+            if ($_){
+                push @list, $_;
+            }
         }
+        close(IN);
+    }else{
+        print("File '$infile' does not exists or not readable. return empty list.\n");
     }
-    close(IN);
     return @list;
 }#}}}
 sub WriteDateTagFile{ #outfile #{{{
