@@ -983,13 +983,13 @@ def loginfo(msg, outfile):# {{{
     myfunc.WriteFile("[%s] %s\n"%(date_str, msg), outfile, "a", True)
 # }}}
 @timeit
-def CleanServerFile(logfile, errfile):#{{{
+def CleanServerFile(path_static, logfile, errfile):#{{{
     """Clean old files on the server"""
 # clean tmp files
     msg = "CleanServerFile..."
     date_str = time.strftime(FORMAT_DATETIME)
     myfunc.WriteFile("[%s] %s\n"%(date_str, msg), logfile, "a", True)
-    cmd = ["clean_server_file.sh"]
+    cmd = ["clean_server_file.sh", path_static]
     RunCmd(cmd, logfile, errfile)
 #}}}
 @timeit
