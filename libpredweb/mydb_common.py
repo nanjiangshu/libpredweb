@@ -11,7 +11,7 @@
 import sys
 import os
 from array import array
-import mybase
+from . import mybase
 
 FORMAT_BINARY = 0
 FORMAT_TEXT = 1

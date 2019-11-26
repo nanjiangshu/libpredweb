@@ -12,7 +12,7 @@ import sys
 import os
 import re
 import random
-import mydb_common
+from . import mydb_common
 import copy
 import subprocess
 import requests
