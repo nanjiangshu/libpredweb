@@ -45,7 +45,8 @@ def IsHaveAvailNode(cntSubmitJobDict):#{{{
     format of cntSubmitJobDict {'node_ip': INT, 'node_ip': INT}  
     """
     for node in cntSubmitJobDict:
-        [num_queue_job, max_allowed_job] = cntSubmitJobDict[node]
+        num_queue_job = cntSubmitJobDict[node][0]
+        max_allowed_job = cntSubmitJobDict[node][1]
         if num_queue_job < max_allowed_job:
             return True
     return False
