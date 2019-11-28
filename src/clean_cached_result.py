@@ -30,16 +30,16 @@ except IOError:
 
 
 rundir = os.path.dirname(os.path.realpath(__file__))
-basedir = os.path.realpath("%s/.."%(rundir)) # path of the application, i.e. pred/
-path_log = "%s/static/log"%(basedir)
-path_stat = "%s/stat"%(path_log)
-path_result = "%s/static/result"%(basedir)
-path_cache = "%s/static/result/cache"%(basedir)
-gen_logfile = "%s/%s.log"%(path_log, progname)
-gen_errfile = "%s/%s.err"%(path_log, progname)
 
-def CleanCachedResult(MAX_KEEP_DAYS):# {{{
+def CleanCachedResult(MAX_KEEP_DAYS, path_static):# {{{
     """Clean out-dated cached result"""
+    path_log = "%s/log"%(path_static)
+    path_stat = "%s/stat"%(path_log)
+    path_result = "%s/result"%(path_static)
+    path_cache = "%s/result/cache"%(path_static)
+    gen_logfile = "%s/%s.log"%(path_log, progname)
+    gen_errfile = "%s/%s.err"%(path_log, progname)
+
     db = "%s/cached_job_finished_date.sqlite3"%(path_log)
     tmpdb = tempfile.mktemp(prefix="%s_"%(db))
 
@@ -156,15 +156,19 @@ Examples:
     parser.add_argument('-max-keep-day' , metavar='INT', dest='max_keep_days',
             default=360, type=int, required=False,
             help='The age of the cached result to be kept, (default: 360)')
+    parser.add_argument('-path-static' , metavar='PATH', dest='path_static',
+            type=str, required=True,
+            help='Set path_static for the web-server')
     parser.add_argument('-v', dest='verbose', nargs='?', type=int, default=0, const=1, 
             help='show verbose information, (default: 0)')
 
     args = parser.parse_args()
 
     MAX_KEEP_DAYS = args.max_keep_days
+    path_static = args.path_static
     verbose=args.verbose
 
     print(("MAX_KEEP_DAYS = %d\n"%MAX_KEEP_DAYS))
-    rtvalue = CleanCachedResult(MAX_KEEP_DAYS)
+    rtvalue = CleanCachedResult(MAX_KEEP_DAYS, path_static)
     sys.exit(rtvalue)
 

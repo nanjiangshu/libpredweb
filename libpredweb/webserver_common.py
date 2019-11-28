@@ -992,13 +992,13 @@ def CleanServerFile(path_static, logfile, errfile):#{{{
     RunCmd(cmd, logfile, errfile)
 #}}}
 @timeit
-def CleanCachedResult(logfile, errfile):#{{{
+def CleanCachedResult(path_static, logfile, errfile):#{{{
     """Clean outdated cahced results on the server"""
 # clean tmp files
     msg = "Clean cached results..."
     date_str = time.strftime(FORMAT_DATETIME)
     myfunc.WriteFile("[%s] %s\n"%(date_str, msg), logfile, "a", True)
-    cmd = ["clean_cached_result.py", "-max-keep-day", "480"]
+    cmd = ["clean_cached_result.py", "-path-static", path_static, "-max-keep-day", "480"]
     RunCmd(cmd, logfile, errfile)
 #}}}
 
