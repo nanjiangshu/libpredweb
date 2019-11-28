@@ -1002,6 +1002,38 @@ def CleanCachedResult(logfile, errfile):#{{{
     RunCmd(cmd, logfile, errfile)
 #}}}
 
+def ReadComputeNode(infile):# {{{
+    """Read computenode file computenode.txt
+    return a dict
+    """
+    try:
+        fpin = open(infile,"r")
+        lines = fpin.read().split('\n')
+        fpin.close()
+    except IOError:
+        print("Failed to read computenodefile %s"%infile)
+        return {}
+
+    dt = {}
+    for line in lines:
+        line = line.strip()
+        if not line or line[0] == '#':
+            continue
+        strs = line.split()
+        node = strs[0]
+        dt[node] = {}
+        try:
+            dt[node]['maxprocess'] = int(strs[1])
+        except:
+            dt[node]['maxprocess'] = 0
+        try:
+            dt[node]['queue_method'] = strs[2]
+        except:
+            dt[node]['queue_method'] = 'suq'
+
+    return dt
+
+# }}}
 def ReadRuntimeFromFile(timefile, default_runtime=0.0):# {{{
     """Read runtime from timefile"""
     if os.path.exists(timefile):
