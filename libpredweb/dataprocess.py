@@ -8,7 +8,6 @@ def extend_time_series_data(data, date_column, v_column, value_columns, freq):# 
     for colname in value_columns:
         data[colname] = pd.to_numeric(data[colname])
     date_range = [pd.date_range(date_first, date_last, freq=freq), data[v_column].unique()]
-    print(date_range)
     mux = pd.MultiIndex.from_product(date_range, names=[date_column, v_column])
     result = data.set_index([date_column, v_column]).reindex(mux, fill_value=0).reset_index()
     result = result[['Date'] + value_columns]
