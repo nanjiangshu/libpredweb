@@ -37,8 +37,6 @@ if($numArgs < 2)
 my $servername = $ARGV[0];
 my $server_root_dir = $ARGV[1];
 my $basedir = abs_path("$server_root_dir/proj/pred/");
-print("servername=$servername, basedir=$basedir \n");
-exit;
 
 my $path_nanjianglib = `which nanjianglib.pl`;
 chomp($path_nanjianglib);
