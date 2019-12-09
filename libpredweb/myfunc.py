@@ -2123,6 +2123,38 @@ def ReadNews(infile):#{{{
         print("Failed to read newsfile %s"%(infile), file=sys.stderr)
         return []
 #}}}
+
+def ReadPDBModelFromBuff(buff):# {{{
+    modelList = []
+    tmpli = buff.split("\nENDMDL")
+    if len(tmpli) == 1:
+        if buff.find("ATOM") >= 0:
+            modelList.append(buff)
+    else:
+        for ss in tmpli:
+            ss = ss.lstrip("\n")
+            if ss[0:5] == "MODEL":
+                pos = ss.find("\n")
+                if pos != -1:
+                    newss = ss[pos+1:]
+                    modelList.append(newss)
+    return modelList
+# }}}
+def ReadPDBModel(infile):# {{{
+    """
+    Read PDB model file and return the model list, each contains a single model
+    """
+    try:
+        fpin = open(infile,"r")
+        buff = fpin.read()
+        fpin.close()
+        modelList = ReadPDBModelFromBuff(buff)
+        return modelList
+    except IOError:
+        print("Failed to read modelfile %s"%(infile), file=sys.stderr)
+        return []
+# }}}
+
 def IsDNASeq(seq):#{{{
 # check whether the sequence is a DNA sequence
     seq = seq.upper()
@@ -2143,6 +2175,17 @@ def IsDNASeq(seq):#{{{
     else:
         return False
 #}}}
+def PDB2Seq(pdbfile):# {{{
+    """Return a list of sequences given the pdbfile
+    """
+    seqList = []
+    structure = PDBParser().get_structure('', pdbfile)
+    ppb=PPBuilder()
+    for pp in ppb.build_peptides(structure):
+        seqList.append(str(pp.get_sequence()))
+    return seqList
+
+# }}}
 
 def week_beg_end(day):#{{{
     """
@@ -2155,4 +2198,18 @@ def week_beg_end(day):#{{{
     to_end_of_week = datetime.timedelta(days=6 - day_of_week)
     end_of_week = day + to_end_of_week
     return (beginning_of_week, end_of_week)
+#}}}
+def disk_usage(path):#{{{
+    """Return disk usage statistics about the given path.
+    (total, used, free) in bytes
+    """
+    try:
+        st = os.statvfs(path)
+        free = st.f_bavail * st.f_frsize
+        total = st.f_blocks * st.f_frsize
+        used = (st.f_blocks - st.f_bfree) * st.f_frsize
+        return (total, used, free)
+    except OSError:
+        print(sys.stderr, "os.statvfs(%s) failed"%(path))
+        return (-1,-1,-1)
 #}}}
