@@ -76,6 +76,143 @@ def get_external_ip():# {{{
     return ip
 #}}}
 
+def ReadProQ3GlobalScore(infile):#{{{
+    #return globalscore and itemList
+    #itemList is the name of the items
+    globalscore = {}
+    keys = []
+    values = []
+    try:
+        fpin = open(infile, "r")
+        lines = fpin.read().split("\n")
+        fpin.close()
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            if line.lower().find("proq") != -1:
+                keys = line.strip().split()
+            elif myfunc.isnumeric(line.strip().split()[0]):
+                values = line.split()
+                try:
+                    values = [float(x) for x in values]
+                except:
+                    values = []
+        if len(keys) == len(values):
+            for i in range(len(keys)):
+                globalscore[keys[i]] = values[i]
+    except IOError:
+        pass
+    return (globalscore, keys)
+#}}}
+def GetProQ3ScoreListFromGlobalScoreFile(globalscorefile):# {{{
+    (globalscore, itemList) = ReadProQ3GlobalScore(globalscorefile)
+    return itemList
+# }}}
+def GetProQ3Option(query_para):#{{{
+    """Return the proq3opt in list
+    """
+    yes_or_no_opt = {}
+    for item in ['isDeepLearning', 'isRepack', 'isKeepFiles']:
+        if query_para[item]:
+            yes_or_no_opt[item] = "yes"
+        else:
+            yes_or_no_opt[item] = "no"
+
+    proq3opt = [
+            "-r", yes_or_no_opt['isRepack'],
+            "-deep", yes_or_no_opt['isDeepLearning'],
+            "-k", yes_or_no_opt['isKeepFiles'],
+            "-quality", query_para['method_quality'],
+            "-output_pdbs", "yes"         #always output PDB file (with proq3 written at the B-factor column)
+            ]
+    if 'targetlength' in query_para:
+        proq3opt += ["-t", str(query_para['targetlength'])]
+
+    return proq3opt
+
+#}}}
+def WriteProQ3TextResultFile(outfile, query_para, modelFileList, #{{{
+        runtime_in_sec, base_www_url, proq3opt, statfile=""):
+    try:
+        fpout = open(outfile, "w")
+
+
+        try:
+            isDeepLearning = query_para['isDeepLearning']
+        except KeyError:
+            isDeepLearning = True
+
+        if isDeepLearning:
+            m_str = "proq3d"
+        else:
+            m_str = "proq3"
+
+        try:
+            method_quality = query_para['method_quality']
+        except KeyError:
+            method_quality = 'sscore'
+
+        fpstat = None
+        numTMPro = 0
+
+        if statfile != "":
+            fpstat = open(statfile, "w")
+        numModel = len(modelFileList)
+
+        date_str = time.strftime(FORMAT_DATETIME)
+        print("##############################################################################", file=fpout)
+        print("# ProQ3 result file", file=fpout)
+        print("# Generated from %s at %s"%(base_www_url, date_str), file=fpout)
+        print("# Options for Proq3: %s"%(str(proq3opt)), file=fpout)
+        print("# Total request time: %.1f seconds."%(runtime_in_sec), file=fpout)
+        print("# Number of finished models: %d"%(numModel), file=fpout)
+        print("##############################################################################", file=fpout)
+        print(file=fpout)
+        print("# Global scores", file=fpout)
+        fpout.write("# %10s"%("Model"))
+
+        cnt = 0
+        for i  in range(numModel):
+            modelfile = modelFileList[i]
+            globalscorefile = "%s.%s.%s.global"%(modelfile, m_str, method_quality)
+            if not os.path.exists(globalscorefile):
+                globalscorefile = "%s.proq3.%s.global"%(modelfile, method_quality)
+                if not os.path.exists(globalscorefile):
+                    globalscorefile = "%s.proq3.global"%(modelfile)
+            (globalscore, itemList) = ReadProQ3GlobalScore(globalscorefile)
+            if i == 0:
+                for ss in itemList:
+                    fpout.write(" %12s"%(ss))
+                fpout.write("\n")
+
+            try:
+                if globalscore:
+                    fpout.write("%2s %10s"%("", "model_%d"%(i)))
+                    for jj in range(len(itemList)):
+                        fpout.write(" %12f"%(globalscore[itemList[jj]]))
+                    fpout.write("\n")
+                else:
+                    print("%2s %10s"%("", "model_%d"%(i)), file=fpout)
+            except:
+                pass
+
+        print("\n# Local scores", file=fpout)
+        for i  in range(numModel):
+            modelfile = modelFileList[i]
+            localscorefile = "%s.%s.%s.local"%(modelfile, m_str, method_quality)
+            if not os.path.exists(localscorefile):
+                localscorefile = "%s.proq3.%s.local"%(modelfile, method_quality)
+                if not os.path.exists(localscorefile):
+                    localscorefile = "%s.proq3.local"%(modelfile)
+            print("\n# Model %d"%(i), file=fpout)
+            content = myfunc.ReadFile(localscorefile)
+            print(content, file=fpout)
+
+    except IOError:
+        print("Failed to write to file %s"%(outfile))
+#}}}
+
 @timeit
 def WriteSubconsTextResultFile(outfile, outpath_result, maplist,#{{{
         runtime_in_sec, base_www_url, statfile=""):
@@ -497,6 +634,22 @@ sequences
 
 
 #}}}
+def GetRunTimeFromTimeFile(timefile, keyword=""):# {{{
+    runtime = 0.0
+    if os.path.exists(timefile):
+        lines = myfunc.ReadFile(timefile).split("\n")
+        for line in lines:
+            if keyword == "" or (keyword != "" and line.find(keyword) != -1):
+                ss2 = line.split(";")
+                try:
+                    runtime = float(ss2[1])
+                    if keyword == "":
+                        break
+                except:
+                    runtime = 0.0
+                    pass
+    return runtime
+# }}}
 def ValidateQuery(request, query, g_params):#{{{
     query['errinfo_br'] = ""
     query['errinfo_content'] = ""
