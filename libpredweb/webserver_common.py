@@ -67,6 +67,14 @@ def get_job_status(jobid, path_result):#{{{
         status = "Wait"
     return status
 #}}}
+def get_external_ip():# {{{
+    """Return external IP of the host
+    """
+    from requests import get
+    ip = get('https://api.ipify.org').text
+    ip = ip.strip()
+    return ip
+#}}}
 
 @timeit
 def WriteSubconsTextResultFile(outfile, outpath_result, maplist,#{{{
