@@ -895,6 +895,18 @@ def InsertFinishDateToDB(date_str, md5_key, seq, outdb):# {{{
             return 1
 
 # }}}
+def GetInfoFinish_Subcons(outpath_this_seq, origIndex, seqLength, seqAnno, source_result="", runtime=0.0):# {{{
+    """Get the list info_finish for the method Subcons"""
+    finalpredfile = "%s/%s/query_0.subcons-final-pred.csv"%(
+            outpath_this_seq, "final-prediction")
+    (loc_def, loc_def_score) = GetLocDef(finalpredfile)
+    date_str = time.strftime(FORMAT_DATETIME)
+    info_finish = [ "seq_%d"%origIndex,
+            str(seqLength), str(loc_def), str(loc_def_score),
+            source_result, str(runtime),
+            seqAnno.replace('\t', ' '), date_str]
+    return info_finish
+# }}}
 def GetInfoFinish_TOPCONS2(outpath_this_seq, origIndex, seqLength, seqAnno, source_result="", runtime=0.0):# {{{
     """Get the list info_finish for the method TOPCONS2"""
     topfile = "%s/%s/topcons.top"%(
@@ -912,6 +924,22 @@ def GetInfoFinish_TOPCONS2(outpath_this_seq, origIndex, seqLength, seqAnno, sour
             str(isHasSP), source_result, str(runtime),
             seqAnno.replace('\t', ' '), date_str]
     return info_finish
+# }}}
+def GetRefreshInterval(queuetime_in_sec, runtime_in_sec, method_submission):# {{{
+    """Get refresh_interval for the webpage"""
+    refresh_interval = 2.0
+    t =  queuetime_in_sec + runtime_in_sec
+    if t < 10:
+        if method_submission == "web":
+            refresh_interval = 2.0
+        else:
+            refresh_interval = 5.0
+    elif t >= 10 and t < 40:
+        refresh_interval = t / 2.0
+    else:
+        refresh_interval = 20.0
+    return refresh_interval
+
 # }}}
 def WriteDateTimeTagFile(outfile, logfile, errfile):# {{{
     if not os.path.exists(outfile):
@@ -1098,6 +1126,19 @@ def GetJobCounter(info): #{{{
 
 def CleanJobFolder_TOPCONS2(rstdir):# {{{
     """Clean the jobfolder for TOPCONS2 after finishing"""
+    flist =[
+            "%s/remotequeue_seqindex.txt"%(rstdir),
+            "%s/torun_seqindex.txt"%(rstdir)
+            ]
+    for f in flist:
+        if os.path.exists(f):
+            try:
+                os.remove(f)
+            except:
+                pass
+# }}}
+def CleanJobFolder_Subcons(rstdir):# {{{
+    """Clean the jobfolder for Subcons after finishing"""
     flist =[
             "%s/remotequeue_seqindex.txt"%(rstdir),
             "%s/torun_seqindex.txt"%(rstdir)
