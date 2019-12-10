@@ -1152,9 +1152,11 @@ def CleanJobFolder_Subcons(rstdir):# {{{
 # }}}
 def DeleteOldResult(path_result, path_log, logfile, MAX_KEEP_DAYS=180):#{{{
     """Delete jobdirs that are finished > MAX_KEEP_DAYS
+    return True if therer is at least one result folder been deleted
     """
     finishedjoblogfile = "%s/finished_job.log"%(path_log)
     finished_job_dict = myfunc.ReadFinishedJobLog(finishedjoblogfile)
+    isOldRstdirDeleted = False
     for jobid in finished_job_dict:
         li = finished_job_dict[jobid]
         try:
@@ -1174,14 +1176,15 @@ def DeleteOldResult(path_result, path_log, logfile, MAX_KEEP_DAYS=180):#{{{
                 timeDiff = current_time - finish_date
                 if timeDiff.days > MAX_KEEP_DAYS:
                     rstdir = "%s/%s"%(path_result, jobid)
-                    msg = "jobid = %s finished %d days ago (>%d days), delete."%(jobid, timeDiff.days, MAX_KEEP_DAYS)
+                    msg = "\tjobid = %s finished %d days ago (>%d days), delete."%(jobid, timeDiff.days, MAX_KEEP_DAYS)
                     loginfo(msg, logfile)
                     try:
                         shutil.rmtree(rstdir)
+                        isOldRstdirDeleted = True
                     except:
                         msg = "failed to delete rstdir %s"%(rstdir)
                         loginfo(msg, logfile)
-
+    return isOldRstdirDeleted
 #}}}
 def loginfo(msg, outfile):# {{{
     """Write loginfo to outfile, appending current time"""
