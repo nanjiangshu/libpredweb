@@ -1133,10 +1133,14 @@ def DeleteOldResult(path_result, path_log, logfile, MAX_KEEP_DAYS=180):#{{{
                 timeDiff = current_time - finish_date
                 if timeDiff.days > MAX_KEEP_DAYS:
                     rstdir = "%s/%s"%(path_result, jobid)
-                    date_str = time.strftime(FORMAT_DATETIME)
-                    msg = "\tjobid = %s finished %d days ago (>%d days), delete."%(jobid, timeDiff.days, MAX_KEEP_DAYS)
-                    myfunc.WriteFile("[%s] "%(date_str)+ msg + "\n", logfile, "a", True)
-                    shutil.rmtree(rstdir)
+                    msg = "jobid = %s finished %d days ago (>%d days), delete."%(jobid, timeDiff.days, MAX_KEEP_DAYS)
+                    loginfo(msg, logfile)
+                    try:
+                        shutil.rmtree(rstdir)
+                    except:
+                        msg = "failed to delete rstdir %s"%(rstdir)
+                        loginfo(msg, logfile)
+
 #}}}
 def loginfo(msg, outfile):# {{{
     """Write loginfo to outfile, appending current time"""
