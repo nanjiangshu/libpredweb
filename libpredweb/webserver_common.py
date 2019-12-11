@@ -213,6 +213,54 @@ def WriteProQ3TextResultFile(outfile, query_para, modelFileList, #{{{
         print("Failed to write to file %s"%(outfile))
 #}}}
 
+def WriteSCAMPI2MSATextResultFile(outfile, outpath_result, maplist, #{{{
+        runtime_in_sec, base_www_url, statfile=""):
+    finished_seq_file = "%s/finished_seqs.txt"%(outpath_result)
+    TM_listfile = "%s/query.TM_list.txt"%(outpath_result)
+    nonTM_listfile = "%s/query.nonTM_list.txt"%(outpath_result)
+    finish_info_lines = myfunc.ReadFile(finished_seq_file).split('\n')
+    str_TMlist = []
+    str_nonTMlist = []
+    try:
+        fpout = open(outfile, "w")
+
+        fpstat = None
+        numTMPro = 0
+
+        if statfile != "":
+            fpstat = open(statfile, "w")
+
+        cnt = 0
+        for line in finish_info_lines:
+            strs = line.split('\t')
+            if len(strs) >= 8:
+                numTM = int(strs[2])
+                isTMPro = False
+                desp = strs[5]
+                top = strs[7]
+                fpout.write(">%s\n%s\n"%(desp, top))
+                numTM = myfunc.CountTM(top)
+                if numTM >0:
+                    str_TMlist.append(desp)
+                    isTMPro = True
+                    numTMPro += 1
+                else:
+                    str_nonTMlist.append(desp)
+
+                cnt += 1
+
+        if fpstat:
+            out_str_list = ["numTMPro\t%d\n"%(numTMPro)]
+            fpstat.write("%s"%("\n".join(out_str_list)))
+            fpstat.close()
+
+        myfunc.WriteFile("\n".join(str_TMlist), TM_listfile, "w")
+        myfunc.WriteFile("\n".join(str_nonTMlist), nonTM_listfile, "w")
+
+    except IOError:
+        print("Failed to write to file %s"%(outfile))
+#}}}
+
 @timeit
 def WriteSubconsTextResultFile(outfile, outpath_result, maplist,#{{{
         runtime_in_sec, base_www_url, statfile=""):
