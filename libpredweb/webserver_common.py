@@ -1027,21 +1027,22 @@ def RunCmd(cmd, logfile, errfile, verbose=False):# {{{
 
     return (isCmdSuccess, runtime_in_sec)
 # }}}
-def SendEmail_TOPCONS2(jobid, base_www_url, finish_status, to_email="", contact_email="", logfile="", errfile=""):# {{{
-    """Send notification email to the user for TOPCONS2 web-server"""
+def SendEmail_on_finish(jobid, base_www_url, finish_status, name_server, from_email, to_email, contact_email, logfile="", errfile=""):# {{{
+    """Send notification email to the user for the web-server, the name
+    of the web-server is specified by the var 'name_server'
+    """
     err_msg = ""
     if os.path.exists(errfile):
         err_msg = myfunc.ReadFile(errfile)
 
-    from_email = "info@topcons.net"
-    subject = "Your result for TOPCONS2 JOBID=%s"%(jobid)
+    subject = "Your result for %s JOBID=%s"%(name_server, jobid)
     if finish_status == "success":
         bodytext = """
 Your result is ready at %s/pred/result/%s
 
-Thanks for using TOPCONS2
+Thanks for using %s
 
-    """%(base_www_url, jobid)
+    """%(base_www_url, jobid, name_server)
     elif finish_status == "failed":
         bodytext="""
 We are sorry that your job with jobid %s is failed.
@@ -1055,7 +1056,7 @@ Attached below is the error message:
         bodytext="""
 Your result is ready at %s/pred/result/%s
 
-We are sorry that TOPCONS failed to predict some sequences of your job.
+We are sorry that %s failed to predict some sequences of your job.
 
 Please re-submit the queries that have been failed.
 
@@ -1063,12 +1064,13 @@ If you have any further questions, please contact %s.
 
 Attached below is the error message:
 %s
-        """%(base_www_url, jobid, contact_email, err_msg)
+        """%(base_www_url, jobid, name_server, contact_email, err_msg)
 
-    myfunc.WriteFile("Sendmail %s -> %s, %s"% (from_email, to_email, subject), logfile, "a", True)
+    date_str = time.strftime(FORMAT_DATETIME)
+    msg =  "Sendmail %s -> %s, %s"%(from_email, to_email, subject)
+    myfunc.WriteFile("[%s] %s\n"% (date_str, msg), logfile, "a", True)
     rtValue = myfunc.Sendmail(from_email, to_email, subject, bodytext)
     if rtValue != 0:
-        date_str = time.strftime(FORMAT_DATETIME)
         msg =  "Sendmail to {} failed with status {}".format(to_email, rtValue)
         myfunc.WriteFile("[%s] %s\n"%(date_str, msg), errfile, "a", True)
         return 1
@@ -1172,6 +1174,19 @@ def GetJobCounter(info): #{{{
     return jobcounter
 #}}}
 
+def CleanJobFolder_Scampi(rstdir):# {{{
+    """Clean the jobfolder for Scampi after finishing"""
+    flist =[
+            "%s/remotequeue_seqindex.txt"%(rstdir),
+            "%s/torun_seqindex.txt"%(rstdir)
+            ]
+    for f in flist:
+        if os.path.exists(f):
+            try:
+                os.remove(f)
+            except:
+                pass
+# }}}
 def CleanJobFolder_TOPCONS2(rstdir):# {{{
     """Clean the jobfolder for TOPCONS2 after finishing"""
     flist =[
