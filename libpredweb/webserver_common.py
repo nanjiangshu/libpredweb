@@ -132,6 +132,7 @@ def GetProQ3Option(query_para):#{{{
     return proq3opt
 
 #}}}
+
 def WriteProQ3TextResultFile(outfile, query_para, modelFileList, #{{{
         runtime_in_sec, base_www_url, proq3opt, statfile=""):
     try:
@@ -212,7 +213,49 @@ def WriteProQ3TextResultFile(outfile, query_para, modelFileList, #{{{
     except IOError:
         print("Failed to write to file %s"%(outfile))
 #}}}
+def WriteBoctopusTextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile=""):#{{{
+    rstdir = os.path.realpath("%s/.."%(outpath_result))
+    runjob_logfile = "%s/%s"%(rstdir, "runjob.log")
+    runjob_errfile = "%s/%s"%(rstdir, "runjob.err")
+    finishtagfile = "%s/%s"%(rstdir, "write_result_finish.tag")
+    try:
+        fpout = open(outfile, "w")
+        fpstat = None
+        numTMPro = 0
 
+        if statfile != "":
+            fpstat = open(statfile, "w")
+
+        cnt = 0
+        for line in maplist:
+            strs = line.split('\t')
+            subfoldername = strs[0]
+            length = int(strs[1])
+            desp = strs[2]
+            seq = strs[3]
+            isTMPro = False
+            outpath_this_seq = "%s/%s"%(outpath_result, subfoldername)
+            predfile = "%s/query_topologies.txt"%(outpath_this_seq)
+            loginfo("predfile =  %s.\n"%(predfile), runjob_logfile)
+            if not os.path.exists(predfile):
+                loginfo("predfile %s does not exist\n"%(predfile), runjob_errfile)
+            (seqid, seqanno, top) = myfunc.ReadSingleFasta(predfile)
+            fpout.write(">%s\n%s\n"%(desp, top))
+            numTM = myfunc.CountTM(top)
+            if numTM >0:
+                isTMPro = True
+                numTMPro += 1
+
+            cnt += 1
+
+        if fpstat:
+            out_str_list = ["numTMPro\t%d\n"%(numTMPro)]
+            fpstat.write("%s"%("\n".join(out_str_list)))
+            fpstat.close()
+        WriteDateTimeTagFile(finishtagfile, runjob_logfile, runjob_errfile)
+    except IOError:
+        loginfo( "Failed to write to file %s"%(outfile), runjob_errfile)
+#}}}
 def WriteSCAMPI2MSATextResultFile(outfile, outpath_result, maplist, #{{{
         runtime_in_sec, base_www_url, statfile=""):
     finished_seq_file = "%s/finished_seqs.txt"%(outpath_result)
@@ -943,6 +986,11 @@ def InsertFinishDateToDB(date_str, md5_key, seq, outdb):# {{{
             return 1
 
 # }}}
+
+def GetInfoFinish_Boctopus2(outpath_this_seq, origIndex, seqLength, seqAnno, source_result="", runtime=0.0):# {{{
+    """Get the list info_finish for the method Boctopus2"""
+    return GetInfoFinish_TOPCONS2(outpath_this_seq, origIndex, seqLength, seqAnno, source_result, runtime)
+# }}}
 def GetInfoFinish_Subcons(outpath_this_seq, origIndex, seqLength, seqAnno, source_result="", runtime=0.0):# {{{
     """Get the list info_finish for the method Subcons"""
     finalpredfile = "%s/%s/query_0.subcons-final-pred.csv"%(
@@ -973,6 +1021,7 @@ def GetInfoFinish_TOPCONS2(outpath_this_seq, origIndex, seqLength, seqAnno, sour
             seqAnno.replace('\t', ' '), date_str]
     return info_finish
 # }}}
+
 def GetRefreshInterval(queuetime_in_sec, runtime_in_sec, method_submission):# {{{
     """Get refresh_interval for the webpage"""
     refresh_interval = 2.0
@@ -1174,6 +1223,19 @@ def GetJobCounter(info): #{{{
     return jobcounter
 #}}}
 
+def CleanJobFolder_Boctopus2(rstdir):# {{{
+    """Clean the jobfolder for TOPCONS2 after finishing"""
+    flist =[
+            "%s/remotequeue_seqindex.txt"%(rstdir),
+            "%s/torun_seqindex.txt"%(rstdir)
+            ]
+    for f in flist:
+        if os.path.exists(f):
+            try:
+                os.remove(f)
+            except:
+                pass
+# }}}
 def CleanJobFolder_Scampi(rstdir):# {{{
     """Clean the jobfolder for Scampi after finishing"""
     flist =[
@@ -1213,6 +1275,7 @@ def CleanJobFolder_Subcons(rstdir):# {{{
             except:
                 pass
 # }}}
+
 def DeleteOldResult(path_result, path_log, logfile, MAX_KEEP_DAYS=180):#{{{
     """Delete jobdirs that are finished > MAX_KEEP_DAYS
     return True if therer is at least one result folder been deleted
