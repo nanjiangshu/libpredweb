@@ -1021,6 +1021,15 @@ def GetInfoFinish_TOPCONS2(outpath_this_seq, origIndex, seqLength, seqAnno, sour
             seqAnno.replace('\t', ' '), date_str]
     return info_finish
 # }}}
+def GetInfoFinish_PRODRES(outpath_this_seq, origIndex, seqLength, seqAnno, source_result="", runtime=0.0):# {{{
+    """Get the list info_finish for the method PRODRES"""
+    date_str = time.strftime(FORMAT_DATETIME)
+    info_finish = [ "seq_%d"%origIndex,
+            str(seqLength), str(None),
+            str(None), source_result, str(runtime),
+            seqAnno.replace('\t', ' '), date_str]
+    return info_finish
+# }}}
 
 def GetRefreshInterval(queuetime_in_sec, runtime_in_sec, method_submission):# {{{
     """Get refresh_interval for the webpage"""
