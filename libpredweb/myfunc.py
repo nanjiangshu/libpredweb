@@ -1612,6 +1612,14 @@ def GetTMPosition(topo):#{{{
             break
     return posTM
 #}}}
+def GetTMPosition_boctopus2(topo):#{{{
+    """
+    Get position of TM helices given a topologyi, for topologies predicted by BOCTOPUS
+    """
+    topo = topo.lower()
+    topo = topo.replace("l", "M").replace("p", "M")
+    return GetTMPosition(topo)
+#}}}
 def GetSPPosition(topo):#{{{
     """
     Get position of Signal Peptide given a topology
@@ -1686,6 +1694,10 @@ def ReadID2IDMap(infile):#{{{
 def CountTM(topo):#{{{
     """Count the number of TM regions in a topology with or without gaps"""
     return len(GetTMPosition(topo))
+#}}}
+def CountTM_boctopus2(topo):#{{{
+    """Count the number of TM regions in a topology with or without gaps"""
+    return len(GetTMPosition_boctopus2(topo))
 #}}}
 def PosTM2Topo(posTM, seqLength, NtermState):#{{{
     """
