@@ -31,12 +31,12 @@ except IOError:
 
 rundir = os.path.dirname(os.path.realpath(__file__))
 
-def CleanCachedResult(MAX_KEEP_DAYS, path_static):# {{{
+def CleanCachedResult(MAX_KEEP_DAYS, path_static, name_cachedir):# {{{
     """Clean out-dated cached result"""
     path_log = "%s/log"%(path_static)
     path_stat = "%s/stat"%(path_log)
     path_result = "%s/result"%(path_static)
-    path_cache = "%s/result/cache"%(path_static)
+    path_cache = "%s/result/%s"%(path_static, name_cachedir)
     gen_logfile = "%s/%s.log"%(path_log, progname)
     gen_errfile = "%s/%s.err"%(path_log, progname)
 
@@ -159,6 +159,9 @@ Examples:
     parser.add_argument('-path-static' , metavar='PATH', dest='path_static',
             type=str, required=True,
             help='Set path_static for the web-server')
+    parser.add_argument('-name-cachedir' , metavar='STR', dest='name_cachedir',
+            type=str, required=False, default='cache',
+            help='Set name of cachedir')
     parser.add_argument('-v', dest='verbose', nargs='?', type=int, default=0, const=1, 
             help='show verbose information, (default: 0)')
 
@@ -167,8 +170,9 @@ Examples:
     MAX_KEEP_DAYS = args.max_keep_days
     path_static = args.path_static
     verbose=args.verbose
+    name_cachedir = args.name_cachedir
 
     print(("MAX_KEEP_DAYS = %d\n"%MAX_KEEP_DAYS))
-    rtvalue = CleanCachedResult(MAX_KEEP_DAYS, path_static)
+    rtvalue = CleanCachedResult(MAX_KEEP_DAYS, path_static, name_cachedir)
     sys.exit(rtvalue)
 
