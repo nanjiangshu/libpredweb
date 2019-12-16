@@ -1431,13 +1431,13 @@ def ArchiveLogFile(path_log, threshold_logfilesize=20*1024*1024):# {{{
 # }}}
 
 
-def set_basic_config(request, info, path_static, settings):# {{{
+def set_basic_config(request, info, path_static, g_params):# {{{
     """Set basic configurations for the template dict"""
     username = request.user.username
     client_ip = request.META['REMOTE_ADDR']
     path_log = "%s/log"%(path_static)
     path_result = "%s/result"%(path_static)
-    if username in settings.SUPER_USER_LIST:
+    if username in g_params['SUPER_USER_LIST']:
         isSuperUser = True
         divided_logfile_query =  "%s/%s"%(path_log, "submitted_seq.log")
         divided_logfile_finished_jobid =  "%s/%s"%(path_log, "failed_job.log")
@@ -1458,7 +1458,7 @@ def set_basic_config(request, info, path_static, settings):# {{{
     info['divided_logfile_finished_jobid'] = divided_logfile_finished_jobid
     info['client_ip'] = client_ip
     info['BASEURL'] = g_params['BASEURL']
-    info['STATIC_URL'] = settings.STATIC_URL
+    info['STATIC_URL'] = g_params['STATIC_URL']
     info['path_result'] = path_result
 # }}}
 def SetColorStatus(status):#{{{
@@ -1471,10 +1471,10 @@ def SetColorStatus(status):#{{{
     else:
         return "black"
 #}}}
-def get_queue(request, path_static, settings):#{{{
+def get_queue(request, path_static, g_params):#{{{
     path_result = "%s/result"%(path_static)
     errfile = "%s/server.err"%(path_result)
-    set_basic_config(request, info, path_static, settings)
+    set_basic_config(request, info, path_static, g_params)
 
     status = "Queued"
     info['header'] = ["No.", "JobID","JobName", "NumSeq", "Email",
