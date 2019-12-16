@@ -1431,10 +1431,11 @@ def ArchiveLogFile(path_log, threshold_logfilesize=20*1024*1024):# {{{
 # }}}
 
 
-def set_basic_config(request, info, path_static, g_params):# {{{
+def set_basic_config(request, info, g_params):# {{{
     """Set basic configurations for the template dict"""
     username = request.user.username
     client_ip = request.META['REMOTE_ADDR']
+    path_static = g_params['path_static']
     path_log = "%s/log"%(path_static)
     path_result = "%s/result"%(path_static)
     if username in g_params['SUPER_USER_LIST']:
@@ -1471,10 +1472,9 @@ def SetColorStatus(status):#{{{
     else:
         return "black"
 #}}}
-def get_queue(request, path_static, g_params):#{{{
-    path_result = "%s/result"%(path_static)
-    errfile = "%s/server.err"%(path_result)
-    set_basic_config(request, info, path_static, g_params)
+def get_queue(request, g_params):#{{{
+    path_result = "%s/result"%(g_params['path_static'])
+    set_basic_config(request, info, g_params)
 
     status = "Queued"
     info['header'] = ["No.", "JobID","JobName", "NumSeq", "Email",
