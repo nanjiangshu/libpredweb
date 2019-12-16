@@ -1473,6 +1473,7 @@ def SetColorStatus(status):#{{{
         return "black"
 #}}}
 def get_queue(request, g_params):#{{{
+    info = {}
     path_result = "%s/result"%(g_params['path_static'])
     set_basic_config(request, info, g_params)
 
