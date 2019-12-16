@@ -1307,6 +1307,19 @@ def CleanJobFolder_Subcons(rstdir):# {{{
             except:
                 pass
 # }}}
+def CleanJobFolder_PRODRES(rstdir):# {{{
+    """Clean the jobfolder for PRODRES after finishing"""
+    flist =[
+            "%s/remotequeue_seqindex.txt"%(rstdir),
+            "%s/torun_seqindex.txt"%(rstdir)
+            ]
+    for f in flist:
+        if os.path.exists(f):
+            try:
+                os.remove(f)
+            except:
+                pass
+# }}}
 
 def DeleteOldResult(path_result, path_log, logfile, MAX_KEEP_DAYS=180):#{{{
     """Delete jobdirs that are finished > MAX_KEEP_DAYS
