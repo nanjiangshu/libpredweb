@@ -1430,3 +1430,141 @@ def ArchiveLogFile(path_log, threshold_logfilesize=20*1024*1024):# {{{
             myfunc.ArchiveFile(f, threshold_logfilesize)
 # }}}
 
+
+def set_basic_config(request, info, path_static, settings):# {{{
+    """Set basic configurations for the template dict"""
+    username = request.user.username
+    client_ip = request.META['REMOTE_ADDR']
+    path_log = "%s/log"%(path_static)
+    path_result = "%s/result"%(path_static)
+    if username in settings.SUPER_USER_LIST:
+        isSuperUser = True
+        divided_logfile_query =  "%s/%s"%(path_log, "submitted_seq.log")
+        divided_logfile_finished_jobid =  "%s/%s"%(path_log, "failed_job.log")
+    else:
+        isSuperUser = False
+        divided_logfile_query =  "%s/%s/%s"%(path_log, "divided", "%s_submitted_seq.log"%(client_ip))
+        divided_logfile_finished_jobid =  "%s/%s/%s"%(path_log, "divided", "%s_failed_job.log"%(client_ip))
+
+    if isSuperUser:
+        info['MAX_DAYS_TO_SHOW'] = g_params['BIG_NUMBER']
+    else:
+        info['MAX_DAYS_TO_SHOW'] = g_params['MAX_DAYS_TO_SHOW']
+
+
+    info['username'] = username
+    info['isSuperUser'] = isSuperUser
+    info['divided_logfile_query'] = divided_logfile_query
+    info['divided_logfile_finished_jobid'] = divided_logfile_finished_jobid
+    info['client_ip'] = client_ip
+    info['BASEURL'] = g_params['BASEURL']
+    info['STATIC_URL'] = settings.STATIC_URL
+    info['path_result'] = path_result
+# }}}
+def SetColorStatus(status):#{{{
+    if status == "Finished":
+        return "green"
+    elif status == "Failed":
+        return "red"
+    elif status == "Running":
+        return "blue"
+    else:
+        return "black"
+#}}}
+def get_queue(request, path_static, settings):#{{{
+    path_result = "%s/result"%(path_static)
+    errfile = "%s/server.err"%(path_result)
+    set_basic_config(request, info, path_static, settings)
+
+    status = "Queued"
+    info['header'] = ["No.", "JobID","JobName", "NumSeq", "Email",
+            "QueueTime", "RunTime", "Date", "Source"]
+    if info['isSuperUser']:
+        info['header'].insert(5, "Host")
+
+    hdl = myfunc.ReadLineByBlock(info['divided_logfile_query'])
+    if hdl.failure:
+        info['errmsg'] = ""
+        pass
+    else:
+        finished_jobid_list = []
+        if os.path.exists(info['divided_logfile_finished_jobid']):
+            finished_jobid_list = myfunc.ReadIDList2(info['divided_logfile_finished_jobid'], 0, None)
+        finished_jobid_set = set(finished_jobid_list)
+        jobRecordList = []
+        lines = hdl.readlines()
+        current_time = datetime.now(timezone(TZ))
+        while lines != None:
+            for line in lines:
+                strs = line.split("\t")
+                if len(strs) < 7:
+                    continue
+                ip = strs[2]
+                if not info['isSuperUser'] and ip != info['client_ip']:
+                    continue
+                jobid = strs[1]
+                if jobid in finished_jobid_set:
+                    continue
+
+                rstdir = "%s/%s"%(path_result, jobid)
+                starttagfile = "%s/%s"%(rstdir, "runjob.start")
+                failedtagfile = "%s/%s"%(rstdir, "runjob.failed")
+                finishtagfile = "%s/%s"%(rstdir, "runjob.finish")
+                if (os.path.exists(rstdir) and 
+                        not os.path.exists(starttagfile) and
+                        not os.path.exists(failedtagfile) and
+                        not os.path.exists(finishtagfile)):
+                    jobRecordList.append(jobid)
+            lines = hdl.readlines()
+        hdl.close()
+
+        jobinfo_list = []
+        rank = 0
+        for jobid in jobRecordList:
+            rank += 1
+            ip =  ""
+            jobname = ""
+            email = ""
+            method_submission = "web"
+            numseq = 1
+            rstdir = "%s/%s"%(path_result, jobid)
+
+            submit_date_str = ""
+            finish_date_str = ""
+            start_date_str = ""
+
+            jobinfofile = "%s/jobinfo"%(rstdir)
+            jobinfo = myfunc.ReadFile(jobinfofile).strip()
+            jobinfolist = jobinfo.split("\t")
+            if len(jobinfolist) >= 8:
+                submit_date_str = jobinfolist[0]
+                ip = jobinfolist[2]
+                numseq = int(jobinfolist[3])
+                jobname = jobinfolist[5]
+                email = jobinfolist[6]
+                method_submission = jobinfolist[7]
+
+            starttagfile = "%s/runjob.start"%(rstdir)
+            queuetime = ""
+            runtime = ""
+            isValidSubmitDate = True
+            try:
+                submit_date = datetime_str_to_time(submit_date_str)
+            except ValueError:
+                isValidSubmitDate = False
+
+            if isValidSubmitDate:
+                queuetime = myfunc.date_diff(submit_date, current_time)
+
+            row_content = [rank, jobid, jobname[:20], numseq, email,
+                    queuetime, runtime, submit_date_str, method_submission]
+            if info['isSuperUser']:
+                row_content.insert(5, ip)
+            jobinfo_list.append(row_content)
+
+        info['content'] = jobinfo_list
+
+    info['jobcounter'] = GetJobCounter(info)
+    #return render(request, 'pred/queue.html', info)
+    return info
+#}}}
