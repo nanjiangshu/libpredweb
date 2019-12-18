@@ -1956,7 +1956,7 @@ def get_failed_job(request, g_params):#{{{
     return info
 #}}}
 
-def get_countjob_country(request):#{{{
+def get_countjob_country(request, g_params):#{{{
     info = {}
     set_basic_config(request, info, g_params)
 
