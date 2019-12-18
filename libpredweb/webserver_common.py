@@ -1956,3 +1956,39 @@ def get_failed_job(request, g_params):#{{{
     return info
 #}}}
 
+def get_countjob_country(request):#{{{
+    info = {}
+    set_basic_config(request, info, g_params)
+
+    path_stat = "%s/log/stat"%(g_params['path_static'])
+
+    countjob_by_country = "%s/countjob_by_country.txt"%(path_stat)
+    lines = myfunc.ReadFile(countjob_by_country).split("\n")
+    li_countjob_country = []
+    for line in lines: 
+        if not line or line[0]=="#":
+            continue
+        strs = line.split("\t")
+        if len(strs) >= 4:
+            country = strs[0]
+            try:
+                numseq = int(strs[1])
+            except:
+                numseq = 0
+            try:
+                numjob = int(strs[2])
+            except:
+                numjob = 0
+            try:
+                numip = int(strs[3])
+            except:
+                numip = 0
+            li_countjob_country.append([country, numseq, numjob, numip])
+    li_countjob_country_header = ["Country", "Numseq", "Numjob", "NumIP"]
+
+    info['li_countjob_country'] = li_countjob_country
+    info['li_countjob_country_header'] = li_countjob_country_header
+
+    info['jobcounter'] = webcom.GetJobCounter(info)
+    return info
+#}}}
