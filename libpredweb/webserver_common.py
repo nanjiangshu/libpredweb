@@ -21,6 +21,7 @@ import shutil
 import logging
 import subprocess
 import sqlite3
+import json
 from .timeit import timeit
 
 TZ = "Europe/Stockholm"
@@ -1989,6 +1990,23 @@ def get_countjob_country(request, g_params):#{{{
     info['li_countjob_country'] = li_countjob_country
     info['li_countjob_country_header'] = li_countjob_country_header
 
+    info['jobcounter'] = GetJobCounter(info)
+    return info
+#}}}
+def get_help(request, g_params):#{{{
+    info = {}
+    set_basic_config(request, info, g_params)
+    configfile = "%s/config/config.json"%(g_params['SITE_ROOT'])
+    config = {}
+    if os.path.exists(configfile):
+        text = myfunc.ReadFile(configfile)
+        config = json.loads(text)
+    try:
+        MAX_KEEP_DAYS = config['qd_fe']['MAX_KEEP_DAYS']
+    except KeyError:
+        MAX_KEEP_DAYS = 30
+        pass
+    info['MAX_KEEP_DAYS'] = MAX_KEEP_DAYS
     info['jobcounter'] = GetJobCounter(info)
     return info
 #}}}
