@@ -1989,6 +1989,6 @@ def get_countjob_country(request, g_params):#{{{
     info['li_countjob_country'] = li_countjob_country
     info['li_countjob_country_header'] = li_countjob_country_header
 
-    info['jobcounter'] = webcom.GetJobCounter(info)
+    info['jobcounter'] = GetJobCounter(info)
     return info
 #}}}
