@@ -2010,3 +2010,16 @@ def get_help(request, g_params):#{{{
     info['jobcounter'] = GetJobCounter(info)
     return info
 #}}}
+def get_news(request, g_params):#{{{
+    info = {}
+    set_basic_config(request, info, g_params)
+
+    newsfile = "%s/%s/%s"%(g_params['SITE_ROOT'], "static/doc", "news.txt")
+    newsList = []
+    if os.path.exists(newsfile):
+        newsList = myfunc.ReadNews(newsfile)
+    info['newsList'] = newsList
+    info['newsfile'] = newsfile
+    info['jobcounter'] = GetJobCounter(info)
+    return info
+#}}}
