@@ -2023,3 +2023,30 @@ def get_news(request, g_params):#{{{
     info['jobcounter'] = GetJobCounter(info)
     return info
 #}}}
+def help_wsdl_api(request, g_params):#{{{
+    info = {}
+    set_basic_config(request, info, g_params)
+    api_script_rtname =  g_params['api_script_rtname']
+    extlist = [".py"]
+    api_script_lang_list = ["Python"]
+    api_script_info_list = []
+
+    for i in range(len(extlist)):
+        ext = extlist[i]
+        api_script_file = "%s/%s/%s"%(g_params['SITE_ROOT'],
+                "static/download/script", "%s%s"%(api_script_rtname,
+                    ext))
+        api_script_basename = os.path.basename(api_script_file)
+        if not os.path.exists(api_script_file):
+            continue
+        cmd = [api_script_file, "-h"]
+        try:
+            usage = subprocess.check_output(cmd, encoding='UTF-8')
+        except subprocess.CalledProcessError as e:
+            usage = ""
+        api_script_info_list.append([api_script_lang_list[i], api_script_basename, usage])
+
+    info['api_script_info_list'] = api_script_info_list
+    info['jobcounter'] = GetJobCounter(info)
+    return info
+#}}}
