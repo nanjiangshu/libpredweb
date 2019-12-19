@@ -807,7 +807,7 @@ def ValidateQuery(request, query, g_params):#{{{
             Failed to read uploaded file \"%s\"
             """%(query['seqfile'])
             return False
-        query['rawseq'] = content
+        query['rawseq'] = content.encode('utf-8')
 
     query['filtered_seq'] = ValidateSeq(query['rawseq'], query, g_params)
     is_valid = query['isValidSeq']
