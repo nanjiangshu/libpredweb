@@ -134,6 +134,35 @@ def GetProQ3Option(query_para):#{{{
 
 #}}}
 
+def ReadJobInfo(infile):# {{{
+    """Read file jobinfo. return a dictionary
+    """
+    jobinfo = myfunc.ReadFile(jobinfofile).strip()
+    dt = {}
+    dt['submit_date_str'] = ""
+    dt['jobid'] = ""
+    dt['client_ip'] = ""
+    dt['length_rawseq'] = 0
+    dt['numseq'] = 1
+    dt['jobname'] = ""
+    dt['email'] = ""
+    dt['method_submission'] = "web"
+    dt['app_type'] = ""
+    jobinfolist = jobinfo.split("\t")
+    if len(jobinfolist) >= 8:
+        dt['submit_date_str'] = jobinfolist[0]
+        dt['jobid'] = jobinfolist[1]
+        dt['client_ip'] = jobinfolist[2]
+        dt['numseq'] = int(jobinfolist[3])
+        dt['length_rawseq'] = int(jobinfolist[4])
+        dt['jobname'] = jobinfolist[5]
+        dt['email'] = jobinfolist[6]
+        dt['method_submission'] = jobinfolist[7]
+        if len(jobinfolist) == 9:
+            dt['app_type'] = jobinfolist[8]
+    return dt
+# }}}
+
 def WriteProQ3TextResultFile(outfile, query_para, modelFileList, #{{{
         runtime_in_sec, base_www_url, proq3opt, statfile=""):
     try:
