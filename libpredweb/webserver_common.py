@@ -2213,8 +2213,6 @@ def get_serverstatus(request, isShowLocalQueue, g_params):#{{{
 
     li_countjob_country_header = ["Country", "Numseq", "Numjob", "NumIP"]
 
-
-    g_params['MAX_ACTIVE_USER'] = 10
     # get most active users by num_job
     activeuserli_njob_header = ["IP", "Country", "NumJob", "NumSeq"]
     activeuserli_njob = []
@@ -2252,7 +2250,7 @@ def get_serverstatus(request, isShowLocalQueue, g_params):#{{{
         except:
             pass
         activeuserli_nseq.append([ip, country, njob, nseq])
-        if cnt >= MAX_ACTIVE_USER:
+        if cnt >= g_params['MAX_ACTIVE_USER']:
             break
 
 # get longest predicted seq
