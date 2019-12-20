@@ -22,6 +22,8 @@ import logging
 import subprocess
 import sqlite3
 import json
+from geoip import geolite2
+import pycountry
 from .timeit import timeit
 
 TZ = "Europe/Stockholm"
@@ -2076,6 +2078,264 @@ def help_wsdl_api(request, g_params):#{{{
         api_script_info_list.append([api_script_lang_list[i], api_script_basename, usage])
 
     info['api_script_info_list'] = api_script_info_list
+    info['jobcounter'] = GetJobCounter(info)
+    return info
+#}}}
+def get_serverstatus(request, isShowLocalQueue, g_params):#{{{
+    info = {}
+    set_basic_config(request, info, g_params)
+    path_log = os.path.join(g_params['SITE_ROOT'], 'static/log')
+    path_stat = os.path.join(path_log, "stat")
+
+    logfile_finished =  os.path.join(path_log, "finished_job.log")
+    logfile_runjob =  os.path.join(path_log, "runjob_log.log")
+    logfile_country_job = os.path.join(path_log, "stat", "country_job_numseq.txt")
+
+
+# get jobs queued locally (at the front end)
+    num_seq_in_local_queue = 0
+
+    if isShowLocalQueue:
+        cmd = [suq_exec, "-b", suq_basedir, "ls"]
+        cmdline = " ".join(cmd)
+        try:
+            suq_ls_content =  subprocess.check_output(cmd, encoding='UTF-8', stderr=subprocess.STDOUT)
+            lines = suq_ls_content.split('\n')
+            cntjob = 0
+            for line in lines:
+                if line.find("runjob") != -1:
+                    cntjob += 1
+            num_seq_in_local_queue = cntjob
+        except subprocess.CalledProcessError as e:
+            webcom.loginfo("Run '%s' exit with error message: %s"%(cmdline, str(e)), g_params['gen_errfile'])
+
+# get jobs queued remotely ()
+    runjob_dict = {}
+    if os.path.exists(logfile_runjob):
+        runjob_dict = myfunc.ReadRunJobLog(logfile_runjob)
+    cntseq_in_remote_queue = 0
+    for jobid in runjob_dict:
+        li = runjob_dict[jobid]
+        numseq = li[4]
+        rstdir = "%s/%s"%(path_result, jobid)
+        finished_idx_file = "%s/finished_seqindex.txt"%(rstdir)
+        if os.path.exists(finished_idx_file):
+            num_finished = len(myfunc.ReadIDList(finished_idx_file))
+        else:
+            num_finished = 0
+
+        cntseq_in_remote_queue += (numseq - num_finished)
+
+
+# get number of finished seqs
+    allfinishedjoblogfile = os.path.join(path_log, "all_finished_job.log")
+    allfinished_job_dict = {}
+    user_dict = {} # by IP
+    if os.path.exists(allfinishedjoblogfile):
+        allfinished_job_dict = myfunc.ReadFinishedJobLog(allfinishedjoblogfile)
+    total_num_finished_seq = 0
+    numjob_wed = 0
+    numjob_wsdl = 0
+    startdate = ""
+    submitdatelist = []
+    iplist = []
+    countrylist = []
+    for jobid in allfinished_job_dict:
+        li = allfinished_job_dict[jobid]
+        try:
+            numseq = int(li[4])
+        except:
+            numseq = 1
+        try:
+            submitdatelist.append(li[6])
+        except:
+            pass
+        try:
+            method_submission = li[5]
+        except:
+            method_submission = ""
+        try:
+            iplist.append(li[2])
+        except:
+            pass
+        ip = ""
+        try:
+            ip = li[2]
+        except:
+            pass
+
+
+        if method_submission == "web":
+            numjob_wed += 1
+        elif method_submission == "wsdl":
+            numjob_wsdl += 1
+
+        if ip != "" and ip != "All" and ip != "127.0.0.1":
+
+            if not ip in user_dict:
+                user_dict[ip] = [0,0] #[num_job, num_seq]
+            user_dict[ip][0] += 1
+            user_dict[ip][1] += numseq
+
+        total_num_finished_seq += numseq
+
+    submitdatelist = sorted(submitdatelist, reverse=False)
+    if len(submitdatelist)>0:
+        startdate = submitdatelist[0].split()[0]
+
+    uniq_iplist = list(set(iplist))
+
+    countjob_by_country = "%s/countjob_by_country.txt"%(path_stat)
+    lines = myfunc.ReadFile(countjob_by_country).split("\n")
+    li_countjob_country = []
+    countrylist = []
+    for line in lines: 
+        if not line or line[0]=="#":
+            continue
+        strs = line.split("\t")
+        if len(strs) >= 4:
+            country = strs[0]
+            try:
+                numseq = int(strs[1])
+            except:
+                numseq = 0
+            try:
+                numjob = int(strs[2])
+            except:
+                numjob = 0
+            try:
+                numip = int(strs[3])
+            except:
+                numip = 0
+            li_countjob_country.append([country, numseq, numjob, numip])
+            countrylist.append(country)
+    uniq_countrylist = list(set(countrylist))
+
+    li_countjob_country_header = ["Country", "Numseq", "Numjob", "NumIP"]
+
+
+    g_params['MAX_ACTIVE_USER'] = 10
+    # get most active users by num_job
+    activeuserli_njob_header = ["IP", "Country", "NumJob", "NumSeq"]
+    activeuserli_njob = []
+    rawlist = sorted(list(user_dict.items()), key=lambda x:x[1][0], reverse=True)
+    cnt = 0
+    for i in range(len(rawlist)):
+        cnt += 1
+        ip = rawlist[i][0]
+        njob = rawlist[i][1][0]
+        nseq = rawlist[i][1][1]
+        country = "N/A"
+        try:
+            match = geolite2.lookup(ip)
+            country = pycountry.countries.get(alpha_2=match.country).name
+        except:
+            pass
+        activeuserli_njob.append([ip, country, njob, nseq])
+        if cnt >= g_params['MAX_ACTIVE_USER']:
+            break
+
+    # get most active users by num_seq
+    activeuserli_nseq_header = ["IP", "Country", "NumJob", "NumSeq"]
+    activeuserli_nseq = []
+    rawlist = sorted(list(user_dict.items()), key=lambda x:x[1][1], reverse=True)
+    cnt = 0
+    for i in range(len(rawlist)):
+        cnt += 1
+        ip = rawlist[i][0]
+        njob = rawlist[i][1][0]
+        nseq = rawlist[i][1][1]
+        country = "N/A"
+        try:
+            match = geolite2.lookup(ip)
+            country = pycountry.countries.get(alpha_2=match.country).name
+        except:
+            pass
+        activeuserli_nseq.append([ip, country, njob, nseq])
+        if cnt >= MAX_ACTIVE_USER:
+            break
+
+# get longest predicted seq
+# get query with most TM helics
+# get query takes the longest time
+    extreme_runtimelogfile = "%s/stat/extreme_jobruntime.log"%(path_log)
+    runtimelogfile = "%s/jobruntime.log"%(path_log)
+    infile_runtime = runtimelogfile
+    if os.path.exists(extreme_runtimelogfile) and os.path.getsize(extreme_runtimelogfile):
+        infile_runtime = extreme_runtimelogfile
+
+    li_longestseq = []
+    li_mostTM = []
+    li_longestruntime = []
+    longestlength = -1
+    mostTM = -1
+    longestruntime = -1.0
+
+    hdl = myfunc.ReadLineByBlock(infile_runtime)
+    if not hdl.failure:
+        lines = hdl.readlines()
+        while lines != None:
+            for line in lines:
+                strs = line.split()
+                if len(strs) < 8:
+                    continue
+                runtime = -1.0
+                jobid = strs[0]
+                seqidx = strs[1]
+                try:
+                    runtime = float(strs[3])
+                except:
+                    pass
+                numTM = -1
+                try:
+                    numTM = int(strs[6])
+                except:
+                    pass
+                mtd_profile = strs[4]
+                lengthseq = -1
+                try:
+                    lengthseq = int(strs[5])
+                except:
+                    pass
+                if runtime > longestruntime:
+                    li_longestruntime = [jobid, seqidx, runtime, lengthseq, numTM]
+                    longestruntime = runtime
+                if lengthseq > longestlength:
+                    li_longestseq = [jobid, seqidx, runtime, lengthseq, numTM]
+                    longestlength = lengthseq
+                if numTM > mostTM:
+                    mostTM = numTM
+                    li_mostTM = [jobid, seqidx, runtime, lengthseq, numTM]
+            lines = hdl.readlines()
+        hdl.close()
+
+    info['longestruntime_str'] = myfunc.second_to_human(int(longestruntime+0.5))
+    info['mostTM_str'] = str(mostTM)
+    info['longestlength_str'] = str(longestlength)
+    info['total_num_finished_seq'] = total_num_finished_seq
+    info['total_num_finished_job'] = len(allfinished_job_dict)
+    info['num_unique_ip'] = len(uniq_iplist)
+    info['num_unique_country'] = len(uniq_countrylist)
+    info['num_finished_seqs_str'] = str(info['total_num_finished_seq'])
+    info['num_finished_jobs_str'] = str(info['total_num_finished_job'])
+    info['num_finished_jobs_web_str'] = str(numjob_wed)
+    info['num_finished_jobs_wsdl_str'] = str(numjob_wsdl)
+    info['num_unique_ip_str'] = str(info['num_unique_ip'])
+    info['num_unique_country_str'] = str(info['num_unique_country'])
+    info['num_seq_in_local_queue'] = num_seq_in_local_queue
+    info['num_seq_in_remote_queue'] = cntseq_in_remote_queue
+    info['activeuserli_nseq_header'] = activeuserli_nseq_header
+    info['activeuserli_njob_header'] = activeuserli_njob_header
+    info['li_countjob_country_header'] = li_countjob_country_header
+    info['li_countjob_country'] = li_countjob_country
+    info['activeuserli_njob_header'] = activeuserli_njob_header
+    info['activeuserli_nseq'] = activeuserli_nseq
+    info['activeuserli_njob'] = activeuserli_njob
+    info['li_longestruntime'] = li_longestruntime
+    info['li_longestseq'] = li_longestseq
+    info['li_mostTM'] = li_mostTM
+
+    info['startdate'] = startdate
     info['jobcounter'] = GetJobCounter(info)
     return info
 #}}}
