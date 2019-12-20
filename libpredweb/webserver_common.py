@@ -2085,6 +2085,7 @@ def get_serverstatus(request, g_params):#{{{
     info = {}
     set_basic_config(request, info, g_params)
     path_log = os.path.join(g_params['SITE_ROOT'], 'static/log')
+    path_result = os.path.join(g_params['SITE_ROOT'], 'static/result')
     path_stat = os.path.join(path_log, "stat")
 
     logfile_finished =  os.path.join(path_log, "finished_job.log")
