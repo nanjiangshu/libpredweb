@@ -2081,7 +2081,7 @@ def help_wsdl_api(request, g_params):#{{{
     info['jobcounter'] = GetJobCounter(info)
     return info
 #}}}
-def get_serverstatus(request, isShowLocalQueue, g_params):#{{{
+def get_serverstatus(request, g_params):#{{{
     info = {}
     set_basic_config(request, info, g_params)
     path_log = os.path.join(g_params['SITE_ROOT'], 'static/log')
@@ -2095,8 +2095,8 @@ def get_serverstatus(request, isShowLocalQueue, g_params):#{{{
 # get jobs queued locally (at the front end)
     num_seq_in_local_queue = 0
 
-    if isShowLocalQueue:
-        cmd = [suq_exec, "-b", suq_basedir, "ls"]
+    if 'isShowLocalQueue' in g_params and g_params['isShowLocalQueue']:
+        cmd = [g_params['suq_exec'], "-b", g_params['suq_basedir'], "ls"]
         cmdline = " ".join(cmd)
         try:
             suq_ls_content =  subprocess.check_output(cmd, encoding='UTF-8', stderr=subprocess.STDOUT)
