@@ -1674,7 +1674,7 @@ def RunStatistics_basic(webserver_root, path_result, path_log):#{{{
             #plot
             if os.path.exists(outfile) and len(sortedlist)>0: #plot only when there are valid data
                 cmd = ["%s/plot_numseq_of_job.sh"%(binpath_plotscript), outfile]
-                .RunCmd(cmd, gen_logfile, gen_errfile)
+                RunCmd(cmd, gen_logfile, gen_errfile)
         except IOError:
             continue
 
