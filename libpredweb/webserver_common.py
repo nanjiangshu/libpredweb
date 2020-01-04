@@ -1479,8 +1479,8 @@ def ArchiveLogFile(path_log, threshold_logfilesize=20*1024*1024):# {{{
 def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):#{{{
     """Function for qd_fe to run statistics for the web-server usage
     """
-    path_log = os.path.join(webserver_root, 'proj','pred', 'log')
-    path_result = os.path.join(webserver_root, 'proj','pred', 'result')
+    path_log = os.path.join(webserver_root, 'proj','pred', 'static', 'log')
+    path_result = os.path.join(webserver_root, 'proj','pred', 'static', 'result')
     path_stat = os.path.join(path_log, 'stat')
 
 # 1. calculate average running time, only for those sequences with time.txt
