@@ -246,7 +246,7 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):#{{{
                 method_submission = strs[7]
                 isValidSubmitDate = True
                 try:
-                    submit_date = datetime_str_to_time(submit_date_str)
+                    submit_date = webcom.datetime_str_to_time(submit_date_str)
                 except ValueError:
                     isValidSubmitDate = False
                 if isValidSubmitDate:#{{{
