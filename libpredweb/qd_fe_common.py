@@ -22,6 +22,9 @@ import pycountry
 import shutil
 from suds.client import Client
 import json
+import hashlib
+import requests
+import urllib.request, urllib.parse, urllib.error
 
 def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):#{{{
     """Function for qd_fe to run statistics for the web-server usage
