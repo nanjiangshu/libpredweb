@@ -632,7 +632,7 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
             if email in g_params['vip_user_list']:
                 numseq_this_user = 1
                 priority = 999999999.0
-                myfunc.WriteFile("email %s in vip_user_list\n"%(email), gen_logfile, "a", True)
+                webcom.loginfo("email %s in vip_user_list"%(email), gen_logfile)
 
             li.append(numseq_this_user)
             li.append(priority)
@@ -1366,9 +1366,9 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
         if finish_status == "success":
             shutil.rmtree(tmpdir)
 
-        # send the result to email
+        # send the result to to_email
         from_email = webcom.get_email_address_outsending(name_server.lower())
-        if webcom.IsFrontEndNode(base_www_url) and myfunc.IsValidEmailAddress(email):
+        if webcom.IsFrontEndNode(base_www_url) and myfunc.IsValidEmailAddress(to_email):
             webcom.SendEmail_on_finish(jobid, base_www_url,
                     finish_status, name_server=name_server, from_email=from_email,
                     to_email=to_email, contact_email=contact_email,
