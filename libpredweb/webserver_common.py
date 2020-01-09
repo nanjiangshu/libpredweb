@@ -165,6 +165,21 @@ def ReadJobInfo(infile):# {{{
     return dt
 # }}}
 
+def WriteDumpedTextResultFile(name_server, outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile=""):#{{{
+    """Write the prediction result to a single text file. This function does not work for proq3
+    """
+    if name_server == "topcons2":
+        WriteTOPCONSTextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile)
+    elif name_server == "subcons":
+        WriteSubconsTextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile)
+    elif name_server == "boctopus2":
+        WriteBoctopusTextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile)
+    elif name_server == "scampi2":
+        WriteSCAMPI2MSATextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile)
+    elif name_server == "pconsc3":
+        WritePconsC3TextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile)
+
+#}}}
 def WritePconsC3TextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile=""):#{{{
     try:
         fpout = open(outfile, "w")
@@ -1089,6 +1104,19 @@ def InsertFinishDateToDB(date_str, md5_key, seq, outdb):# {{{
 
 # }}}
 
+def GetInfoFinish(name_server, outpath_this_seq, origIndex, seqLength, seqAnno, source_result="", runtime=0.0):# {{{
+    """Get the list info_finish for finished prediction"""
+    if name_server.lower() == "topcons2":
+        return GetInfoFinish_TOPCONS2(outpath_this_seq, origIndex, seqLength, seqAnno, source_result, runtime)
+    elif name_server.lower() == "boctopus2":
+        return GetInfoFinish_Boctopus2(outpath_this_seq, origIndex, seqLength, seqAnno, source_result, runtime)
+    elif name_server.lower() == "subcons":
+        return GetInfoFinish_Subcons(outpath_this_seq, origIndex, seqLength, seqAnno, source_result, runtime)
+    elif name_server.lower() == "prodres":
+        return GetInfoFinish_PRODRES(outpath_this_seq, origIndex, seqLength, seqAnno, source_result, runtime)
+    else:
+        return []
+# }}}
 def GetInfoFinish_Boctopus2(outpath_this_seq, origIndex, seqLength, seqAnno, source_result="", runtime=0.0):# {{{
     """Get the list info_finish for the method Boctopus2"""
     return GetInfoFinish_TOPCONS2(outpath_this_seq, origIndex, seqLength, seqAnno, source_result, runtime)
@@ -1380,6 +1408,20 @@ def GetJobCounter(info): #{{{
     return jobcounter
 #}}}
 
+def CleanJobFolder(rstdir, name_server):# {{{
+    name_server = name_server.lower()
+    if name_server == "boctopus2":
+        CleanJobFolder_Boctopus2(rstdir)
+    elif name_server == "scampi2":
+        CleanJobFolder_Scampi(rstdir)
+    elif name_server == "topcons2":
+        CleanJobFolder_TOPCONS2(rstdir)
+    elif name_server == "subcons":
+        CleanJobFolder_Subcons(rstdir)
+    elif name_server == "prodres":
+        CleanJobFolder_PRODRES(rstdir)
+# }}}
+
 def CleanJobFolder_Boctopus2(rstdir):# {{{
     """Clean the jobfolder for TOPCONS2 after finishing"""
     flist =[
@@ -1566,6 +1608,54 @@ def ArchiveLogFile(path_log, threshold_logfilesize=20*1024*1024):# {{{
     for f in flist:
         if os.path.exists(f):
             myfunc.ArchiveFile(f, threshold_logfilesize)
+# }}}
+
+def get_default_server_url(name_server):# {{{
+    if name_server = "subcons":
+        return "http://subcons.bioinfo.se"
+    elif name_server = "prodres":
+        return "http://prodres.bioinfo.se"
+    elif name_server = "topcons2":
+        return "http://topcons.net"
+    elif name_server = "scampi2":
+        return "http://scampi.bioinfo.se"
+    elif name_server = "boctopus2":
+        return "http://boctopus.bioinfo.se"
+    elif name_server = "proq3":
+        return "http://proq3.bioinfo.se"
+    elif name_server = "predzinc":
+        return "http://predzinc.bioshu.se"
+    elif name_server = "frag1d":
+        return "http://frag1d.bioshu.se"
+# }}}
+def GetNameSoftware(name_server, queue_method):# {{{
+    """Determine name_software for each webserver
+    """
+    if name_server == "subcons":
+        name_software = "docker_subcons"
+        if queue_method == "slurm":
+            name_software = "singularity_subcons"
+    elif name_server == "prodres":
+        name_software = "prodres"
+# }}}
+def get_email_address_outsending(name_server):# {{{
+    """determine the outsending email address for given name_server
+    """
+    name_server = name_server.lower()
+    if name_server == "subcons":
+        return "no-reply.SubCons@bioinfo.se"
+    elif name_server == "topcons2":
+        return "no-reply.TOPCONS@topcons.net"
+    elif name_server == "scampi2":
+        return "no-reply.SCAMPI@bioinfo.se"
+    elif name_server == "boctopus2":
+        return "no-reply.BOCTOPUS@bioinfo.se"
+    elif name_server == "proq3":
+        return "no-reply.PROQ3@bioinfo.se"
+    elif name_server == "prodres":
+        return "no-reply.PROSRES@bioinfo.se"
+    elif name_server == "pconsc3":
+        return "no-reply.PCONSC3@bioinfo.se"
 # }}}
 
 # functions for views.py
