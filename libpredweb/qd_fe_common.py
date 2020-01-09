@@ -371,7 +371,7 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):#{{{
             webcom.RunCmd(cmd, gen_logfile, gen_errfile)
 
 #}}}
-def CreateRunJoblog(loop, name_server, isOldRstdirDeleted, g_params):#{{{
+def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
     gen_logfile = g_params['gen_logfile']
     gen_errfile = g_params['gen_errfile']
 
@@ -379,6 +379,7 @@ def CreateRunJoblog(loop, name_server, isOldRstdirDeleted, g_params):#{{{
 
     path_result = os.path.join(path_static, 'result')
     path_log = os.path.join(path_static, 'log')
+    name_server = g_params['name_server']
 
     submitjoblogfile = "%s/submitted_seq.log"%(path_log)
     runjoblogfile = "%s/runjob_log.log"%(path_log)
@@ -650,7 +651,7 @@ def CreateRunJoblog(loop, name_server, isOldRstdirDeleted, g_params):#{{{
         myfunc.WriteFile("", runjoblogfile, "w", True)
 
 #}}}
-def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, name_server, g_params):#{{{
+def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
 # for each job rstdir, keep three log files, 
 # 1.seqs finished, finished_seq log keeps all information, finished_index_log
 #   can be very compact to speed up reading, e.g.
@@ -662,6 +663,7 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, name_server, g_params):
 
     webcom.logfile("SubmitJob for %s, numseq_this_user=%d"%(jobid, numseq_this_user), gen_logfile)
 
+    name_server = g_params['name_server']
     path_static = g_params['path_static']
     path_result = os.path.join(path_static, 'result')
     path_log = os.path.join(path_static, 'log')
@@ -956,15 +958,18 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, name_server, g_params):
 
     return 0
 #}}}
-def GetResult(jobid, name_server, g_params):#{{{
+def GetResult(jobid, g_params):#{{{
     # retrieving result from the remote server for this job
+    gen_logfile = g_params['gen_logfile']
+    gen_errfile = g_params['gen_errfile']
+
     webcom.loginfo("GetResult for %s.\n" %(jobid), gen_logfile)
 
     path_result = os.path.join(path_static, 'result')
     path_log = os.path.join(path_static, 'log')
-    gen_logfile = g_params['gen_logfile']
-    gen_errfile = g_params['gen_errfile']
     finished_date_db = g_params['finished_date_db']
+    name_server = g_params['name_server']
+
 
     rstdir = "%s/%s"%(path_result, jobid)
     runjob_logfile = "%s/%s"%(rstdir, "runjob.log")
@@ -1267,12 +1272,18 @@ def GetResult(jobid, name_server, g_params):#{{{
         json.dump(cntTryDict, fpout)
     return 0
 #}}}
-def CheckIfJobFinished(jobid, numseq, email):#{{{
+def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
     """check if the job is finished and write tag files"""
     runjob_errfile = "%s/%s"%(rstdir, "runjob.err")
     runjob_logfile = "%s/%s"%(rstdir, "runjob.log")
 
     webcom.loginfo("CheckIfJobFinished for %s.\n" %(jobid), gen_logfile)
+
+    name_server = g_params['name_server']
+
+    path_static = g_params['path_static']
+    path_result = os.path.join(path_static, 'result')
+    path_log = os.path.join(path_static, 'log')
 
     rstdir = "%s/%s"%(path_result, jobid)
     tmpdir = "%s/tmpdir"%(rstdir)
@@ -1345,12 +1356,11 @@ def CheckIfJobFinished(jobid, numseq, email):#{{{
             shutil.rmtree(tmpdir)
 
         # send the result to email
-
         from_email = webcom.get_email_address_outsending(name_server.lower())
         if webcom.IsFrontEndNode(base_www_url) and myfunc.IsValidEmailAddress(email):
             webcom.SendEmail_on_finish(jobid, base_www_url,
                     finish_status, name_server=name_server, from_email=from_email,
-                    to_email=email, contact_email=contact_email,
+                    to_email=to_email, contact_email=contact_email,
                     logfile=runjob_logfile, errfile=runjob_errfile)
         webcom.CleanJobFolder(rstdir, name_server.lower())
 
