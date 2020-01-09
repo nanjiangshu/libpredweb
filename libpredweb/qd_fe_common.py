@@ -374,12 +374,12 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):#{{{
 def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
     gen_logfile = g_params['gen_logfile']
     gen_errfile = g_params['gen_errfile']
+    name_server = g_params['name_server']
 
     webcom.loginfo("CreateRunJoblog for server %s..."%(name_server), gen_logfile)
 
     path_result = os.path.join(path_static, 'result')
     path_log = os.path.join(path_static, 'log')
-    name_server = g_params['name_server']
 
     submitjoblogfile = "%s/submitted_seq.log"%(path_log)
     runjoblogfile = "%s/runjob_log.log"%(path_log)
