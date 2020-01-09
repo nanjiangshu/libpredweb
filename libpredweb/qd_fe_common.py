@@ -1293,6 +1293,7 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
     path_result = os.path.join(path_static, 'result')
     path_log = os.path.join(path_static, 'log')
     path_cache = g_params['path_cache']
+    contact_email = g_params['contact_email']
 
     rstdir = "%s/%s"%(path_result, jobid)
     runjob_errfile = "%s/%s"%(rstdir, "runjob.err")
