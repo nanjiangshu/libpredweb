@@ -1283,8 +1283,8 @@ def GetResult(jobid, g_params):#{{{
 #}}}
 def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
     """check if the job is finished and write tag files"""
-    runjob_errfile = "%s/%s"%(rstdir, "runjob.err")
-    runjob_logfile = "%s/%s"%(rstdir, "runjob.log")
+    gen_logfile = g_params['gen_logfile']
+    gen_errfile = g_params['gen_errfile']
     name_server = g_params['name_server']
 
     webcom.loginfo("CheckIfJobFinished for %s.\n" %(jobid), gen_logfile)
@@ -1295,6 +1295,8 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
     path_cache = g_params['path_cache']
 
     rstdir = "%s/%s"%(path_result, jobid)
+    runjob_errfile = "%s/%s"%(rstdir, "runjob.err")
+    runjob_logfile = "%s/%s"%(rstdir, "runjob.log")
     tmpdir = "%s/tmpdir"%(rstdir)
     outpath_result = "%s/%s"%(rstdir, jobid)
     finished_idx_file = "%s/finished_seqindex.txt"%(rstdir)
