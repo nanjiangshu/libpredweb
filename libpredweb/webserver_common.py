@@ -1611,21 +1611,21 @@ def ArchiveLogFile(path_log, threshold_logfilesize=20*1024*1024):# {{{
 # }}}
 
 def get_default_server_url(name_server):# {{{
-    if name_server = "subcons":
+    if name_server == "subcons":
         return "http://subcons.bioinfo.se"
-    elif name_server = "prodres":
+    elif name_server == "prodres":
         return "http://prodres.bioinfo.se"
-    elif name_server = "topcons2":
+    elif name_server == "topcons2":
         return "http://topcons.net"
-    elif name_server = "scampi2":
+    elif name_server == "scampi2":
         return "http://scampi.bioinfo.se"
-    elif name_server = "boctopus2":
+    elif name_server == "boctopus2":
         return "http://boctopus.bioinfo.se"
-    elif name_server = "proq3":
+    elif name_server == "proq3":
         return "http://proq3.bioinfo.se"
-    elif name_server = "predzinc":
+    elif name_server == "predzinc":
         return "http://predzinc.bioshu.se"
-    elif name_server = "frag1d":
+    elif name_server == "frag1d":
         return "http://frag1d.bioshu.se"
 # }}}
 def GetNameSoftware(name_server, queue_method):# {{{
