@@ -664,7 +664,7 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
     gen_errfile = g_params['gen_errfile']
     name_server = g_params['name_server']
 
-    webcom.logfile("SubmitJob for %s, numseq_this_user=%d"%(jobid, numseq_this_user), gen_logfile)
+    webcom.loginfo("SubmitJob for %s, numseq_this_user=%d"%(jobid, numseq_this_user), gen_logfile)
 
     path_static = g_params['path_static']
     path_result = os.path.join(path_static, 'result')
