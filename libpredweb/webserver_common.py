@@ -1133,6 +1133,52 @@ def GetInfoFinish_PRODRES(outpath_this_seq, origIndex, seqLength, seqAnno, sourc
     return info_finish
 # }}}
 
+def GetNumSeqSameUserDict(joblist):#{{{
+    """calculate the total number of sequences users with jobs either in queue or running
+    joblist is a list of list with the data structure: 
+
+    li = [jobid, status, jobname, ip, email, numseq_str,
+    method_submission, submit_date_str, start_date_str,
+    finish_date_str]
+
+    the return value is a dictionary {'jobid': total_num_seq}
+    """
+    # Fixed error for getting numseq at 2015-04-11
+    numseq_user_dict = {}
+    for i in range(len(joblist)):
+        li1 = joblist[i]
+        jobid1 = li1[0]
+        ip1 = li1[3]
+        email1 = li1[4]
+        try:
+            numseq1 = int(li1[5])
+        except:
+            numseq1 = 123
+            pass
+        if not jobid1 in numseq_user_dict:
+            numseq_user_dict[jobid1] = 0
+        numseq_user_dict[jobid1] += numseq1
+        if ip1 == "" and email1 == "":
+            continue
+
+        for j in range(len(joblist)):
+            li2 = joblist[j]
+            if i == j:
+                continue
+
+            jobid2 = li2[0]
+            ip2 = li2[3]
+            email2 = li2[4]
+            try:
+                numseq2 = int(li2[5])
+            except:
+                numseq2 = 123
+                pass
+            if ((ip2 != "" and ip2 == ip1) or
+                    (email2 != "" and email2 == email1)):
+                numseq_user_dict[jobid1] += numseq2
+    return numseq_user_dict
+#}}}
 def GetRefreshInterval(queuetime_in_sec, runtime_in_sec, method_submission):# {{{
     """Get refresh_interval for the webpage"""
     refresh_interval = 2.0
