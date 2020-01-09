@@ -378,6 +378,7 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
 
     webcom.loginfo("CreateRunJoblog for server %s..."%(name_server), gen_logfile)
 
+    path_static = g_params['path_static']
     path_result = os.path.join(path_static, 'result')
     path_log = os.path.join(path_static, 'log')
 
@@ -385,7 +386,6 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
     runjoblogfile = "%s/runjob_log.log"%(path_log)
     finishedjoblogfile = "%s/finished_job.log"%(path_log)
 
-    path_static = g_params['path_static']
 
     # Read entries from submitjoblogfile, checking in the result folder and
     # generate two logfiles: 
@@ -660,15 +660,15 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
 #       index node remote_jobid
 # 3. format of the torun_idx_file
 #    origIndex
+    gen_logfile = g_params['gen_logfile']
+    gen_errfile = g_params['gen_errfile']
+    name_server = g_params['name_server']
 
     webcom.logfile("SubmitJob for %s, numseq_this_user=%d"%(jobid, numseq_this_user), gen_logfile)
 
-    name_server = g_params['name_server']
     path_static = g_params['path_static']
     path_result = os.path.join(path_static, 'result')
     path_log = os.path.join(path_static, 'log')
-    gen_logfile = g_params['gen_logfile']
-    gen_errfile = g_params['gen_errfile']
 
     rstdir = "%s/%s"%(path_result, jobid)
     outpath_result = "%s/%s"%(rstdir, jobid)
@@ -965,6 +965,7 @@ def GetResult(jobid, g_params):#{{{
 
     webcom.loginfo("GetResult for %s.\n" %(jobid), gen_logfile)
 
+    path_static = g_params['path_static']
     path_result = os.path.join(path_static, 'result')
     path_log = os.path.join(path_static, 'log')
     finished_date_db = g_params['finished_date_db']
@@ -1276,10 +1277,9 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
     """check if the job is finished and write tag files"""
     runjob_errfile = "%s/%s"%(rstdir, "runjob.err")
     runjob_logfile = "%s/%s"%(rstdir, "runjob.log")
+    name_server = g_params['name_server']
 
     webcom.loginfo("CheckIfJobFinished for %s.\n" %(jobid), gen_logfile)
-
-    name_server = g_params['name_server']
 
     path_static = g_params['path_static']
     path_result = os.path.join(path_static, 'result')
