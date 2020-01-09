@@ -382,6 +382,8 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
     webcom.loginfo("CreateRunJoblog for server %s..."%(name_server), gen_logfile)
 
     path_static = g_params['path_static']
+    path_cache = g_params['path_cache']
+
     path_result = os.path.join(path_static, 'result')
     path_log = os.path.join(path_static, 'log')
 
@@ -670,6 +672,8 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
     webcom.loginfo("SubmitJob for %s, numseq_this_user=%d"%(jobid, numseq_this_user), gen_logfile)
 
     path_static = g_params['path_static']
+    path_cache = g_params['path_cache']
+
     path_result = os.path.join(path_static, 'result')
     path_log = os.path.join(path_static, 'log')
 
@@ -971,6 +975,7 @@ def GetResult(jobid, g_params):#{{{
     path_static = g_params['path_static']
     path_result = os.path.join(path_static, 'result')
     path_log = os.path.join(path_static, 'log')
+    path_cache = g_params['path_cache']
     finished_date_db = g_params['finished_date_db']
     name_server = g_params['name_server']
 
@@ -1287,6 +1292,7 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
     path_static = g_params['path_static']
     path_result = os.path.join(path_static, 'result')
     path_log = os.path.join(path_static, 'log')
+    path_cache = g_params['path_cache']
 
     rstdir = "%s/%s"%(path_result, jobid)
     tmpdir = "%s/tmpdir"%(rstdir)
