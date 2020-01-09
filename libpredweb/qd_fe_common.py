@@ -1303,7 +1303,7 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
     failed_idx_file = "%s/failed_seqindex.txt"%(rstdir)
     seqfile = "%s/query.fa"%(rstdir)
 
-    base_www_url_file = "%s/static/log/base_www_url.txt"%(basedir)
+    base_www_url_file = "%s/base_www_url.txt"%(path_log)
     base_www_url = ""
 
     finished_idx_list = []
