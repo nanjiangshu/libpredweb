@@ -165,6 +165,52 @@ def ReadJobInfo(infile):# {{{
     return dt
 # }}}
 
+def WritePconsC3TextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile=""):#{{{
+    try:
+        fpout = open(outfile, "w")
+
+        fpstat = None
+
+        if statfile != "":
+            fpstat = open(statfile, "w")
+
+        date_str = time.strftime(FORMAT_DATETIME)
+        print("##############################################################################", file=fpout)
+        print("PconsC3 result file", file=fpout)
+        print("Generated from %s at %s"%(base_www_url, date_str), file=fpout)
+        print("Total request time: %.1f seconds."%(runtime_in_sec), file=fpout)
+        print("##############################################################################", file=fpout)
+
+        cnt = 0
+        for line in maplist:
+            strs = line.split('\t')
+            subfoldername = strs[0]
+            length = int(strs[1])
+            desp = strs[2]
+            seq = strs[3]
+            outpath_this_seq = "%s/%s"%(outpath_result, subfoldername)
+            predfile = "%s/query.fa.hhE0.pconsc3.out"%(outpath_this_seq)
+            print("Sequence number: %d"%(cnt+1), file=fpout)
+            print("Sequence name: %s"%(desp), file=fpout)
+            print("Sequence length: %d aa."%(length), file=fpout)
+            print("Sequence:\n%s\n\n"%(seq), file=fpout)
+            print("Predicted contacts:", file=fpout)
+            print("%-4s %4s %5s"%("Res1", "Res2", "Score"), file=fpout)
+
+            if os.path.exists(predfile):
+                content = myfunc.ReadFile(predfile)
+                fpout.write("%s\n"%(content))
+            else:
+                print("***Contact prediction failed***", file=fpout)
+            print("##############################################################################", file=fpout)
+            cnt += 1
+
+        fpout.close()
+        if fpstat:
+            fpstat.close()
+    except IOError:
+        print("Failed to write to file %s"%(outfile))
+#}}}
 def WriteProQ3TextResultFile(outfile, query_para, modelFileList, #{{{
         runtime_in_sec, base_www_url, proq3opt, statfile=""):
     try:
