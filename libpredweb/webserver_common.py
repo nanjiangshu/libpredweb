@@ -1637,6 +1637,26 @@ def GetNameSoftware(name_server, queue_method):# {{{
             name_software = "singularity_subcons"
     elif name_server == "prodres":
         name_software = "prodres"
+    elif name_server == "topcons2":
+        name_software = "docker_topcons2"
+        if queue_method == "slurm":
+            name_software = "singularity_topcons2"
+    elif name_server == "proq3":
+        name_software = "docker_proq3"
+        if queue_method == "slurm":
+            name_software = "singularity_proq3"
+    elif name_server == "boctopus2":
+        name_software = "docker_boctopus2"
+        if queue_method == "slurm":
+            name_software = "singularity_boctopus2"
+    elif name_server == "pathopred":
+        name_software = "docker_pathopred"
+        if queue_method == "slurm":
+            name_software = "singularity_pathopred"
+    elif name_server == "scampi2":
+        name_software = "scampi2-msa"
+
+    return name_software
 # }}}
 def get_email_address_outsending(name_server):# {{{
     """determine the outsending email address for given name_server
