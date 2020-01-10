@@ -689,6 +689,15 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
     runjob_errfile = "%s/%s"%(rstdir, "runjob.err")
     runjob_logfile = "%s/%s"%(rstdir, "runjob.log")
     finished_seq_file = "%s/finished_seqs.txt"%(outpath_result)
+    query_parafile = "%s/query.para.txt"%(rstdir)
+
+    query_para = {}
+    content = myfunc.ReadFile(query_parafile)
+    para_str = content
+    if content != "":
+        query_para = json.loads(content)
+    else:
+        query_para = {}
     tmpdir = "%s/tmpdir"%(rstdir)
     qdinittagfile = "%s/runjob.qdinit"%(rstdir)
     failedtagfile = "%s/%s"%(rstdir, "runjob.failed")
@@ -740,6 +749,7 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
             webcom.WriteDateTimeTagFile(failedtagfile, runjob_logfile, runjob_errfile)
             webcom.loginfo("Read query seq file failed. Zero sequence read in", runjob_errfile)
             return 1
+
         if g_params['DEBUG']:
             msg = "jobid = %s, isCacheProcessingFinished=%s, MAX_CACHE_PROCESS=%d"%(
                     jobid, str(isCacheProcessingFinished), g_params['MAX_CACHE_PROCESS'])
@@ -754,7 +764,6 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
                     lastprocessed_idx = int(myfunc.ReadFile(lastprocessed_cache_idx_file))
                 except:
                     lastprocessed_idx = -1
-
             cnt_processed_cache = 0
             for i in range(lastprocessed_idx+1, len(seqIDList)):
                 if i in finished_idx_set:
@@ -892,9 +901,7 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
 
                 isSubmitSuccess = False
                 if len(seq) > 0:
-                    query_para = {}
                     query_para['name_software'] = webcom.GetNameSoftware(name_server.lower(), queue_method)
-
                     para_str = json.dumps(query_para, sort_keys=True)
                     jobname = ""
                     if not email in g_params['vip_user_list']:
@@ -931,6 +938,7 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
                                 cnttry = 0  #reset cnttry to zero
                         else:
                             webcom.loginfo("bad wsdl return value", gen_errfile)
+
                 if isSubmitSuccess:
                     cnt += 1
                     myfunc.WriteFile(" succeeded\n", gen_logfile, "a", True)
@@ -941,7 +949,7 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
                     iToRun += 1
                     processedIndexSet.add(str(origIndex))
                     if g_params['DEBUG']:
-                        myfunc.WriteFile("DEBUG: jobid %s processedIndexSet.add(str(%d))\n"%(jobid, origIndex), gen_logfile, "a", True)
+                        webcom.loginfo("DEBUG: jobid %s processedIndexSet.add(str(%d))"%(jobid, origIndex), gen_logfile)
             # update cntSubmitJobDict for this node
             cntSubmitJobDict[node][0] = cnt
 
@@ -954,7 +962,7 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
         if not idx in processedIndexSet:
             newToRunIndexList.append(idx)
     if g_params['DEBUG']:
-        myfunc.WriteFile("DEBUG: jobid %s, newToRunIndexList="%(jobid) + " ".join( newToRunIndexList)+"\n", gen_logfile, "a", True)
+        webcom.loginfo("DEBUG: jobid %s, newToRunIndexList="%(jobid) + " ".join( newToRunIndexList), gen_logfile)
 
     if len(newToRunIndexList)>0:
         myfunc.WriteFile("\n".join(newToRunIndexList)+"\n", torun_idx_file, "w", True)
