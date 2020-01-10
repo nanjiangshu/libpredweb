@@ -1698,6 +1698,8 @@ def GetNameSoftware(name_server, queue_method):# {{{
             name_software = "singularity_pathopred"
     elif name_server == "scampi2":
         name_software = "scampi2-msa"
+    elif name_server == "pconsc3":
+        name_software = "pconsc3"
 
     return name_software
 # }}}
