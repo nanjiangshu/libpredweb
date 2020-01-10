@@ -692,12 +692,11 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
     query_parafile = "%s/query.para.txt"%(rstdir)
 
     query_para = {}
-    content = myfunc.ReadFile(query_parafile)
-    para_str = content
-    if content != "":
-        query_para = json.loads(content)
-    else:
-        query_para = {}
+    if os.path.exists(query_parafile):
+        content = myfunc.ReadFile(query_parafile)
+        para_str = content
+        if content != "":
+            query_para = json.loads(content)
     tmpdir = "%s/tmpdir"%(rstdir)
     qdinittagfile = "%s/runjob.qdinit"%(rstdir)
     failedtagfile = "%s/%s"%(rstdir, "runjob.failed")
@@ -1000,9 +999,10 @@ def GetResult(jobid, g_params):#{{{
     query_parafile = "%s/query.para.txt"%(rstdir)
 
     query_para = {}
-    content = myfunc.ReadFile(query_parafile)
-    if content != "":
-        query_para = json.loads(content)
+    if os.path.exists(query_parafile):
+        content = myfunc.ReadFile(query_parafile)
+        if content != "":
+            query_para = json.loads(content)
     failed_idx_file = "%s/failed_seqindex.txt"%(rstdir)
 
     starttagfile = "%s/%s"%(rstdir, "runjob.start")
