@@ -1055,7 +1055,7 @@ def GetResult(jobid, g_params):#{{{
             myfunc.WriteFile("\n".join(torun_idx_str_list)+"\n", torun_idx_file, "w", True)
 
             if g_params['DEBUG']:
-                myfunc.WriteFile("recreate torun_idx_file: jobid = %s, numseq=%d, len(completed_idx_set)=%d, len(torun_idx_str_list)=%d\n"%(jobid, numseq, len(completed_idx_set), len(torun_idx_str_list)), gen_logfile, "a", True)
+                webcom.loginfo("recreate torun_idx_file: jobid = %s, numseq=%d, len(completed_idx_set)=%d, len(torun_idx_str_list)=%d\n"%(jobid, numseq, len(completed_idx_set), len(torun_idx_str_list)), gen_logfile)
         else:
             myfunc.WriteFile("", torun_idx_file, "w", True)
 
@@ -1155,8 +1155,6 @@ def GetResult(jobid, g_params):#{{{
 
                         if os.path.exists(rst_this_seq) and not os.path.exists(outpath_this_seq):
                             cmd = ["mv","-f", rst_this_seq, outpath_this_seq]
-                            webcom.RunCmd(cmd, runjob_logfile, runjob_errfile)
-                            if webcom.IsCheckPredictionPassed(outpath_this_seq, name_server):
                                 isSuccess = True
 
                             if isSuccess:
@@ -1354,6 +1352,9 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
         # Now write the text output to a single file
         statfile = "%s/%s"%(outpath_result, "stat.txt")
         resultfile_text = "%s/%s"%(outpath_result, "query.result.txt")
+        if name_server.lower() == 'pconsc3':
+            resultfile_text = "%s/%s"%(outpath_result, "query.pconsc3.txt")
+
         (seqIDList, seqAnnoList, seqList) = myfunc.ReadFasta(seqfile)
         maplist = []
         for i in range(len(seqIDList)):

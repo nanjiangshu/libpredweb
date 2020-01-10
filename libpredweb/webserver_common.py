@@ -839,11 +839,13 @@ def IsCheckPredictionPassed(outpath_this_seq, name_server):# {{{
     """Check if the prediction is complete
     """
     name_server = name_server.lower()
-    if name_server in ["subcons", "boctopus2"]:
+    if name_server in ["subcons", "boctopus2", "pconsc3"]:
         if name_server == "subcons":
             checkfile = "%s/plot/query_0.png"%(outpath_this_seq)
         elif name_server == "boctopus2":
             checkfile = "%s/query.predict.png"%(outpath_this_seq)
+        elif name_server == "pconsc3":
+            checkfile = "%s/query.fa.hhE0.pconsc3.out"%(outpath_this_seq)
         if not os.path.exists(checkfile):
             return False
     return True
@@ -1118,14 +1120,17 @@ def InsertFinishDateToDB(date_str, md5_key, seq, outdb):# {{{
 
 def GetInfoFinish(name_server, outpath_this_seq, origIndex, seqLength, seqAnno, source_result="", runtime=0.0):# {{{
     """Get the list info_finish for finished prediction"""
-    if name_server.lower() == "topcons2":
+    name_server = name_server.lower()
+    if name_server == "topcons2":
         return GetInfoFinish_TOPCONS2(outpath_this_seq, origIndex, seqLength, seqAnno, source_result, runtime)
-    elif name_server.lower() == "boctopus2":
+    elif name_server == "boctopus2":
         return GetInfoFinish_Boctopus2(outpath_this_seq, origIndex, seqLength, seqAnno, source_result, runtime)
-    elif name_server.lower() == "subcons":
+    elif name_server == "subcons":
         return GetInfoFinish_Subcons(outpath_this_seq, origIndex, seqLength, seqAnno, source_result, runtime)
-    elif name_server.lower() == "prodres":
+    elif name_server == "prodres":
         return GetInfoFinish_PRODRES(outpath_this_seq, origIndex, seqLength, seqAnno, source_result, runtime)
+    elif name_server == "pconsc3":
+        return GetInfoFinish_PconsC3(outpath_this_seq, origIndex, seqLength, seqAnno, source_result, runtime)
     else:
         return []
 # }}}
@@ -1165,6 +1170,15 @@ def GetInfoFinish_TOPCONS2(outpath_this_seq, origIndex, seqLength, seqAnno, sour
 # }}}
 def GetInfoFinish_PRODRES(outpath_this_seq, origIndex, seqLength, seqAnno, source_result="", runtime=0.0):# {{{
     """Get the list info_finish for the method PRODRES"""
+    date_str = time.strftime(FORMAT_DATETIME)
+    info_finish = [ "seq_%d"%origIndex,
+            str(seqLength), str(None),
+            str(None), source_result, str(runtime),
+            seqAnno.replace('\t', ' '), date_str]
+    return info_finish
+# }}}
+def GetInfoFinish_PconsC3(outpath_this_seq, origIndex, seqLength, seqAnno, source_result="", runtime=0.0):# {{{
+    """Get the list info_finish for the method PconsC3"""
     date_str = time.strftime(FORMAT_DATETIME)
     info_finish = [ "seq_%d"%origIndex,
             str(seqLength), str(None),
@@ -1432,6 +1446,8 @@ def CleanJobFolder(rstdir, name_server):# {{{
         CleanJobFolder_Subcons(rstdir)
     elif name_server == "prodres":
         CleanJobFolder_PRODRES(rstdir)
+    elif name_server == "pconsc3":
+        CleanJobFolder_PconsC3(rstdir)
 # }}}
 
 def CleanJobFolder_Boctopus2(rstdir):# {{{
@@ -1488,6 +1504,19 @@ def CleanJobFolder_Subcons(rstdir):# {{{
 # }}}
 def CleanJobFolder_PRODRES(rstdir):# {{{
     """Clean the jobfolder for PRODRES after finishing"""
+    flist =[
+            "%s/remotequeue_seqindex.txt"%(rstdir),
+            "%s/torun_seqindex.txt"%(rstdir)
+            ]
+    for f in flist:
+        if os.path.exists(f):
+            try:
+                os.remove(f)
+            except:
+                pass
+# }}}
+def CleanJobFolder_PconsC3(rstdir):# {{{
+    """Clean the jobfolder for PconsC3 after finishing"""
     flist =[
             "%s/remotequeue_seqindex.txt"%(rstdir),
             "%s/torun_seqindex.txt"%(rstdir)
@@ -1635,6 +1664,8 @@ def get_default_server_url(name_server):# {{{
         return "http://boctopus.bioinfo.se"
     elif name_server == "proq3":
         return "http://proq3.bioinfo.se"
+    elif name_server == "pconsc3":
+        return "http://pconsc3.bioinfo.se"
     elif name_server == "predzinc":
         return "http://predzinc.bioshu.se"
     elif name_server == "frag1d":
