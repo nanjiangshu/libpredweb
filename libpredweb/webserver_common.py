@@ -835,7 +835,19 @@ def GetRunTimeFromTimeFile(timefile, keyword=""):# {{{
     return runtime
 # }}}
 
-
+def IsCheckPredictionPassed(outpath_this_seq, name_server):# {{{
+    """Check if the prediction is complete
+    """
+    name_server = name_server.lower()
+    if name_server in ["subcons", "boctopus2"]
+        if name_server == "subcons":
+            checkfile = "%s/plot/query_0.png"%(outpath_this_seq)
+        elif name_server == "boctopus2":
+            checkfile = "%s/query.predict.png"%(outpath_this_seq)
+        if not os.path.exists(checkfile):
+            return False
+    return True
+# }}}
 def ValidateParameter_PRODRES(query_para):#{{{
     """Validate the input parameters for PRODRES
     query_para is a dictionary

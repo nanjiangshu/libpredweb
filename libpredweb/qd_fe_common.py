@@ -997,6 +997,12 @@ def GetResult(jobid, g_params):#{{{
 
     torun_idx_file = "%s/torun_seqindex.txt"%(rstdir) # ordered seq index to run
     finished_idx_file = "%s/finished_seqindex.txt"%(rstdir)
+    query_parafile = "%s/query.para.txt"%(rstdir)
+
+    query_para = {}
+    content = myfunc.ReadFile(query_parafile)
+    if content != "":
+        query_para = json.loads(content)
     failed_idx_file = "%s/failed_seqindex.txt"%(rstdir)
 
     starttagfile = "%s/%s"%(rstdir, "runjob.start")
@@ -1108,7 +1114,7 @@ def GetResult(jobid, g_params):#{{{
         try:
             rtValue = myclient.service.checkjob(remote_jobid)
         except:
-            webcom.loginfo("Failed to run myclient.service.checkjob(%s)"%(remote_jobid), gen_errfile)
+            webcom.loginfo("Failed to run myclient.service.checkjob(%s) for job %s"%(remote_jobid, jobid), gen_errfile)
             rtValue = []
             pass
         isSuccess = False
@@ -1150,8 +1156,7 @@ def GetResult(jobid, g_params):#{{{
                         if os.path.exists(rst_this_seq) and not os.path.exists(outpath_this_seq):
                             cmd = ["mv","-f", rst_this_seq, outpath_this_seq]
                             webcom.RunCmd(cmd, runjob_logfile, runjob_errfile)
-                            checkfile = "%s/plot/query_0.png"%(outpath_this_seq)
-                            if os.path.exists(checkfile):
+                            if webcom.IsCheckPredictionPassed(outpath_this_seq, name_server):
                                 isSuccess = True
 
                             if isSuccess:
@@ -1184,7 +1189,10 @@ def GetResult(jobid, g_params):#{{{
                                 shutil.rmtree("%s/%s"%(tmpdir, remote_jobid))
 
                                 # create or update the md5 cache
-                                md5_key = hashlib.md5(seq.encode('utf-8')).hexdigest()
+                                if name_server.lower() == "prodres" and query_para != {}:
+                                    md5_key = hashlib.md5((seq+str(query_para)).encode('utf-8')).hexdigest()
+                                else:
+                                    md5_key = hashlib.md5(seq.encode('utf-8')).hexdigest()
                                 subfoldername = md5_key[:2]
                                 md5_subfolder = "%s/%s"%(path_cache, subfoldername)
                                 cachedir = "%s/%s/%s"%(path_cache, subfoldername, md5_key)
@@ -1226,7 +1234,7 @@ def GetResult(jobid, g_params):#{{{
             runtime1 = time_now - submit_time_epoch #in seconds
             timefile = "%s/time.txt"%(outpath_this_seq)
             runtime = webcom.ReadRuntimeFromFile(timefile, default_runtime=runtime1)
-            info_finish = webcom.GetInfoFinish_Subcons(outpath_this_seq,
+            info_finish = webcom.GetInfoFinish(name_server, outpath_this_seq,
                     origIndex, len(seq), description,
                     source_result="newrun", runtime=runtime)
             finished_info_list.append("\t".join(info_finish))
