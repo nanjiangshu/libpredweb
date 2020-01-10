@@ -839,7 +839,7 @@ def IsCheckPredictionPassed(outpath_this_seq, name_server):# {{{
     """Check if the prediction is complete
     """
     name_server = name_server.lower()
-    if name_server in ["subcons", "boctopus2"]
+    if name_server in ["subcons", "boctopus2"]:
         if name_server == "subcons":
             checkfile = "%s/plot/query_0.png"%(outpath_this_seq)
         elif name_server == "boctopus2":
