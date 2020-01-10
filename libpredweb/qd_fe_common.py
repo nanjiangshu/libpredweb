@@ -750,7 +750,7 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
             webcom.loginfo("Read query seq file failed. Zero sequence read in", runjob_errfile)
             return 1
 
-        if g_params['DEBUG']:
+        if 'DEBUG' in g_params and g_params['DEBUG']:
             msg = "jobid = %s, isCacheProcessingFinished=%s, MAX_CACHE_PROCESS=%d"%(
                     jobid, str(isCacheProcessingFinished), g_params['MAX_CACHE_PROCESS'])
             webcom.loginfo(msg, gen_logfile)
@@ -877,9 +877,9 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
                     iToRun += 1
                     continue
 
-                if g_params['DEBUG']:
-                    myfunc.WriteFile("DEBUG: cnt (%d) < maxnum (%d) "\
-                            "and iToRun(%d) < numToRun(%d)"%(cnt, maxnum, iToRun, numToRun), gen_logfile, "a", True)
+                if 'DEBUG' in g_params and g_params['DEBUG']:
+                    webcom.loginfo("DEBUG: cnt (%d) < maxnum (%d) "\
+                            "and iToRun(%d) < numToRun(%d)"%(cnt, maxnum, iToRun, numToRun), gen_logfile)
                 fastaseq = ""
                 seqid = ""
                 seqanno = ""
@@ -948,7 +948,7 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
                 if isSubmitSuccess or cnttry >= g_params['MAX_SUBMIT_TRY']:
                     iToRun += 1
                     processedIndexSet.add(str(origIndex))
-                    if g_params['DEBUG']:
+                    if 'DEBUG' in g_params and g_params['DEBUG']:
                         webcom.loginfo("DEBUG: jobid %s processedIndexSet.add(str(%d))"%(jobid, origIndex), gen_logfile)
             # update cntSubmitJobDict for this node
             cntSubmitJobDict[node][0] = cnt
@@ -961,7 +961,7 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
     for idx in toRunIndexList:
         if not idx in processedIndexSet:
             newToRunIndexList.append(idx)
-    if g_params['DEBUG']:
+    if 'DEBUG' in g_params and g_params['DEBUG']:
         webcom.loginfo("DEBUG: jobid %s, newToRunIndexList="%(jobid) + " ".join( newToRunIndexList), gen_logfile)
 
     if len(newToRunIndexList)>0:
@@ -1054,7 +1054,7 @@ def GetResult(jobid, g_params):#{{{
                     pass
             myfunc.WriteFile("\n".join(torun_idx_str_list)+"\n", torun_idx_file, "w", True)
 
-            if g_params['DEBUG']:
+            if 'DEBUG' in g_params and g_params['DEBUG']:
                 webcom.loginfo("recreate torun_idx_file: jobid = %s, numseq=%d, len(completed_idx_set)=%d, len(torun_idx_str_list)=%d\n"%(jobid, numseq, len(completed_idx_set), len(torun_idx_str_list)), gen_logfile)
         else:
             myfunc.WriteFile("", torun_idx_file, "w", True)
@@ -1091,7 +1091,7 @@ def GetResult(jobid, g_params):#{{{
     for i in range(len(lines)):#{{{
         line = lines[i]
 
-        if g_params['DEBUG']:
+        if 'DEBUG' in g_params and g_params['DEBUG']:
             myfunc.WriteFile("Process %s\n"%(line), gen_logfile, "a", True)
         if not line or line[0] == "#":
             continue
@@ -1225,9 +1225,6 @@ def GetResult(jobid, g_params):#{{{
                     isFinish_remote = True
                 if status != "Wait" and not os.path.exists(starttagfile):
                     webcom.WriteDateTimeTagFile(starttagfile, runjob_logfile, runjob_errfile)
-
-                if g_params['DEBUG_CACHE']:
-                    myfunc.WriteFile("\n", gen_logfile, "a", True)
 
         if isSuccess:#{{{
             time_now = time.time()
