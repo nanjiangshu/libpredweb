@@ -466,7 +466,6 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
 
             # single-sequence job submitted from the web-page will be
             # submmitted by suq
-            UPPER_WAIT_TIME_IN_SEC = 60
             isValidSubmitDate = True
             try:
                 submit_date = webcom.datetime_str_to_time(submit_date_str)
@@ -478,7 +477,7 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
                 timeDiff = current_time - submit_date
                 queuetime_in_sec = timeDiff.seconds
             else:
-                queuetime_in_sec = UPPER_WAIT_TIME_IN_SEC + 1
+                queuetime_in_sec = g_params['UPPER_WAIT_TIME_IN_SEC'] + 1
 
             #if numseq > 1 or method_submission == "wsdl" or queuetime_in_sec > UPPER_WAIT_TIME_IN_SEC:
             # note that all jobs are handled by the qd
@@ -528,18 +527,6 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
         else:
             myfunc.WriteFile("", divide_finishedjoblogfile, "w", True)
 
-# update all_submitted jobs
-    allsubmitjoblogfile = "%s/all_submitted_seq.log"%(path_log)
-    allsubmitted_jobid_set = set(myfunc.ReadIDList2(allsubmitjoblogfile, col=1, delim="\t"))
-    li_str = []
-    for li in new_submitted_list:
-        jobid = li[0]
-        if not jobid in allsubmitted_jobid_set:
-            li_str.append(li[1])
-    if len(li_str)>0:
-        myfunc.WriteFile("\n".join(li_str)+"\n", allsubmitjoblogfile, "a", True)
-
-
 # update allfinished jobs
     allfinishedjoblogfile = "%s/all_finished_job.log"%(path_log)
     allfinished_jobid_set = set(myfunc.ReadIDList2(allfinishedjoblogfile, col=0, delim="\t"))
@@ -551,6 +538,17 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
             li_str.append("\t".join(li))
     if len(li_str)>0:
         myfunc.WriteFile("\n".join(li_str)+"\n", allfinishedjoblogfile, "a", True)
+
+# update all_submitted jobs
+    allsubmitjoblogfile = "%s/all_submitted_seq.log"%(path_log)
+    allsubmitted_jobid_set = set(myfunc.ReadIDList2(allsubmitjoblogfile, col=1, delim="\t"))
+    li_str = []
+    for li in new_submitted_list:
+        jobid = li[0]
+        if not jobid in allsubmitted_jobid_set:
+            li_str.append(li[1])
+    if len(li_str)>0:
+        myfunc.WriteFile("\n".join(li_str)+"\n", allsubmitjoblogfile, "a", True)
 
 # write logs of running and queuing jobs
 # the queuing jobs are sorted in descending order by the suq priority
