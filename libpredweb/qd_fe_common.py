@@ -1349,9 +1349,7 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
         if base_www_url == "":
             base_www_url = webcom.get_default_server_url(name_server.lower())
 
-        date_str = time.strftime(g_params['FORMAT_DATETIME'])
         date_str_epoch = time.time()
-        myfunc.WriteFile(date_str, finishtagfile, "w", True)
 
         # Now write the text output to a single file
         statfile = "%s/%s"%(outpath_result, "stat.txt")
@@ -1377,6 +1375,8 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
 
         if len(failed_idx_list)>0:
             myfunc.WriteFile(date_str, failedtagfile, "w", True)
+
+        webcom.WriteDateTimeTagFile(finishtagfile, runjob_logfile, runjob_errfile)
 
         if finish_status == "success":
             shutil.rmtree(tmpdir)
