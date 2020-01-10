@@ -1155,6 +1155,8 @@ def GetResult(jobid, g_params):#{{{
 
                         if os.path.exists(rst_this_seq) and not os.path.exists(outpath_this_seq):
                             cmd = ["mv","-f", rst_this_seq, outpath_this_seq]
+                            webcom.RunCmd(cmd, runjob_logfile, runjob_errfile)
+                            if webcom.IsCheckPredictionPassed(outpath_this_seq, name_server):
                                 isSuccess = True
 
                             if isSuccess:
