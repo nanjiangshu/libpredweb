@@ -916,6 +916,8 @@ def ValidateQuery(request, query, g_params):#{{{
         query['rawseq'] = content.decode('utf-8')
 
     query['filtered_seq'] = ValidateSeq(query['rawseq'], query, g_params)
+    if 'variants' in query:
+        query['filtered_variants'] = ValidateVariants(query['variants'], query, g_params)
     is_valid = query['isValidSeq']
     return is_valid
 #}}}
@@ -1090,6 +1092,50 @@ def ValidateSeq(rawseq, seqinfo, g_params):#{{{
 
     seqinfo['errinfo'] = seqinfo['errinfo_br'] + seqinfo['errinfo_content']
     return filtered_seq
+#}}}
+def ValidateVariants(rawvariants, seqinfo, g_params):#{{{
+    # rawvariants is raw input from variants form
+    # seqinfo is a dictionary
+    # return (variants if valid)
+    rawvariants = re.sub(r'[^\x00-\x7f]',r' ',rawvariants) # remove non-ASCII characters
+    rawvariants = re.sub(r'[\x0b]',r' ',rawvariants) # filter invalid characters for XML
+    filtered_variants = ""
+
+    # initialization
+    for item in ['errinfo_br', 'errinfo', 'errinfo_content', 'warninfo']:
+        if item not in seqinfo:
+            seqinfo[item] = ""
+
+    seqinfo['isValidVariants'] = True
+    valid_aa = "ABCDEFGHIKLMNPQRSTUVWYZX"
+    li_err_info = []
+
+    # identifiers, starting with >, can keep any name
+    # we want to filter any variants not on the format AA,position,AA
+    for var_line in rawvariants.split('\n'):
+        stripped_line = re.sub("[\s\n\r\t]", '', var_line)
+        if not stripped_line.startswith('>'):
+            ref_aa = stripped_line[0].upper()
+            alt_aa = stripped_line[-1].upper()
+            position = stripped_line[1:-1]
+            if not ref_aa in valid_aa:
+                msg = "Bad letter for reference amino acid in variant %s (letter: '%s')"%(stripped_line, ref_aa)
+                li_err_info.append(msg)
+            if not alt_aa in valid_aa:
+                msg = "Bad letter for altered amino acid in variant %s (letter: '%s')"%(stripped_line, alt_aa)
+                li_err_info.append(msg)
+            if not position.isdigit():
+                msg = "Bad position value in variant %s (position: '%s')"%(stripped_line, position)
+                li_err_info.append(msg)
+
+    if len(li_err_info) > 0:
+        seqinfo['errinfo_content'] += "\n".join(li_err_info) + "\n"
+        seqinfo['isValidVariants'] = False
+    else:
+        filtered_variants = rawvariants
+
+    seqinfo['errinfo'] = seqinfo['errinfo_br'] + seqinfo['errinfo_content']
+    return filtered_variants
 #}}}
 def InsertFinishDateToDB(date_str, md5_key, seq, outdb):# {{{
     """ Insert the finish date to the sqlite3 database
