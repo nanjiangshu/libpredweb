@@ -1146,10 +1146,11 @@ def GetResult(jobid, g_params):#{{{
                     if os.path.exists(outfile_zip) and isRetrieveSuccess:
                         cmd = ["unzip", outfile_zip, "-d", tmpdir]
                         webcom.RunCmd(cmd, runjob_logfile, runjob_errfile)
+                        rst_fetched = os.path.join(tmpdir, remote_jobid)
                         if name_server.lower() == 'pconsc3':
-                            rst_this_seq = "%s/%s"%(tmpdir, remote_jobid)
+                            rst_this_seq = rst_fetched
                         else:
-                            rst_this_seq = "%s/%s/seq_0"%(tmpdir, remote_jobid)
+                            rst_this_seq = os.path.join(rst_fetched, "seq_0")
 
                         if os.path.islink(outpath_this_seq):
                             os.unlink(outpath_this_seq)
@@ -1188,8 +1189,10 @@ def GetResult(jobid, g_params):#{{{
 
                                 # delete the downloaded temporary zip file and
                                 # extracted file
-                                os.remove(outfile_zip)
-                                shutil.rmtree("%s/%s"%(tmpdir, remote_jobid))
+                                if os.path.exists(outfile_zip):
+                                    os.remove(outfile_zip)
+                                if os.path.exists(rst_fetched):
+                                    shutil.rmtree(rst_fetched)
 
                                 # create or update the md5 cache
                                 if name_server.lower() == "prodres" and query_para != {}:
