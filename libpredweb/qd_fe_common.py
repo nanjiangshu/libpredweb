@@ -706,6 +706,7 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
     split_seq_dir = "%s/splitaa"%(tmpdir)
     forceruntagfile = "%s/forcerun"%(rstdir)
     lastprocessed_cache_idx_file = "%s/lastprocessed_cache_idx.txt"%(rstdir)
+    variant_file = "%s/variants.fa"%(rstdir)
 
     if os.path.exists(forceruntagfile):
         isForceRun = True
@@ -901,6 +902,12 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
                 isSubmitSuccess = False
                 if len(seq) > 0:
                     query_para['name_software'] = webcom.GetNameSoftware(name_server.lower(), queue_method)
+                    if name_server.lower() == "pathopred":
+                        variant_text = myfunc.ReadFile(variant_file)
+                        query_para['variants'] = variant_text
+                        #also include the identifier name as a query parameter
+                        query_para['identifier_name'] = seqid
+
                     para_str = json.dumps(query_para, sort_keys=True)
                     jobname = ""
                     if not email in g_params['vip_user_list']:

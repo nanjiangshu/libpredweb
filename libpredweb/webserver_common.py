@@ -1666,6 +1666,8 @@ def get_default_server_url(name_server):# {{{
         return "http://proq3.bioinfo.se"
     elif name_server == "pconsc3":
         return "http://pconsc3.bioinfo.se"
+    elif name_server == "pathopred":
+        return "http://pathopred.bioinfo.se"
     elif name_server == "predzinc":
         return "http://predzinc.bioshu.se"
     elif name_server == "frag1d":
