@@ -1146,7 +1146,10 @@ def GetResult(jobid, g_params):#{{{
                     if os.path.exists(outfile_zip) and isRetrieveSuccess:
                         cmd = ["unzip", outfile_zip, "-d", tmpdir]
                         webcom.RunCmd(cmd, runjob_logfile, runjob_errfile)
-                        rst_this_seq = "%s/%s/seq_0"%(tmpdir, remote_jobid)
+                        if name_server.lower() == 'pconsc3':
+                            rst_this_seq = "%s/%s"%(tmpdir, remote_jobid)
+                        else:
+                            rst_this_seq = "%s/%s/seq_0"%(tmpdir, remote_jobid)
 
                         if os.path.islink(outpath_this_seq):
                             os.unlink(outpath_this_seq)
