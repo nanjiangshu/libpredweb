@@ -846,6 +846,8 @@ def IsCheckPredictionPassed(outpath_this_seq, name_server):# {{{
             checkfile = "%s/query.predict.png"%(outpath_this_seq)
         elif name_server == "pconsc3":
             checkfile = "%s/query.fa.hhE0.pconsc3.out"%(outpath_this_seq)
+        elif name_server == "pathopred":
+            checkfile = "%s/output_predictions"%(outpath_this_seq)
         if not os.path.exists(checkfile):
             return False
     return True
