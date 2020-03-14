@@ -369,7 +369,11 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):#{{{
             #if os.path.basename(outfile).find('day') == -1:
             # extends date time series for missing dates
             freq = dataprocess.date_range_frequency(os.path.basename(outfile))
-            dataprocess.extend_data(outfile, value_columns=['numjob', 'numseq'], freq=freq, outfile=outfile)
+            try:
+                dataprocess.extend_data(outfile, value_columns=['numjob', 'numseq'], freq=freq, outfile=outfile)
+            except Exception as e:
+                webcom.loginfo("Failed to extend data for the file '%s' with error message: '%s'"%(outfile, str(e)), gen_errfile)
+                pass
             cmd = ["%s/plot_numsubmit.sh"%(binpath_plotscript), outfile]
             webcom.RunCmd(cmd, gen_logfile, gen_errfile)
 
