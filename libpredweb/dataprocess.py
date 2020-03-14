@@ -9,9 +9,12 @@ def extend_time_series_data(data, date_column, v_column, value_columns, freq):# 
         data[colname] = pd.to_numeric(data[colname])
     date_range = [pd.date_range(date_first, date_last, freq=freq), data[v_column].unique()]
     mux = pd.MultiIndex.from_product(date_range, names=[date_column, v_column])
-    result = data.set_index([date_column, v_column]).reindex(mux, fill_value=0).reset_index()
-    result = result[['Date'] + value_columns]
-    return result
+    try:
+        result = data.set_index([date_column, v_column]).reindex(mux, fill_value=0).reset_index()
+        result = result[['Date'] + value_columns]
+        return result
+    except:
+        return data[['Date'] + value_columns]
 # }}}
 def extend_data(datafile, value_columns, freq, outfile):# {{{
     """Fill zero values for missing dates, write the TSV data to the outfile
