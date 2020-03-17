@@ -1687,6 +1687,7 @@ def ReadRuntimeFromFile(timefile, default_runtime=0.0):# {{{
 def ArchiveLogFile(path_log, threshold_logfilesize=20*1024*1024):# {{{
     """Archive some of the log files if they are too big"""
     gen_logfile = "%s/qd_fe.log"%(path_log)
+    loginfo("Running ArchiveLogFile", gen_logfile)
     gen_errfile = "%s/qd_fe.err"%(path_log)
     flist = [gen_logfile, gen_errfile,
             "%s/restart_qd_fe.cgi.log"%(path_log),
