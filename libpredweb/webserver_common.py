@@ -1684,10 +1684,11 @@ def ReadRuntimeFromFile(timefile, default_runtime=0.0):# {{{
         runtime = default_runtime
     return runtime
 # }}}
-def ArchiveLogFile(path_log, threshold_logfilesize=20*1024*1024):# {{{
+def ArchiveLogFile(path_log, threshold_logfilesize=20*1024*1024, g_params={}):# {{{
     """Archive some of the log files if they are too big"""
     gen_logfile = "%s/qd_fe.log"%(path_log)
-    loginfo("Running ArchiveLogFile", gen_logfile)
+    if 'DEBUG_ARCHIVE' in g_params and g_params['DEBUG_ARCHIVE']:
+        loginfo("Entering ArchiveLogFile", gen_logfile)
     gen_errfile = "%s/qd_fe.err"%(path_log)
     flist = [gen_logfile, gen_errfile,
             "%s/restart_qd_fe.cgi.log"%(path_log),
@@ -1697,9 +1698,12 @@ def ArchiveLogFile(path_log, threshold_logfilesize=20*1024*1024):# {{{
 
     for f in flist:
         if os.path.exists(f):
-            filesize = os.path.getsize(f)
-            if filesize > threshold_logfilesize:
-                loginfo("filesize(%s) = %d > %d, archive it"%(f, filesize, threshold_logfilesize), gen_logfile)
+            if 'DEBUG_ARCHIVE' in g_params and g_params['DEBUG_ARCHIVE']:
+                filesize = os.path.getsize(f)
+                if filesize > threshold_logfilesize:
+                    loginfo("filesize(%s) = %d > %d, archive it"%(f, filesize, threshold_logfilesize), gen_logfile)
+                else:
+                    loginfo("filesize(%s) = %d, threshold_logfilesize=%d"%(f, filesize, threshold_logfilesize), gen_logfile)
             myfunc.ArchiveFile(f, threshold_logfilesize)
 # }}}
 
