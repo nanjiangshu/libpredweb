@@ -1696,7 +1696,7 @@ def ArchiveLogFile(path_log, threshold_logfilesize=20*1024*1024):# {{{
 
     for f in flist:
         if os.path.exists(f):
-            filesize = os.path.getsize(filename)
+            filesize = os.path.getsize(f)
             if filesize > threshold_logfilesize:
                 loginfo("filesize(%s) = %d > %d, archive it"%(f, filesize, threshold_logfilesize), gen_logfile)
             myfunc.ArchiveFile(f, threshold_logfilesize)
