@@ -1622,9 +1622,8 @@ def loginfo(msg, outfile):# {{{
 def CleanServerFile(path_static, logfile, errfile):#{{{
     """Clean old files on the server"""
 # clean tmp files
-    msg = "CleanServerFile..."
-    date_str = time.strftime(FORMAT_DATETIME)
-    myfunc.WriteFile("[%s] %s\n"%(date_str, msg), logfile, "a", True)
+    msg = "CleanServerFile, path_static=%s"%(path_static)
+    loginfo(msg, logfile)
     cmd = ["clean_server_file.sh", path_static]
     RunCmd(cmd, logfile, errfile)
 #}}}
