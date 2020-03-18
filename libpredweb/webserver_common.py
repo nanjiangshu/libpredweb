@@ -1775,7 +1775,7 @@ def get_email_address_outsending(name_server):# {{{
     elif name_server == "proq3":
         return "no-reply.PROQ3@bioinfo.se"
     elif name_server == "prodres":
-        return "no-reply.PROSRES@bioinfo.se"
+        return "no-reply.PRODRES@bioinfo.se"
     elif name_server == "pconsc3":
         return "no-reply.PCONSC3@bioinfo.se"
 # }}}
