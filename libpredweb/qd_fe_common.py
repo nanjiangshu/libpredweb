@@ -1158,8 +1158,11 @@ def GetResult(jobid, g_params):#{{{
                         cmd = ["unzip", outfile_zip, "-d", tmpdir]
                         webcom.RunCmd(cmd, runjob_logfile, runjob_errfile)
                         rst_fetched = os.path.join(tmpdir, remote_jobid)
-                        if name_server.lower() == 'pconsc3':
+                        if name_server.lower() == "pconsc3":
                             rst_this_seq = rst_fetched
+                        elif name_server.lower() == "boctopus2":
+                            rst_this_seq =  os.path.join(rst_fetched, "seq_0", "seq_0")
+                            rst_this_seq_parent =  os.path.join(rst_fetched, "seq_0")
                         else:
                             rst_this_seq = os.path.join(rst_fetched, "seq_0")
 
@@ -1171,6 +1174,17 @@ def GetResult(jobid, g_params):#{{{
                         if os.path.exists(rst_this_seq) and not os.path.exists(outpath_this_seq):
                             cmd = ["mv","-f", rst_this_seq, outpath_this_seq]
                             webcom.RunCmd(cmd, runjob_logfile, runjob_errfile)
+                            if name_server.lower() == "boctopus2":
+                                # move also seq.fa and time.txt for boctopus2
+                                file1 = os.path.join(rst_this_seq_parent, "seq.fa")
+                                file2 = os.path.join(rst_this_seq_parent, "time.txt")
+                                for f in [file1, file2]:
+                                    if os.path.exists(f):
+                                        try:
+                                            shutil.move(f, outpath_this_seq)
+                                        except:
+                                            pass
+
                             if webcom.IsCheckPredictionPassed(outpath_this_seq, name_server):
                                 isSuccess = True
 
