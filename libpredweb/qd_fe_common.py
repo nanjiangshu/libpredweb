@@ -1383,7 +1383,9 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
         statfile = "%s/%s"%(outpath_result, "stat.txt")
         resultfile_text = "%s/%s"%(outpath_result, "query.result.txt")
         if name_server.lower() == 'pconsc3':
-            resultfile_text = "%s/%s"%(outpath_result, "query.pconsc3.txt")
+            resultfile_text = os.path.join(outpath_result, "query.pconsc3.txt")
+        elif name_server.lower() == "boctopus2":
+            resultfile_text = os.path.join(outpath_result, "query.top")
 
         (seqIDList, seqAnnoList, seqList) = myfunc.ReadFasta(seqfile)
         maplist = []
