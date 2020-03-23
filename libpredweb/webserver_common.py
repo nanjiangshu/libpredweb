@@ -2491,7 +2491,7 @@ def get_serverstatus(request, g_params):#{{{
     uniq_iplist = list(set(iplist))
 
     countjob_by_country = "%s/countjob_by_country.txt"%(path_stat)
-    lines = myfunc.ReadFile(countjob_by_country).split("\n")
+    lines = myfunc.ReadFile(countjob_by_country, mode='r', encoding='utf-8').split("\n")
     li_countjob_country = []
     countrylist = []
     for line in lines: 
