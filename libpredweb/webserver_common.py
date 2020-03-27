@@ -761,9 +761,11 @@ def datetime_str_to_time(date_str):# {{{
     The string of date_time may with or without the zone info
     """
     strs = date_str.split()
-    dt = dtparser.parse(date_str)
     if len(strs) == 2:
-        dt = dt.replace(tzinfo=timezone('UTC'))
+        date_str += " UTC"
+    if len(strs) == 3 and strs[2] == "U":
+        date_str = date_str.replace("U", "UTC")
+    dt = dtparser.parse(date_str)
     return dt
 # }}}
 def IsFrontEndNode(base_www_url):#{{{
