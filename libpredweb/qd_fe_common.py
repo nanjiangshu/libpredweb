@@ -587,8 +587,8 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
                 (seqidlist, seqannolist, seqlist) = myfunc.ReadFasta(queryfile)
                 try:
                     dirlist = os.listdir(outpath_result)
-                except:
-                    webcom.loginfo("Failed to os.listdir(%s)"%(outpath_result), gen_errfile)
+                except Exception as e:
+                    webcom.loginfo("Failed to os.listdir(%s) with errmsg=%s"%(outpath_result, str(e)), gen_logfile)
                 for dd in dirlist:
                     if dd.find("seq_") == 0:
                         origIndex_str = dd.split("_")[1]
@@ -866,7 +866,7 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
             try:
                 myclient = Client(wsdl_url, cache=None, timeout=30)
             except:
-                webcom.loginfo("Failed to access %s"%(wsdl_url), gen_errfile)
+                webcom.loginfo("Failed to access %s"%(wsdl_url), gen_logfile)
                 break
 
             [cnt, maxnum, queue_method] = cntSubmitJobDict[node]
@@ -923,8 +923,8 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
                                 gen_logfile, "a", True)
                         rtValue = myclient.service.submitjob_remote(fastaseq, para_str,
                                 jobname, useemail, str(numseq_this_user), isForceRun)
-                    except:
-                        webcom.loginfo("Failed to run myclient.service.submitjob_remote", gen_errfile)
+                    except Exception as e:
+                        webcom.loginfo("Failed to run myclient.service.submitjob_remote with errmsg=%s"%(str(e)), gen_logfile)
                         rtValue = []
                         pass
 
@@ -947,7 +947,7 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
                                 submitted_loginfo_list.append(txt)
                                 cnttry = 0  #reset cnttry to zero
                         else:
-                            webcom.loginfo("bad wsdl return value", gen_errfile)
+                            webcom.loginfo("bad wsdl return value", gen_logfile)
 
                 if isSubmitSuccess:
                     cnt += 1
@@ -1095,7 +1095,7 @@ def GetResult(jobid, g_params):#{{{
             myclient = Client(wsdl_url, cache=None, timeout=30)
             myclientDict[node] = myclient
         except:
-            webcom.loginfo("Failed to access %s"%(wsdl_url), gen_errfile)
+            webcom.loginfo("Failed to access %s"%(wsdl_url), gen_logfile)
             pass
 
 
@@ -1126,7 +1126,7 @@ def GetResult(jobid, g_params):#{{{
         try:
             rtValue = myclient.service.checkjob(remote_jobid)
         except:
-            webcom.loginfo("Failed to run myclient.service.checkjob(%s) for job %s"%(remote_jobid, jobid), gen_errfile)
+            webcom.loginfo("Failed to run myclient.service.checkjob(%s) for job %s"%(remote_jobid, jobid), gen_logfile)
             rtValue = []
             pass
         isSuccess = False
@@ -1195,7 +1195,7 @@ def GetResult(jobid, g_params):#{{{
                                 try:
                                     rtValue2 = myclient.service.deletejob(remote_jobid)
                                 except:
-                                    webcom.loginfo("Failed to run myclient.service.deletejob(%s)"%(remote_jobid), gen_errfile)
+                                    webcom.loginfo("Failed to run myclient.service.deletejob(%s)"%(remote_jobid), gen_logfile)
                                     rtValue2 = []
                                     pass
 
