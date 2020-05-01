@@ -24,3 +24,12 @@ if __name__ == '__main__':
         seq = myfunc.PDB2Seq(pdbfile)
         print(seq)
 
+    if TESTMODE == "urlretrieve":
+        url = sys.argv[2]
+        outfile = sys.argv[3]
+        timeout = int(sys.argv[4])
+        try:
+            myfunc.urlretrieve(url, outfile, timeout)
+        except Exception as e:
+            print("retrieve %s failed with errmsg=%s"%(url, str(e)) )
+
