@@ -37,6 +37,8 @@ if($numArgs < 2)
 my $servername = $ARGV[0];
 my $server_root_dir = $ARGV[1];
 my $basedir = abs_path("$server_root_dir/proj/pred/");
+print("basedir=$basedir\n");
+print("server_root_dir=$server_root_dir\n");
 
 my $path_nanjianglib = `which nanjianglib.pl`;
 chomp($path_nanjianglib);
@@ -44,7 +46,7 @@ require "$path_nanjianglib";
 my $FORMAT_DATETIME = '%Y-%m-%d %H:%M:%S %Z';
 
 my $date = strftime "$FORMAT_DATETIME", localtime;
-print "Date: $date\n";
+print "\n#=======================\nDate: $date\n";
 my $url = "";
 my $target_qd_script_name = "qd_fe.py";
 my $computenodelistfile = "$basedir/config/computenode.txt";
