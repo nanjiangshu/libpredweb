@@ -54,18 +54,26 @@ def IsHaveAvailNode(cntSubmitJobDict):#{{{
             return True
     return False
 #}}}
-def get_job_status(jobid, path_result):#{{{
+def get_job_status(jobid, numseq, path_result):#{{{
+    """Get the status of a job submitted to the web-server
+    """
     status = "";
     rstdir = "%s/%s"%(path_result, jobid)
     starttagfile = "%s/%s"%(rstdir, "runjob.start")
     finishtagfile = "%s/%s"%(rstdir, "runjob.finish")
     failedtagfile = "%s/%s"%(rstdir, "runjob.failed")
+    remotequeue_idx_file = "%s/remotequeue_seqindex.txt"%(rstdir)
+    torun_idx_file = "%s/torun_seqindex.txt"%(rstdir) # ordered seq index to run
+    num_torun = len(myfunc.ReadIDList(torun_idx_file))
     if os.path.exists(failedtagfile):
         status = "Failed"
     elif os.path.exists(finishtagfile):
         status = "Finished"
     elif os.path.exists(starttagfile):
-        status = "Running"
+        if num_torun < numseq:
+            status = "Running"
+        else:
+            status = "Wait"
     elif os.path.exists(rstdir):
         status = "Wait"
     return status
