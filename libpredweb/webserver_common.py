@@ -82,9 +82,12 @@ def get_job_status(jobid, numseq, path_result):#{{{
 def get_external_ip(timeout=5):# {{{
     """Return external IP of the host
     """
-    ip = requests.get('https://api.ipify.org', timeout=timeout).text
-    ip = ip.strip()
-    return ip
+    try:
+        ip = requests.get('https://api.ipify.org', timeout=timeout).text
+        ip = ip.strip()
+        return ip
+    except:
+        return ""
 #}}}
 
 def ReadProQ3GlobalScore(infile):#{{{
