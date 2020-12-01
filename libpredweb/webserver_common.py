@@ -24,6 +24,7 @@ import sqlite3
 import json
 from geoip import geolite2
 import pycountry
+import requests
 from .timeit import timeit
 
 TZ = "Europe/Stockholm"
@@ -78,11 +79,10 @@ def get_job_status(jobid, numseq, path_result):#{{{
         status = "Wait"
     return status
 #}}}
-def get_external_ip():# {{{
+def get_external_ip(timeout=5):# {{{
     """Return external IP of the host
     """
-    from requests import get
-    ip = get('https://api.ipify.org').text
+    ip = requests.get('https://api.ipify.org', timeout=timeout).text
     ip = ip.strip()
     return ip
 #}}}
