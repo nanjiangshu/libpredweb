@@ -1792,6 +1792,33 @@ def get_email_address_outsending(name_server):# {{{
     elif name_server == "pconsc3":
         return "no-reply.PCONSC3@bioinfo.se"
 # }}}
+def SubmitSlurmJob(datapath, outpath, scriptfile, debugfile):#{{{
+    """Submit job to the Slurm queue
+    """
+    loginfo("Entering SubmitSlurmJob()", debugfile)
+    rmsg = ""
+    os.chdir(outpath)
+    cmd = ['sbatch', scriptfile]
+    cmdline = " ".join(cmd)
+    loginfo("cmdline: %s\n\n"%(cmdline), debugfile)
+    MAX_TRY = 2
+    cnttry = 0
+    isSubmitSuccess = False
+    while cnttry < MAX_TRY:
+        loginfo("run cmd: cnttry = %d, MAX_TRY=%d\n"%(cnttry,
+            MAX_TRY), debugfile)
+        (isSubmitSuccess, t_runtime) = RunCmd(cmd, debugfile, debugfile)
+        if isSubmitSuccess:
+            break
+        cnttry += 1
+        time.sleep(0.05+cnttry*0.03)
+    if isSubmitSuccess:
+        loginfo("Leaving SubmitSlurmJob() with success\n", debugfile)
+        return 0
+    else:
+        loginfo("Leaving SubmitSlurmJob() with error\n\n", debugfile)
+        return 1
+#}}}
 
 # functions for views.py
 def set_basic_config(request, info, g_params):# {{{
