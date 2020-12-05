@@ -764,20 +764,28 @@ def GetLocDef(predfile):#{{{
 def datetime_str_to_epoch(date_str):# {{{
     """convert the date_time in string to epoch
     The string of date_time may with or without the zone info
+    return the epoch time of the current time when conversion failed
     """
-    return dtparser.parse(date_str).strftime("%s")
+    try:
+        return dtparser.parse(date_str).strftime("%s")
+    except:
+        return time.strftime('%s')
 # }}}
 def datetime_str_to_time(date_str):# {{{
     """convert the date_time in string to datetime type
     The string of date_time may with or without the zone info
+    return the the current time when conversion failed
     """
-    strs = date_str.split()
-    if len(strs) == 2:
-        date_str += " UTC"
-    if len(strs) == 3 and strs[2] == "U":
-        date_str = date_str.replace("U", "UTC")
-    dt = dtparser.parse(date_str)
-    return dt
+    try:
+        strs = date_str.split()
+        if len(strs) == 2:
+            date_str += " UTC"
+        if len(strs) == 3 and strs[2] == "U":
+            date_str = date_str.replace("U", "UTC")
+        dt = dtparser.parse(date_str)
+        return dt
+    except:
+        return datetime.now(timezone(TZ))
 # }}}
 def IsFrontEndNode(base_www_url):#{{{
     """
