@@ -84,11 +84,11 @@ foreach $url (@urllist){
     }
 
 # Second: check if qd is running at the front-end
-    my $num_running=`curl $url/cgi-bin/check_qd_fe.cgi 2> /dev/null | html2text | grep  "$target_qd_script_name" | wc -l`;
+    my $num_running=`curl -k $url/cgi-bin/check_qd_fe.cgi 2> /dev/null | html2text | grep  "$target_qd_script_name" | wc -l`;
     chomp($num_running);
 
     if ($num_running < 1){
-        $output=`curl $url/cgi-bin/restart_qd_fe.cgi 2>&1 | html2text`;
+        $output=`curl -k $url/cgi-bin/restart_qd_fe.cgi 2>&1 | html2text`;
         $title = "[$servername] $target_qd_script_name restarted for $url";
         foreach my $to_email(@to_email_list) {
             sendmail($to_email, $from_email, $title, $output);
@@ -103,9 +103,9 @@ foreach (sort keys %computenodelist){
     my $max_parallel_job= $computenodelist{$_}{"numprocess"};
     my $queue_method=  $computenodelist{$_}{"queue_method"};
     if ($queue_method eq 'suq'){
-        print "curl http://$computenode/cgi-bin/clean_blocked_suq.cgi 2>&1 | html2text\n";
-        $output=`curl http://$computenode/cgi-bin/clean_blocked_suq.cgi 2>&1 | html2text`;
-        `curl http://$computenode/cgi-bin/set_suqntask.cgi?ntask=$max_parallel_job `;
+        print "curl -k http://$computenode/cgi-bin/clean_blocked_suq.cgi 2>&1 | html2text\n";
+        $output=`curl -k http://$computenode/cgi-bin/clean_blocked_suq.cgi 2>&1 | html2text`;
+        `curl -k http://$computenode/cgi-bin/set_suqntask.cgi?ntask=$max_parallel_job `;
         if ($output =~ /Try to clean the queue/){
             $title = "[$servername] Cleaning the queue at $computenode";
             foreach my $to_email(@to_email_list) {
