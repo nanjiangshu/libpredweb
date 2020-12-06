@@ -25,7 +25,7 @@ my $from_email = "nanjiang.shu\@scilifelab.se";
 my $title = "";
 my $output = "";
 
-my @to_email_list = ReadList($alert_emaillist_file);
+my @to_email_list = ('njshumessage@gmail.com');
 
 
 # run the script show_jobqueuestatus.py and send the result by email
