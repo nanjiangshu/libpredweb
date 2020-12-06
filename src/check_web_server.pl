@@ -74,14 +74,17 @@ close IN;
 print(dump( %computenodelist)."\n");
 
 foreach $url (@urllist){ 
-# First: check if the $url is accessable
-    if (!head($url)){
-        $title = "[$servername] $url un-accessible";
-        $output = "$url un-accessible";
-        foreach my $to_email(@to_email_list) {
-            sendmail($to_email, $from_email, $title, $output);
-        }
-    }
+
+# This method is not working for https protocol
+# whether the web-server is up or down is monitored by UptimeRobot
+# # First: check if the $url is accessable
+#     if (!head($url)){
+#         $title = "[$servername] $url un-accessible";
+#         $output = "$url un-accessible";
+#         foreach my $to_email(@to_email_list) {
+#             sendmail($to_email, $from_email, $title, $output);
+#         }
+#     }
 
 # Second: check if qd is running at the front-end
     my $num_running=`curl -k $url/cgi-bin/check_qd_fe.cgi 2> /dev/null | html2text | grep  "$target_qd_script_name" | wc -l`;
