@@ -8,8 +8,8 @@ import sys
 import shutil
 import subprocess
 import pwd
-from . import myfunc
-from . import webserver_common as webcom
+from libpredweb import myfunc
+from libpredweb import webserver_common as webcom
 from datetime import datetime
 from pytz import timezone
 
