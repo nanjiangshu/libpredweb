@@ -527,7 +527,9 @@ def WriteFile(content, outfile, mode="w", isFlush=False):#{{{
     except IOError:
         return "Failed to write to %s with mode \"%s\""%(outfile, mode)
 #}}}
-def ReadFile(infile, mode="r", encoding="ascii"):#{{{
+def ReadFile(infile, mode="r", encoding="utf-8"):#{{{
+    """Read Content of File
+    """
     try:
         fpin = open(infile, mode, encoding=encoding)
         content = fpin.read()
