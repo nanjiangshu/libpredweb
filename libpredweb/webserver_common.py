@@ -1447,7 +1447,6 @@ def GetJobCounter(info): #{{{
             elif status == "Failed":
                 failed_jobid_set.add(jobid)
         lines = hdl.readlines()
-        current_time = datetime.now(timezone(TZ))
         while lines != None:
             for line in lines:
                 strs = line.split("\t")
@@ -1467,6 +1466,7 @@ def GetJobCounter(info): #{{{
                 if not isValidSubmitDate:
                     continue
 
+                current_time = datetime.now(submit_date.tzinfo)
                 diff_date = current_time - submit_date
                 if diff_date.days > maxdaystoshow:
                     continue
@@ -1620,7 +1620,7 @@ def DeleteOldResult(path_result, path_log, logfile, MAX_KEEP_DAYS=180):#{{{
                 isValidFinishDate = False
 
             if isValidFinishDate:
-                current_time = datetime.now(timezone(TZ))
+                current_time = datetime.now(finish_date.tzinfo)
                 timeDiff = current_time - finish_date
                 if timeDiff.days > MAX_KEEP_DAYS:
                     rstdir = "%s/%s"%(path_result, jobid)
@@ -1893,7 +1893,6 @@ def get_queue(request, g_params):#{{{
         finished_jobid_set = set(finished_jobid_list)
         jobRecordList = []
         lines = hdl.readlines()
-        current_time = datetime.now(timezone(TZ))
         while lines != None:
             for line in lines:
                 strs = line.split("\t")
@@ -1954,6 +1953,7 @@ def get_queue(request, g_params):#{{{
                 isValidSubmitDate = False
 
             if isValidSubmitDate:
+                current_time = datetime.now(submit_date.tzinfo)
                 queuetime = myfunc.date_diff(submit_date, current_time)
 
             row_content = [rank, jobid, jobname[:20], numseq, email,
@@ -1991,7 +1991,6 @@ def get_running(request, g_params):#{{{
         finished_jobid_set = set(finished_jobid_list)
         jobRecordList = []
         lines = hdl.readlines()
-        current_time = datetime.now(timezone(TZ))
         while lines != None:
             for line in lines:
                 strs = line.split("\t")
@@ -2063,6 +2062,7 @@ def get_running(request, g_params):#{{{
             except ValueError:
                 isValidStartDate = False
             if isValidStartDate:
+                current_time = datetime.now(start_date.tzinfo)
                 runtime = myfunc.date_diff(start_date, current_time)
             if isValidStartDate and isValidSubmitDate:
                 queuetime = myfunc.date_diff(submit_date, start_date)
@@ -2098,7 +2098,6 @@ def get_finished_job(request, g_params):#{{{
         finished_job_dict = myfunc.ReadFinishedJobLog(info['divided_logfile_finished_jobid'])
         jobRecordList = []
         lines = hdl.readlines()
-        current_time = datetime.now(timezone(TZ))
         while lines != None:
             for line in lines:
                 strs = line.split("\t")
@@ -2117,6 +2116,7 @@ def get_finished_job(request, g_params):#{{{
                 if not isValidSubmitDate:
                     continue
 
+                current_time = datetime.now(submit_date.tzinfo)
                 diff_date = current_time - submit_date
                 if diff_date.days > info['MAX_DAYS_TO_SHOW']:
                     continue
@@ -2231,7 +2231,6 @@ def get_failed_job(request, g_params):#{{{
         finished_job_dict = myfunc.ReadFinishedJobLog(info['divided_logfile_finished_jobid'])
         jobRecordList = []
         lines = hdl.readlines()
-        current_time = datetime.now(timezone(TZ))
         while lines != None:
             for line in lines:
                 strs = line.split("\t")
@@ -2243,6 +2242,7 @@ def get_failed_job(request, g_params):#{{{
 
                 submit_date_str = strs[0]
                 submit_date = datetime_str_to_time(submit_date_str)
+                current_time = datetime.now(submit_date.tzinfo)
                 diff_date = current_time - submit_date
                 if diff_date.days > info['MAX_DAYS_TO_SHOW']:
                     continue

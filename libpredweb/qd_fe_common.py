@@ -477,7 +477,7 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
                 isValidSubmitDate = False
 
             if isValidSubmitDate:
-                current_time = datetime.now(timezone(g_params['TZ']))
+                current_time = datetime.now(submit_date.tzinfo)
                 timeDiff = current_time - submit_date
                 queuetime_in_sec = timeDiff.seconds
             else:
