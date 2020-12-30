@@ -2383,7 +2383,10 @@ def get_help(request, g_params):#{{{
     config = {}
     if os.path.exists(configfile):
         text = myfunc.ReadFile(configfile)
-        config = json.loads(text)
+        try:
+            config = json.loads(text)
+        except:
+            config = {}
     try:
         MAX_KEEP_DAYS = config['qd_fe']['MAX_KEEP_DAYS']
     except KeyError:

@@ -700,7 +700,10 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
         content = myfunc.ReadFile(query_parafile)
         para_str = content
         if content != "":
-            query_para = json.loads(content)
+            try:
+                query_para = json.loads(content)
+            except:
+                query_para = {}
     tmpdir = "%s/tmpdir"%(rstdir)
     qdinittagfile = "%s/runjob.qdinit"%(rstdir)
     failedtagfile = "%s/%s"%(rstdir, "runjob.failed")
@@ -1013,7 +1016,10 @@ def GetResult(jobid, g_params):#{{{
     if os.path.exists(query_parafile):
         content = myfunc.ReadFile(query_parafile)
         if content != "":
-            query_para = json.loads(content)
+            try:
+                query_para = json.loads(content)
+            except:
+                query_para = {}
     failed_idx_file = "%s/failed_seqindex.txt"%(rstdir)
 
     starttagfile = "%s/%s"%(rstdir, "runjob.start")
@@ -1033,7 +1039,10 @@ def GetResult(jobid, g_params):#{{{
     cntTryDict = {}
     if os.path.exists(cnttry_idx_file):
         with open(cnttry_idx_file, 'r') as fpin:
-            cntTryDict = json.load(fpin)
+            try:
+                cntTryDict = json.load(fpin)
+            except:
+                cntTryDict = {}
 
     # in case of missing queries, if remotequeue_idx_file is empty  but the job
     # is still not finished, force re-creating torun_idx_file
