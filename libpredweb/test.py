@@ -1,7 +1,8 @@
+#!/usr/bin/env python
 import os
 import sys
-from . import webserver_common as webcom
-from . import myfunc
+from libpredweb import webserver_common as webcom
+from libpredweb import myfunc
 if __name__ == '__main__':
     progname=os.path.basename(sys.argv[0])
     general_usage = """
