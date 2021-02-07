@@ -949,8 +949,9 @@ def ValidateSeq(rawseq, seqinfo, g_params):#{{{
 # seqinfo is a dictionary
 # return (filtered_seq)
     rawseq = re.sub(r'[^\x00-\x7f]',r' ',rawseq) # remove non-ASCII characters
-    rawseq = re.sub(r'[\x0b]',r' ',rawseq) # filter invalid characters for XML
-    rawseq = re.sub(r'[\x00-\x01]',r' ',rawseq) # filter invalid characters for XML
+    rawseq = re.sub(r'[\x00-\x09]',r' ',rawseq) # Filter non letter ASCII characters except CR (x13) LF (x10)
+    rawseq = re.sub(r'[\x11-\x12]',r' ',rawseq) # 
+    rawseq = re.sub(r'[\x13-\x1F]',r' ',rawseq) # 
     filtered_seq = ""
     # initialization
     for item in ['errinfo_br', 'errinfo', 'errinfo_content', 'warninfo']:
