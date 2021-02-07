@@ -43,3 +43,5 @@ for file in $filelist; do
         fi
     fi
 done
+# 3. clean outdated uncleaned tmpfile for cached_job_finished_date.sqlite3
+for file in $(find . -maxdepth 1 -name "cached_job_finished_date.sqlite3_*"  -type f -ctime +1); do rm -f $file; done
