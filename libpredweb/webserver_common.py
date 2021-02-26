@@ -97,6 +97,18 @@ def anonymize_ip_v4(ip):# {{{
         strs[i] = '*'
     return '.'.join(strs)
 # }}}
+def get_url_scheme(request):# {{{
+    """get whether the url is http or https
+    """
+    try:
+        if request.is_secure():
+            return "https://"
+        else:
+            return "http://"
+    except:
+        return "http://"
+# }}}
+
 def ReadProQ3GlobalScore(infile):#{{{
     #return globalscore and itemList
     #itemList is the name of the items
