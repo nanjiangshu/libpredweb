@@ -89,7 +89,14 @@ def get_external_ip(timeout=5):# {{{
     except:
         return ""
 #}}}
-
+def anonymize_ip_v4(ip):# {{{
+    """Anonymize the IP address for protecting user privacy
+    """
+    strs = ip.split('.')
+    for i in range(2, len(strs)):
+        strs[i] = '*'
+    return '.'.join(strs)
+# }}}
 def ReadProQ3GlobalScore(infile):#{{{
     #return globalscore and itemList
     #itemList is the name of the items
@@ -2586,7 +2593,7 @@ def get_serverstatus(request, g_params):#{{{
             country = pycountry.countries.get(alpha_2=match.country).name
         except:
             pass
-        activeuserli_njob.append([ip, country, njob, nseq])
+        activeuserli_njob.append([anonymize_ip_v4(ip), country, njob, nseq])
         if cnt >= g_params['MAX_ACTIVE_USER']:
             break
 
@@ -2606,7 +2613,7 @@ def get_serverstatus(request, g_params):#{{{
             country = pycountry.countries.get(alpha_2=match.country).name
         except:
             pass
-        activeuserli_nseq.append([ip, country, njob, nseq])
+        activeuserli_nseq.append([anonymize_ip_v4(ip), country, njob, nseq])
         if cnt >= g_params['MAX_ACTIVE_USER']:
             break
 
