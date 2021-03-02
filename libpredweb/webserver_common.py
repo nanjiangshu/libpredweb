@@ -806,6 +806,346 @@ def datetime_str_to_time(date_str):# {{{
     except:
         return datetime.now(timezone(TZ))
 # }}}
+
+def WriteSubconsTextResultFile(outfile, outpath_result, maplist,#{{{
+        runtime_in_sec, base_www_url, statfile=""):
+    try:
+        fpout = open(outfile, "w")
+        if statfile != "":
+            fpstat = open(statfile, "w")
+
+        date_str = time.strftime(FORMAT_DATETIME)
+        print("##############################################################################", file=fpout)
+        print("Subcons result file", file=fpout)
+        print("Generated from %s at %s"%(base_www_url, date_str), file=fpout)
+        print("Total request time: %.1f seconds."%(runtime_in_sec), file=fpout)
+        print("##############################################################################", file=fpout)
+        cnt = 0
+        for line in maplist:
+            strs = line.split('\t')
+            subfoldername = strs[0]
+            length = int(strs[1])
+            desp = strs[2]
+            seq = strs[3]
+            seqid = myfunc.GetSeqIDFromAnnotation(desp)
+            print("Sequence number: %d"%(cnt+1), file=fpout)
+            print("Sequence name: %s"%(desp), file=fpout)
+            print("Sequence length: %d aa."%(length), file=fpout)
+            print("Sequence:\n%s\n\n"%(seq), file=fpout)
+
+            rstfile1 = "%s/%s/%s/query_0_final.csv"%(outpath_result, subfoldername, "plot")
+            rstfile2 = "%s/%s/query_0_final.csv"%(outpath_result, subfoldername)
+            if os.path.exists(rstfile1):
+                rstfile = rstfile1
+            elif os.path.exists(rstfile2):
+                rstfile = rstfile2
+            else:
+                rstfile = ""
+
+            if os.path.exists(rstfile):
+                content = myfunc.ReadFile(rstfile).strip()
+                lines = content.split("\n")
+                if len(lines) >= 6:
+                    header_line = lines[0].split("\t")
+                    if header_line[0].strip() == "":
+                        header_line[0] = "Method"
+                        header_line = [x.strip() for x in header_line]
+
+                    data_line = []
+                    for i in range(1, len(lines)):
+                        strs1 = lines[i].split("\t")
+                        strs1 = [x.strip() for x in strs1]
+                        data_line.append(strs1)
+
+                    content = tabulate.tabulate(data_line, header_line, 'plain')
+            else:
+                content = ""
+            if content == "":
+                content = "***No prediction could be produced with this method***"
+
+            print("Prediction results:\n\n%s\n\n"%(content), file=fpout)
+
+            print("##############################################################################", file=fpout)
+            cnt += 1
+
+    except IOError:
+        print("Failed to write to file %s"%(outfile))
+#}}}
+def WriteTOPCONSTextResultFile(outfile, outpath_result, maplist,#{{{
+        runtime_in_sec, base_www_url, statfile=""):
+    try:
+        methodlist = ['TOPCONS', 'OCTOPUS', 'Philius', 'PolyPhobius', 'SCAMPI',
+                'SPOCTOPUS', 'Homology']
+        fpout = open(outfile, "w")
+
+        fpstat = None
+        num_TMPro_cons = 0
+        num_TMPro_any = 0
+        num_nonTMPro_cons = 0
+        num_nonTMPro_any = 0
+        num_SPPro_cons = 0
+        num_SPPro_any = 0
+
+        if statfile != "":
+            fpstat = open(statfile, "w")
+
+        date_str = time.strftime(FORMAT_DATETIME)
+        print("##############################################################################", file=fpout)
+        print("TOPCONS2 result file", file=fpout)
+        print("Generated from %s at %s"%(base_www_url, date_str), file=fpout)
+        print("Total request time: %.1f seconds."%(runtime_in_sec), file=fpout)
+        print("##############################################################################", file=fpout)
+        cnt = 0
+        for line in maplist:
+            strs = line.split('\t')
+            subfoldername = strs[0]
+            length = int(strs[1])
+            desp = strs[2]
+            seq = strs[3]
+            print("Sequence number: %d"%(cnt+1), file=fpout)
+            print("Sequence name: %s"%(desp), file=fpout)
+            print("Sequence length: %d aa."%(length), file=fpout)
+            print("Sequence:\n%s\n\n"%(seq), file=fpout)
+
+            is_TM_cons = False
+            is_TM_any = False
+            is_nonTM_cons = True
+            is_nonTM_any = True
+            is_SP_cons = False
+            is_SP_any = False
+
+            for i in range(len(methodlist)):
+                method = methodlist[i]
+                seqid = ""
+                seqanno = ""
+                top = ""
+                if method == "TOPCONS":
+                    topfile = "%s/%s/%s/topcons.top"%(outpath_result, subfoldername, "Topcons")
+                elif method == "Philius":
+                    topfile = "%s/%s/%s/query.top"%(outpath_result, subfoldername, "philius")
+                elif method == "SCAMPI":
+                    topfile = "%s/%s/%s/query.top"%(outpath_result, subfoldername, method+"_MSA")
+                else:
+                    topfile = "%s/%s/%s/query.top"%(outpath_result, subfoldername, method)
+                if os.path.exists(topfile):
+                    (seqid, seqanno, top) = myfunc.ReadSingleFasta(topfile)
+                else:
+                    top = ""
+                if top == "":
+                    #top = "***No topology could be produced with this method topfile=%s***"%(topfile)
+                    top = "***No topology could be produced with this method***"
+
+                if fpstat != None:
+                    if top.find('M') >= 0:
+                        is_TM_any = True
+                        is_nonTM_any = False
+                        if method == "TOPCONS":
+                            is_TM_cons = True
+                            is_nonTM_cons = False
+                    if top.find('S') >= 0:
+                        is_SP_any = True
+                        if method == "TOPCONS":
+                            is_SP_cons = True
+
+                if method == "Homology":
+                    showtext_homo = method
+                    if seqid != "":
+                        showtext_homo = seqid
+                    print("%s:\n%s\n\n"%(showtext_homo, top), file=fpout)
+                else:
+                    print("%s predicted topology:\n%s\n\n"%(method, top), file=fpout)
+
+
+            if fpstat:
+                num_TMPro_cons += is_TM_cons
+                num_TMPro_any += is_TM_any
+                num_nonTMPro_cons += is_nonTM_cons
+                num_nonTMPro_any += is_nonTM_any
+                num_SPPro_cons += is_SP_cons
+                num_SPPro_any += is_SP_any
+
+            dgfile = "%s/%s/dg.txt"%(outpath_result, subfoldername)
+            dg_content = ""
+            if os.path.exists(dgfile):
+                dg_content = myfunc.ReadFile(dgfile)
+            lines = dg_content.split("\n")
+            dglines = []
+            for line in lines:
+                if line and line[0].isdigit():
+                    dglines.append(line)
+            if len(dglines)>0:
+                print("\nPredicted Delta-G-values (kcal/mol) "\
+                        "(left column=sequence position; right column=Delta-G)\n", file=fpout)
+                print("\n".join(dglines), file=fpout)
+
+            reliability_file = "%s/%s/Topcons/reliability.txt"%(outpath_result, subfoldername)
+            reliability = ""
+            if os.path.exists(reliability_file):
+                reliability = myfunc.ReadFile(reliability_file)
+            if reliability != "":
+                print("\nPredicted TOPCONS reliability (left "\
+                        "column=sequence position; right column=reliability)\n", file=fpout)
+                print(reliability, file=fpout)
+            print("##############################################################################", file=fpout)
+            cnt += 1
+
+        fpout.close()
+
+        if fpstat:
+            out_str_list = []
+            out_str_list.append("num_TMPro_cons %d"% num_TMPro_cons)
+            out_str_list.append("num_TMPro_any %d"% num_TMPro_any)
+            out_str_list.append("num_nonTMPro_cons %d"% num_nonTMPro_cons)
+            out_str_list.append("num_nonTMPro_any %d"% num_nonTMPro_any)
+            out_str_list.append("num_SPPro_cons %d"% num_SPPro_cons)
+            out_str_list.append("num_SPPro_any %d"% num_SPPro_any)
+            fpstat.write("%s"%("\n".join(out_str_list)))
+
+            fpstat.close()
+
+        rstdir = os.path.realpath("%s/.."%(outpath_result))
+        runjob_logfile = "%s/%s"%(rstdir, "runjob.log")
+        runjob_errfile = "%s/%s"%(rstdir, "runjob.err")
+        finishtagfile = "%s/%s"%(rstdir, "write_result_finish.tag")
+        WriteDateTimeTagFile(finishtagfile, runjob_logfile, runjob_errfile)
+    except IOError:
+        print("Failed to write to file %s"%(outfile))
+#}}}
+def WriteProQ3TextResultFile(outfile, query_para, modelFileList, #{{{
+        runtime_in_sec, base_www_url, proq3opt, statfile=""):
+    try:
+        fpout = open(outfile, "w")
+
+
+        try:
+            isDeepLearning = query_para['isDeepLearning']
+        except KeyError:
+            isDeepLearning = True
+
+        if isDeepLearning:
+            m_str = "proq3d"
+        else:
+            m_str = "proq3"
+
+        try:
+            method_quality = query_para['method_quality']
+        except KeyError:
+            method_quality = 'sscore'
+
+        fpstat = None
+        numTMPro = 0
+
+        if statfile != "":
+            fpstat = open(statfile, "w")
+        numModel = len(modelFileList)
+
+        date_str = time.strftime(FORMAT_DATETIME)
+        print("##############################################################################", file=fpout)
+        print("# ProQ3 result file", file=fpout)
+        print("# Generated from %s at %s"%(base_www_url, date_str), file=fpout)
+        print("# Options for Proq3: %s"%(str(proq3opt)), file=fpout)
+        print("# Total request time: %.1f seconds."%(runtime_in_sec), file=fpout)
+        print("# Number of finished models: %d"%(numModel), file=fpout)
+        print("##############################################################################", file=fpout)
+        print(file=fpout)
+        print("# Global scores", file=fpout)
+        fpout.write("# %10s"%("Model"))
+
+        cnt = 0
+        for i  in range(numModel):
+            modelfile = modelFileList[i]
+            globalscorefile = "%s.%s.%s.global"%(modelfile, m_str, method_quality)
+            if not os.path.exists(globalscorefile):
+                globalscorefile = "%s.proq3.%s.global"%(modelfile, method_quality)
+                if not os.path.exists(globalscorefile):
+                    globalscorefile = "%s.proq3.global"%(modelfile)
+            (globalscore, itemList) = ReadProQ3GlobalScore(globalscorefile)
+            if i == 0:
+                for ss in itemList:
+                    fpout.write(" %12s"%(ss))
+                fpout.write("\n")
+
+            try:
+                if globalscore:
+                    fpout.write("%2s %10s"%("", "model_%d"%(i)))
+                    for jj in range(len(itemList)):
+                        fpout.write(" %12f"%(globalscore[itemList[jj]]))
+                    fpout.write("\n")
+                else:
+                    print("%2s %10s"%("", "model_%d"%(i)), file=fpout)
+            except:
+                pass
+
+        print("\n# Local scores", file=fpout)
+        for i  in range(numModel):
+            modelfile = modelFileList[i]
+            localscorefile = "%s.%s.%s.local"%(modelfile, m_str, method_quality)
+            if not os.path.exists(localscorefile):
+                localscorefile = "%s.proq3.local"%(modelfile)
+            print("\n# Model %d"%(i), file=fpout)
+            content = myfunc.ReadFile(localscorefile)
+            print(content, file=fpout)
+
+    except IOError:
+        print("Failed to write to file %s"%(outfile))
+#}}}
+def WriteBoctopusTextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile=""):#{{{
+    rstdir = os.path.realpath("%s/.."%(outpath_result))
+    runjob_logfile = "%s/%s"%(rstdir, "runjob.log")
+    runjob_errfile = "%s/%s"%(rstdir, "runjob.err")
+    finishtagfile = "%s/%s"%(rstdir, "write_result_finish.tag")
+    try:
+        fpout = open(outfile, "w")
+        fpstat = None
+        numTMPro = 0
+
+        if statfile != "":
+            fpstat = open(statfile, "w")
+
+        cnt = 0
+        for line in maplist:
+            strs = line.split('\t')
+            subfoldername = strs[0]
+            length = int(strs[1])
+            desp = strs[2]
+            seq = strs[3]
+            isTMPro = False
+            outpath_this_seq = "%s/%s"%(outpath_result, subfoldername)
+            predfile = "%s/query_topologies.txt"%(outpath_this_seq)
+            loginfo("predfile =  %s.\n"%(predfile), runjob_logfile)
+            if not os.path.exists(predfile):
+                loginfo("predfile %s does not exist\n"%(predfile), runjob_errfile)
+            (seqid, seqanno, top) = myfunc.ReadSingleFasta(predfile)
+            fpout.write(">%s\n%s\n"%(desp, top))
+            numTM = myfunc.CountTM(top)
+            if numTM >0:
+                isTMPro = True
+                numTMPro += 1
+
+            cnt += 1
+
+        if fpstat:
+            out_str_list = ["numTMPro\t%d\n"%(numTMPro)]
+            fpstat.write("%s"%("\n".join(out_str_list)))
+            fpstat.close()
+        WriteDateTimeTagFile(finishtagfile, runjob_logfile, runjob_errfile)
+    except IOError:
+        loginfo( "Failed to write to file %s"%(outfile), runjob_errfile)
+#}}}
+def WriteTextResultFile(name_software, outfile, outpath_result, maplist,#{{{
+        runtime_in_sec, base_www_url, statfile=""):
+    if name_software in ["subcons", "docker_subcons", "singularity_subcons"]:
+        WriteSubconsTextResultFile(outfile, outpath_result, maplist,
+                runtime_in_sec, base_www_url, statfile)
+    elif name_software in ["topcons2", "docker_topcons2", "singularity_topcons2"]:
+        WriteTOPCONSTextResultFile(outfile, outpath_result, maplist,
+                runtime_in_sec, base_www_url, statfile)
+    elif name_software in ["boctopus2", "docker_boctopus2", "singularity_boctopus2"]:
+        WriteBoctopusTextResultFile(outfile, outpath_result, maplist,
+                runtime_in_sec, base_www_url, statfile)
+
+#}}}
+
 def IsFrontEndNode(base_www_url):#{{{
     """
     check if the base_www_url is front-end node
