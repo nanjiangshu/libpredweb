@@ -2333,6 +2333,8 @@ def GetNameSoftware(name_server, queue_method):# {{{
         name_software = "scampi2-msa"
     elif name_server == "pconsc3":
         name_software = "pconsc3"
+    elif name_server == "predzinc":
+        name_software = "docker_predzinc"
 
     return name_software
 # }}}
@@ -2354,6 +2356,8 @@ def get_email_address_outsending(name_server):# {{{
         return "no-reply.PRODRES@bioinfo.se"
     elif name_server == "pconsc3":
         return "no-reply.PCONSC3@bioinfo.se"
+    elif name_server == "predzinc":
+        return "no-reply.predzinc@bioshu.se"
 # }}}
 def SubmitSlurmJob(datapath, outpath, scriptfile, debugfile):#{{{
     """Submit job to the Slurm queue
