@@ -29,6 +29,17 @@ from .timeit import timeit
 
 TZ = "Europe/Stockholm"
 FORMAT_DATETIME = "%Y-%m-%d %H:%M:%S %Z"
+ZB_SCORE_THRESHOLD = 0.45
+chde_table = {
+        'C':'CYS',
+        'H': 'HIS',
+        'D': 'ASP',
+        'E': 'GLU',
+        'CYS': 'C',
+        'HIS': 'H',
+        'ASP': 'D',
+        'GLU': 'E'
+        }
 def IsCacheProcessingFinished(rstdir):# {{{
     """Check whether the jobdir is still under cache processing"""
     forceruntagfile = "%s/forcerun"%(rstdir)
