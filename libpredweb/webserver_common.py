@@ -119,6 +119,34 @@ def get_url_scheme(request):# {{{
     except:
         return "http://"
 # }}}
+def CountNumPredZB(predfile, threshold=0.45):#{{{
+    cntZB = 0
+    cntHomo = 0
+    hdl = myfunc.ReadLineByBlock(predfile)
+    if not hdl.failure:
+        lines = hdl.readlines()
+        while lines != None:
+            for line in lines:
+                if not line:
+                    continue
+                if line[0] == "#":
+                    strs = line.split()
+                    if len(strs) >=6 and strs[0] == "#Homolog":
+                        cntHomo += 1
+                else:
+                    strs = line.split("\t")
+                    try:
+                        score = float(strs[2])
+                        if score >= threshold:
+                            cntZB += 1
+                    except:
+                        pass
+            lines = hdl.readlines()
+        hdl.close()
+        return (cntZB, cntHomo)
+    else:
+        return (cntZB, cntHomo)
+#}}}
 
 def ReadProQ3GlobalScore(infile):#{{{
     #return globalscore and itemList
@@ -219,6 +247,8 @@ def WriteDumpedTextResultFile(name_server, outfile, outpath_result, maplist, run
         WriteSCAMPI2MSATextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile)
     elif name_server == "pconsc3":
         WritePconsC3TextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile)
+    elif name_server == "predzinc":
+        WritePredZincTextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile)
 
 #}}}
 def WritePconsC3TextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile=""):#{{{
@@ -434,6 +464,128 @@ def WriteSCAMPI2MSATextResultFile(outfile, outpath_result, maplist, #{{{
         myfunc.WriteFile("\n".join(str_TMlist), TM_listfile, "w")
         myfunc.WriteFile("\n".join(str_nonTMlist), nonTM_listfile, "w")
 
+    except IOError:
+        print("Failed to write to file %s"%(outfile))
+#}}}
+def WriteNiceResultPredZinc(predfile, fpout, threshold=0.45):#{{{
+    is_ZB = False
+    is_has_homo = False
+    li_homolog = []
+    li_ZB = []
+    li_other = []
+    hdl = myfunc.ReadLineByBlock(predfile)
+    if not hdl.failure:
+        lines = hdl.readlines()
+        while lines != None:
+            for line in lines:
+                if not line:
+                    continue
+                if line[0] == "#":
+                    strs = line.split()
+                    if len(strs) >=6 and strs[0] == "#Homolog":
+                        id_homo = strs[4]
+                        score_homo = strs[5]
+                        li_homolog.append([id_homo, score_homo])
+                else:
+                    strs = line.split("\t")
+                    if len(strs)>=5:
+                        key = strs[0]
+                        ss2 = key.split(";")
+                        if len(ss2)>=5:
+                            res = ss2[3]
+                            series = ss2[4]
+                            try:
+                                score = float(strs[2])
+                            except:
+                                score = -100.0
+                            if score >= threshold:
+                                li_ZB.append([res, series, score])
+                            else:
+                                li_other.append([res, series, score])
+            lines = hdl.readlines()
+        hdl.close()
+        if len(li_ZB) > 0:
+            is_ZB = True
+        if len(li_homolog) > 0:
+            is_has_homo = True
+
+        try:
+            if len(li_ZB) > 0:
+                fpout.write("The following %d residues were predicted as zinc-binding (with score >= %g, sorted by scores\n\n"%(len(li_ZB), threshold))
+                fpout.write("%-3s %8s %6s\n"%("Res","SerialNo","Score"))
+                li_ZB = sorted(li_ZB, key=lambda x:x[2], reverse=True)
+                for item in li_ZB:
+                    fpout.write("%-3s %8s %6.3f\n"%(chde_table[item[0]],
+                        item[1], item[2]))
+            else:
+                fpout.write("No residues were predicted as zinc-binding\n\n")
+
+            if len(li_other) >0:
+                fpout.write("\n\nPrediction scores for the rest %d CHDEs, sorted by scores\n\n"%(
+                    len(li_other)))
+                fpout.write("%-3s %8s %6s\n"%("Res","SerialNo","Score"))
+                li_other = sorted(li_other, key=lambda x:x[2], reverse=True)
+                for item in li_other:
+                    fpout.write("%-3s %8s %6.3f\n"%(chde_table[item[0]],
+                        item[1], item[2]))
+
+            fpout.write("//\n\n") # write finishing tag
+        except:
+            pass
+
+    else:
+        pass
+
+    return (is_ZB, is_has_homo)
+#}}}
+def WritePredZincTextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile=""):#{{{
+    try:
+        fpout = open(outfile, "w")
+
+        fpstat = None
+        num_ZB = 0
+        num_has_homo = 0
+
+        if statfile != "":
+            fpstat = open(statfile, "w")
+
+        date_str = time.strftime(FORMAT_DATETIME)
+        print("##############################################################################", file=fpout)
+        print("PredZinc result file", file=fpout)
+        print("Generated from %s at %s"%(base_www_url, date_str), file=fpout)
+        print("Total request time: %.1f seconds."%(runtime_in_sec), file=fpout)
+        print("##############################################################################", file=fpout)
+        cnt = 0
+        for line in maplist:
+            strs = line.split('\t')
+            subfoldername = strs[0]
+            length = int(strs[1])
+            desp = strs[2]
+            seq = strs[3]
+            print("Sequence number: %d"%(cnt+1), file=fpout)
+            print("Sequence name: %s"%(desp), file=fpout)
+            print("Sequence length: %d aa."%(length), file=fpout)
+            print("Sequence:\n%s\n\n"%(seq), file=fpout)
+
+            is_ZB = False
+            is_has_homo = False
+            outpath_this_seq = "%s/%s"%(outpath_result, subfoldername)
+            predfile = "%s/query.predzinc.predict"%(outpath_this_seq)
+            (is_ZB, is_has_homo ) = WriteNiceResult(predfile, fpout,
+                    threshold=ZB_SCORE_THRESHOLD) 
+
+            if fpstat:
+                num_ZB += is_ZB
+                num_has_homo += is_has_homo
+
+            cnt += 1
+
+        if fpstat:
+            out_str_list = []
+            out_str_list.append("num_ZB %d"% num_ZB)
+            out_str_list.append("num_has_homo %d"% num_has_homo)
+            fpstat.write("%s"%("\n".join(out_str_list)))
+            fpstat.close()
     except IOError:
         print("Failed to write to file %s"%(outfile))
 #}}}
@@ -1571,6 +1723,8 @@ def GetInfoFinish(name_server, outpath_this_seq, origIndex, seqLength, seqAnno, 
         return GetInfoFinish_PRODRES(outpath_this_seq, origIndex, seqLength, seqAnno, source_result, runtime)
     elif name_server == "pconsc3":
         return GetInfoFinish_PconsC3(outpath_this_seq, origIndex, seqLength, seqAnno, source_result, runtime)
+    elif name_server == "predzinc":
+        return GetInfoFinish_PredZinc(outpath_this_seq, origIndex, seqLength, seqAnno, source_result, runtime)
     else:
         return []
 # }}}
@@ -1586,6 +1740,18 @@ def GetInfoFinish_Subcons(outpath_this_seq, origIndex, seqLength, seqAnno, sourc
     date_str = time.strftime(FORMAT_DATETIME)
     info_finish = [ "seq_%d"%origIndex,
             str(seqLength), str(loc_def), str(loc_def_score),
+            source_result, str(runtime),
+            seqAnno.replace('\t', ' '), date_str]
+    return info_finish
+# }}}
+def GetInfoFinish_PredZinc(outpath_this_seq, origIndex, seqLength, seqAnno, source_result="", runtime=0.0):# {{{
+    """Get the list info_finish for the method PredZinc"""
+    predfile = "%s/query.predzinc.predict"%( outpath_this_seq)
+    (numZB, cntHomo) = CountNumPredZB(predfile, threshold=ZB_SCORE_THRESHOLD)
+    date_str = time.strftime(FORMAT_DATETIME)
+    # info_finish has 8 items
+    info_finish = [ "seq_%d"%origIndex,
+            str(seqLength), str(numZB), str(cntHomo),
             source_result, str(runtime),
             seqAnno.replace('\t', ' '), date_str]
     return info_finish
