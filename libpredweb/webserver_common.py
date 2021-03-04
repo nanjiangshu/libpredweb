@@ -2056,6 +2056,9 @@ def CleanJobFolder(rstdir, name_server):# {{{
         CleanJobFolder_PRODRES(rstdir)
     elif name_server == "pconsc3":
         CleanJobFolder_PconsC3(rstdir)
+    else:
+        CleanJobFolder_basic(rstdir)
+
 # }}}
 
 def CleanJobFolder_Boctopus2(rstdir):# {{{
@@ -2125,6 +2128,19 @@ def CleanJobFolder_PRODRES(rstdir):# {{{
 # }}}
 def CleanJobFolder_PconsC3(rstdir):# {{{
     """Clean the jobfolder for PconsC3 after finishing"""
+    flist =[
+            "%s/remotequeue_seqindex.txt"%(rstdir),
+            "%s/torun_seqindex.txt"%(rstdir)
+            ]
+    for f in flist:
+        if os.path.exists(f):
+            try:
+                os.remove(f)
+            except:
+                pass
+# }}}
+def CleanJobFolder_basic(rstdir):# {{{
+    """Clean the jobfolder after finishing: the basic function"""
     flist =[
             "%s/remotequeue_seqindex.txt"%(rstdir),
             "%s/torun_seqindex.txt"%(rstdir)
