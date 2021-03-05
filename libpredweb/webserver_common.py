@@ -3342,6 +3342,6 @@ def get_results_eachseq(request, name_resultfile, name_nicetopfile, jobid, seqin
     if os.path.exists(topfolder_seq0):
         resultdict['isResultFolderExist'] = True
 
-    resultdict['jobcounter'] = webcom.GetJobCounter(resultdict)
+    resultdict['jobcounter'] = GetJobCounter(resultdict)
     return resultdict
 #}}}
