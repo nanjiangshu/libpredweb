@@ -2397,7 +2397,7 @@ def SubmitSuqJob(suq_exec, suq_basedir, datapath, outpath, priority, scriptfile,
     isSubmitSuccess = False
     while cnttry < MAX_TRY:
         loginfo("run cmd: cnttry = %d, MAX_TRY=%d\n"%(cnttry, MAX_TRY), logfile)
-        (isSubmitSuccess, t_runtime) = RunCmd(cmd, g_params['debugfile'], logfile)
+        (isSubmitSuccess, t_runtime) = RunCmd(cmd, logfile, logfile)
         if isSubmitSuccess:
             break
         cnttry += 1
