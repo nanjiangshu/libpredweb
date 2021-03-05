@@ -3292,7 +3292,7 @@ def get_results_eachseq(request, name_resultfile, name_nicetopfile, jobid, seqin
     resultdict = {}
     set_basic_config(request, resultdict, g_params)
 
-    rstdir = "%s/%s"%(path_result, jobid)
+    rstdir = "%s/%s"%(g_params['path_result'], jobid)
     outpathname = jobid
 
     jobinfofile = "%s/jobinfo"%(rstdir)
