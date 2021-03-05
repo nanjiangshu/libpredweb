@@ -2409,6 +2409,17 @@ def SubmitSuqJob(suq_exec, suq_basedir, datapath, outpath, priority, scriptfile,
         webcom.loginfo("Leaving SubmitSuqJob() with error\n\n", logfile)
         return 1
 #}}}
+def get_queue_method_name():# {{{
+    """Get the name of queue_method based on the hostname
+    """
+    import socket
+    hostname = socket.gethostname()
+    if hostname.find("shu") != -1 or hostname.find("pcons3") != -1:
+        return "suq"
+    else:
+        return "slurm"
+# }}}
+
 
 # functions for views.py
 def set_basic_config(request, info, g_params):# {{{
