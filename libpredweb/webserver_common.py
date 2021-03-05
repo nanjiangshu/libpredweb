@@ -2391,22 +2391,22 @@ def SubmitSuqJob(suq_exec, suq_basedir, datapath, outpath, priority, scriptfile,
     rmsg = ""
     cmd = [suq_exec,"-b", suq_basedir, "run", "-d", outpath, "-p", "%d"%(priority), scriptfile]
     cmdline = " ".join(cmd)
-    webcom.loginfo("cmdline: %s\n\n"%(cmdline), logfile)
+    loginfo("cmdline: %s\n\n"%(cmdline), logfile)
     MAX_TRY = 5
     cnttry = 0
     isSubmitSuccess = False
     while cnttry < MAX_TRY:
-        webcom.loginfo("run cmd: cnttry = %d, MAX_TRY=%d\n"%(cnttry, MAX_TRY), logfile)
+        loginfo("run cmd: cnttry = %d, MAX_TRY=%d\n"%(cnttry, MAX_TRY), logfile)
         (isSubmitSuccess, t_runtime) = RunCmd(cmd, g_params['debugfile'], logfile)
         if isSubmitSuccess:
             break
         cnttry += 1
         time.sleep(0.05+cnttry*0.03)
     if isSubmitSuccess:
-        webcom.loginfo("Leaving SubmitSuqJob() with success\n", logfile)
+        loginfo("Leaving SubmitSuqJob() with success\n", logfile)
         return 0
     else:
-        webcom.loginfo("Leaving SubmitSuqJob() with error\n\n", logfile)
+        loginfo("Leaving SubmitSuqJob() with error\n\n", logfile)
         return 1
 #}}}
 def get_queue_method_name():# {{{
