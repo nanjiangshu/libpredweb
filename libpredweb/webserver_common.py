@@ -3286,3 +3286,62 @@ def get_serverstatus(request, g_params):#{{{
     info['jobcounter'] = GetJobCounter(info)
     return info
 #}}}
+def get_results_eachseq(request, name_resultfile, name_nicetopfile, jobid, seqindex, g_params):#{{{
+    """base function for get_results_eachseq
+    """
+    resultdict = {}
+    set_basic_config(request, resultdict, g_params)
+
+    rstdir = "%s/%s"%(path_result, jobid)
+    outpathname = jobid
+
+    jobinfofile = "%s/jobinfo"%(rstdir)
+    jobinfo = myfunc.ReadFile(jobinfofile).strip()
+    jobinfolist = jobinfo.split("\t")
+    if len(jobinfolist) >= 8:
+        submit_date_str = jobinfolist[0]
+        numseq = int(jobinfolist[3])
+        jobname = jobinfolist[5]
+        email = jobinfolist[6]
+        method_submission = jobinfolist[7]
+    else:
+        submit_date_str = ""
+        numseq = 1
+        jobname = ""
+        email = ""
+        method_submission = "web"
+
+    status = ""
+
+    resultdict['jobid'] = jobid
+    resultdict['jobname'] = jobname
+    resultdict['outpathname'] = os.path.basename(outpathname)
+    resultdict['BASEURL'] = g_params['BASEURL']
+    resultdict['status'] = status
+    resultdict['numseq'] = numseq
+    base_www_url = get_url_scheme(request) + request.META['HTTP_HOST']
+
+    resultfile = "%s/%s/%s/%s"%(rstdir, outpathname, seqindex, name_resultfile)
+    if os.path.exists(resultfile):
+        resultdict['resultfile'] = os.path.basename(resultfile)
+    else:
+        resultdict['resultfile'] = ""
+
+    # get prediction results for the first seq
+    topfolder_seq0 = "%s/%s/%s"%(rstdir, jobid, seqindex)
+    subdirname = seqindex
+    resultdict['subdirname'] = subdirname
+    nicetopfile = "%s/%s"%(topfolder_seq0, name_nicetopfile)
+    if os.path.exists(nicetopfile):
+        resultdict['nicetopfile'] = "%s/%s/%s/%s/%s"%(
+                "result", jobid, jobid, subdirname,
+                os.path.basename(nicetopfile))
+    else:
+        resultdict['nicetopfile'] = ""
+    resultdict['isResultFolderExist'] = False
+    if os.path.exists(topfolder_seq0):
+        resultdict['isResultFolderExist'] = True
+
+    resultdict['jobcounter'] = webcom.GetJobCounter(resultdict)
+    return resultdict
+#}}}
