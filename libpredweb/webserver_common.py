@@ -571,7 +571,7 @@ def WritePredZincTextResultFile(outfile, outpath_result, maplist, runtime_in_sec
             is_has_homo = False
             outpath_this_seq = "%s/%s"%(outpath_result, subfoldername)
             predfile = "%s/query.predzinc.predict"%(outpath_this_seq)
-            (is_ZB, is_has_homo ) = WriteNiceResult(predfile, fpout,
+            (is_ZB, is_has_homo ) = WriteNiceResultPredZinc(predfile, fpout,
                     threshold=ZB_SCORE_THRESHOLD) 
 
             if fpstat:
