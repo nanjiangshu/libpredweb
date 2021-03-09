@@ -249,6 +249,8 @@ def WriteDumpedTextResultFile(name_server, outfile, outpath_result, maplist, run
         WritePconsC3TextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile)
     elif name_server == "predzinc":
         WritePredZincTextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile)
+    elif name_server == "frag1d":
+        WriteFrag1DTextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile)
 
 #}}}
 def WritePconsC3TextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile=""):#{{{
@@ -588,6 +590,62 @@ def WritePredZincTextResultFile(outfile, outpath_result, maplist, runtime_in_sec
             fpstat.close()
     except IOError:
         print("Failed to write to file %s"%(outfile))
+#}}}
+def WriteNiceResultFrag1D(predfile, fpout):#{{{
+    hdl = myfunc.ReadLineByBlock(predfile)
+    if not hdl.failure:
+        lines = hdl.readlines()
+        while lines != None:
+            for line in lines:
+                if not line or line[0] == "/":
+                    continue
+                if line[0] == "#":
+                    if line.find("# Num AA Sec") == 0:
+                        print >> fpout, line
+                else:
+                    print >> fpout, line
+            lines = hdl.readlines()
+        hdl.close()
+        fpout.write("//\n\n") # write finishing tag
+    else:
+        pass
+#}}}
+def WriteFrag1DTextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile=""):#{{{
+    try:
+        fpout = open(outfile, "w")
+        fpstat = None
+        if statfile != "":
+            fpstat = open(statfile, "w")
+        date_str = time.strftime(FORMAT_DATETIME)
+        print >> fpout, "##############################################################################"
+        print >> fpout, "Frag1D result file"
+        print >> fpout, "Generated from %s at %s"%(base_www_url, date_str)
+        print >> fpout, "Total request time: %.1f seconds."%(runtime_in_sec)
+        print >> fpout, "##############################################################################"
+        cnt = 0
+        for line in maplist:
+            strs = line.split('\t')
+            subfoldername = strs[0]
+            length = int(strs[1])
+            desp = strs[2]
+            seq = strs[3]
+            print >> fpout, "Sequence number: %d"%(cnt+1)
+            print >> fpout, "Sequence name: %s"%(desp)
+            print >> fpout, "Sequence length: %d aa."%(length)
+            print >> fpout, "Sequence:\n%s\n\n"%(seq)
+
+            outpath_this_seq = "%s/%s"%(outpath_result, subfoldername)
+            predfile = "%s/query.predfrag1d"%(outpath_this_seq)
+            WriteNiceResultFrag1D(predfile, fpout)
+
+            cnt += 1
+
+        if fpstat:
+            out_str_list = []
+            fpstat.write("%s"%("\n".join(out_str_list)))
+            fpstat.close()
+    except IOError:
+        print "Failed to write to file %s"%(outfile)
 #}}}
 
 @timeit
@@ -1727,6 +1785,8 @@ def GetInfoFinish(name_server, outpath_this_seq, origIndex, seqLength, seqAnno, 
         return GetInfoFinish_PconsC3(outpath_this_seq, origIndex, seqLength, seqAnno, source_result, runtime)
     elif name_server == "predzinc":
         return GetInfoFinish_PredZinc(outpath_this_seq, origIndex, seqLength, seqAnno, source_result, runtime)
+    elif name_server == "frag1d":
+        return GetInfoFinish_Frag1D(outpath_this_seq, origIndex, seqLength, seqAnno, source_result, runtime)
     else:
         return []
 # }}}
@@ -1754,6 +1814,25 @@ def GetInfoFinish_PredZinc(outpath_this_seq, origIndex, seqLength, seqAnno, sour
     # info_finish has 8 items
     info_finish = [ "seq_%d"%origIndex,
             str(seqLength), str(numZB), str(cntHomo),
+            source_result, str(runtime),
+            seqAnno.replace('\t', ' '), date_str]
+    return info_finish
+# }}}
+def GetInfoFinish_Frag1D(outpath_this_seq, origIndex, seqLength, seqAnno, source_result="", runtime=0.0):# {{{
+    """Get the list info_finish for the method Frag1D"""
+    predfile = "%s/query.predfrag1d"%( outpath_this_seq)
+    (numZB, cntHomo) = CountNumPredZB(predfile, threshold=ZB_SCORE_THRESHOLD)
+    para_pred = StatFrag1DPred(predfile)
+    date_str = time.strftime(FORMAT_DATETIME)
+    # info_finish has 11 items
+    info_finish = [ "seq_%d"%origIndex,
+            str(seqLength), 
+            str(para_pred['per_sec_H']),
+            str(para_pred['per_sec_S']),
+            str(para_pred['per_sec_R']),
+            str(para_pred['per_s3_H']),
+            str(para_pred['per_s3_S']),
+            str(para_pred['per_s3_T']),
             source_result, str(runtime),
             seqAnno.replace('\t', ' '), date_str]
     return info_finish
