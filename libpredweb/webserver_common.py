@@ -601,9 +601,9 @@ def WriteNiceResultFrag1D(predfile, fpout):#{{{
                     continue
                 if line[0] == "#":
                     if line.find("# Num AA Sec") == 0:
-                        print >> fpout, line
+                        print(line, file=fpout)
                 else:
-                    print >> fpout, line
+                    print(line, file=fpout)
             lines = hdl.readlines()
         hdl.close()
         fpout.write("//\n\n") # write finishing tag
@@ -617,11 +617,11 @@ def WriteFrag1DTextResultFile(outfile, outpath_result, maplist, runtime_in_sec, 
         if statfile != "":
             fpstat = open(statfile, "w")
         date_str = time.strftime(FORMAT_DATETIME)
-        print >> fpout, "##############################################################################"
-        print >> fpout, "Frag1D result file"
-        print >> fpout, "Generated from %s at %s"%(base_www_url, date_str)
-        print >> fpout, "Total request time: %.1f seconds."%(runtime_in_sec)
-        print >> fpout, "##############################################################################"
+        print("##############################################################################", file=fpout)
+        print("Frag1D result file", file=fpout)
+        print("Generated from %s at %s"%(base_www_url, date_str), file=fpout)
+        print("Total request time: %.1f seconds."%(runtime_in_sec), file=fpout)
+        print("##############################################################################", file=fpout)
         cnt = 0
         for line in maplist:
             strs = line.split('\t')
@@ -629,10 +629,10 @@ def WriteFrag1DTextResultFile(outfile, outpath_result, maplist, runtime_in_sec, 
             length = int(strs[1])
             desp = strs[2]
             seq = strs[3]
-            print >> fpout, "Sequence number: %d"%(cnt+1)
-            print >> fpout, "Sequence name: %s"%(desp)
-            print >> fpout, "Sequence length: %d aa."%(length)
-            print >> fpout, "Sequence:\n%s\n\n"%(seq)
+            print("Sequence number: %d"%(cnt+1), file=fpout)
+            print("Sequence name: %s"%(desp), file=fpout)
+            print("Sequence length: %d aa."%(length), file=fpout)
+            print("Sequence:\n%s\n\n"%(seq), file=fpout)
 
             outpath_this_seq = "%s/%s"%(outpath_result, subfoldername)
             predfile = "%s/query.predfrag1d"%(outpath_this_seq)
@@ -645,7 +645,7 @@ def WriteFrag1DTextResultFile(outfile, outpath_result, maplist, runtime_in_sec, 
             fpstat.write("%s"%("\n".join(out_str_list)))
             fpstat.close()
     except IOError:
-        print "Failed to write to file %s"%(outfile)
+        print("Failed to write to file %s"%(outfile))
 #}}}
 
 @timeit
