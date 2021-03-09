@@ -2414,6 +2414,8 @@ def GetNameSoftware(name_server, queue_method):# {{{
         name_software = "pconsc3"
     elif name_server == "predzinc":
         name_software = "docker_predzinc"
+    elif name_server == "frag1d":
+        name_software = "docker_frag1d"
 
     return name_software
 # }}}
