@@ -1824,7 +1824,7 @@ def GetInfoFinish_Frag1D(outpath_this_seq, origIndex, seqLength, seqAnno, source
     (numZB, cntHomo) = CountNumPredZB(predfile, threshold=ZB_SCORE_THRESHOLD)
     para_pred = StatFrag1DPred(predfile)
     date_str = time.strftime(FORMAT_DATETIME)
-    # info_finish has 11 items
+    # info_finish has 12 items
     info_finish = [ "seq_%d"%origIndex,
             str(seqLength), 
             str(para_pred['per_sec_H']),
