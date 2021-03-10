@@ -597,13 +597,10 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
                     if dd.find("seq_") == 0 and dd not in finished_seqs_idset:
                         origIndex = int(dd.split("_")[1])
                         outpath_this_seq = "%s/%s"%(outpath_result, dd)
-                        timefile = "%s/time.txt"%(outpath_this_seq)
-                        seq = seqlist[origIndex]
-                        description = seqannolist[origIndex]
-                        runtime = webcom.ReadRuntimeFromFile(timefile, default_runtime=0.0)
-                        info_finish = webcom.GetInfoFinish_Subcons(outpath_this_seq,
-                                origIndex, len(seq), description,
-                                source_result="newrun", runtime=runtime)
+                        info_finish = webcom.GetInfoFinish(name_server, outpath_this_seq,
+                                origIndex, len(seqList[origIndex]),
+                                seqAnnoList[origIndex], source_result="cached",
+                                runtime=0.0)
                         finished_info_list.append("\t".join(info_finish))
                 if len(finished_info_list)>0:
                     myfunc.WriteFile("\n".join(finished_info_list)+"\n", finished_seq_file, "a", True)
