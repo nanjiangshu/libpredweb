@@ -1398,7 +1398,7 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
         elif name_server.lower() == "predzinc":
             resultfile_text = os.path.join(outpath_result, "query.predzinc.txt")
         elif name_server.lower() == "frag1d":
-            resultfile_text = os.path.join(outpath_result, "query.predfrag1d")
+            resultfile_text = os.path.join(outpath_result, "query.frag1d.txt")
 
         (seqIDList, seqAnnoList, seqList) = myfunc.ReadFasta(seqfile)
         maplist = []
