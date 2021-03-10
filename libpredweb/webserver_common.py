@@ -1001,6 +1001,47 @@ def GetLocDef(predfile):#{{{
 
     return (loc_def, loc_def_score)
 #}}}
+def GetStatFrag1DPred(predfile):#{{{
+    """analyze the frag1d prediction and return prediction parameters
+    """
+    para_pred = {}
+    li_s3_seq = []
+    li_sec_seq = []
+    hdl = myfunc.ReadLineByBlock(predfile)
+    if not hdl.failure:
+        lines = hdl.readlines()
+        while lines != None:
+            for line in lines:
+                if not line or line[0] == "#" or line[0]=="/":
+                    continue
+                strs = line.split()
+                if len(strs)==8:
+                    li_sec_seq.append(strs[2])
+                    li_s3_seq.append(strs[6])
+            lines = hdl.readlines()
+        hdl.close()
+    lenseq = len(li_sec_seq)
+    cnt_sec_H = li_sec_seq.count("H")
+    cnt_sec_S = li_sec_seq.count("S")
+    cnt_sec_R = li_sec_seq.count("R")
+    cnt_s3_H = li_s3_seq.count("H")
+    cnt_s3_S = li_s3_seq.count("S")
+    cnt_s3_T = li_s3_seq.count("T")
+
+    per_sec_H = myfunc.FloatDivision(cnt_sec_H, lenseq)*100
+    per_sec_S =  myfunc.FloatDivision(cnt_sec_S, lenseq)*100 
+    per_sec_R =   myfunc.FloatDivision(cnt_sec_R, lenseq)*100 
+    per_s3_H =   myfunc.FloatDivision(cnt_s3_H, lenseq)*100 
+    per_s3_S =   myfunc.FloatDivision(cnt_s3_S, lenseq)*100  
+    per_s3_T =  myfunc.FloatDivision(cnt_s3_T, lenseq)*100  
+    para_pred['per_sec_H'] = per_sec_H
+    para_pred['per_sec_R'] = per_sec_R
+    para_pred['per_sec_S'] = per_sec_S
+    para_pred['per_s3_H'] = per_s3_H
+    para_pred['per_s3_S'] = per_s3_S
+    para_pred['per_s3_T'] = per_s3_T
+    return para_pred
+#}}}
 def datetime_str_to_epoch(date_str):# {{{
     """convert the date_time in string to epoch
     The string of date_time may with or without the zone info
@@ -1823,8 +1864,7 @@ def GetInfoFinish_PredZinc(outpath_this_seq, origIndex, seqLength, seqAnno, sour
 def GetInfoFinish_Frag1D(outpath_this_seq, origIndex, seqLength, seqAnno, source_result="", runtime=0.0):# {{{
     """Get the list info_finish for the method Frag1D"""
     predfile = "%s/query.predfrag1d"%( outpath_this_seq)
-    (numZB, cntHomo) = CountNumPredZB(predfile, threshold=ZB_SCORE_THRESHOLD)
-    para_pred = StatFrag1DPred(predfile)
+    para_pred = GetStatFrag1DPred(predfile)
     date_str = time.strftime(FORMAT_DATETIME)
     # info_finish has 12 items
     info_finish = [ "seq_%d"%origIndex,
