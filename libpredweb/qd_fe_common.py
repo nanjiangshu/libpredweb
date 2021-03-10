@@ -584,7 +584,7 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
                 finished_seqs_idset = set(finished_seqs_idlist)
                 finished_info_list = []
                 queryfile = "%s/query.fa"%(rstdir)
-                (seqidlist, seqannolist, seqlist) = myfunc.ReadFasta(queryfile)
+                (seqIDList, seqAnnoList, seqList) = myfunc.ReadFasta(queryfile)
                 try:
                     dirlist = os.listdir(outpath_result)
                 except Exception as e:
