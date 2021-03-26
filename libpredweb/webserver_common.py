@@ -1052,10 +1052,11 @@ def datetime_str_to_epoch(date_str):# {{{
     except:
         return time.strftime('%s')
 # }}}
-def datetime_str_to_time(date_str):# {{{
+def datetime_str_to_time(date_str, isSetDefault=True):# {{{
     """convert the date_time in string to datetime type
     The string of date_time may with or without the zone info
-    return the the current time when conversion failed
+    return the the current time when conversion failed if isSetDefault is True
+    otherwise return None when conversion failed
     """
     try:
         strs = date_str.split()
@@ -1066,7 +1067,10 @@ def datetime_str_to_time(date_str):# {{{
         dt = dtparser.parse(date_str)
         return dt
     except:
-        return datetime.now(timezone(TZ))
+        if isSetDefault:
+            return datetime.now(timezone(TZ))
+        else:
+            return None
 # }}}
 
 def WriteSubconsTextResultFile(outfile, outpath_result, maplist,#{{{
