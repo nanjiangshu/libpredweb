@@ -850,7 +850,7 @@ def WriteTOPCONSTextResultFile(outfile, outpath_result, maplist,#{{{
 #}}}
 
 def WriteHTMLHeader(title, fpout):#{{{
-    exturl = "http://topcons.net/static"
+    exturl = "https://topcons.net/static"
     print("<HTML>", file=fpout)
     print("<head>", file=fpout)
     print("<title>%s</title>"%(title), file=fpout)
@@ -2409,25 +2409,25 @@ def ArchiveLogFile(path_log, threshold_logfilesize=20*1024*1024, g_params={}):# 
 
 def get_default_server_url(name_server):# {{{
     if name_server == "subcons":
-        return "http://subcons.bioinfo.se"
+        return "https://subcons.bioinfo.se"
     elif name_server == "prodres":
-        return "http://prodres.bioinfo.se"
+        return "https://prodres.bioinfo.se"
     elif name_server == "topcons2":
-        return "http://topcons.net"
+        return "https://topcons.net"
     elif name_server == "scampi2":
-        return "http://scampi.bioinfo.se"
+        return "https://scampi.bioinfo.se"
     elif name_server == "boctopus2":
-        return "http://boctopus.bioinfo.se"
+        return "https://boctopus.bioinfo.se"
     elif name_server == "proq3":
-        return "http://proq3.bioinfo.se"
+        return "https://proq3.bioinfo.se"
     elif name_server == "pconsc3":
-        return "http://pconsc3.bioinfo.se"
+        return "https://pconsc3.bioinfo.se"
     elif name_server == "pathopred":
-        return "http://pathopred.bioinfo.se"
+        return "https://pathopred.bioinfo.se"
     elif name_server == "predzinc":
-        return "http://predzinc.bioshu.se"
+        return "https://predzinc.bioshu.se"
     elif name_server == "frag1d":
-        return "http://frag1d.bioshu.se"
+        return "https://frag1d.bioshu.se"
 # }}}
 def GetNameSoftware(name_server, queue_method):# {{{
     """Determine name_software for each webserver
