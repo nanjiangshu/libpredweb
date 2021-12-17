@@ -2094,9 +2094,7 @@ def GetNameSoftware(name_server, queue_method):# {{{
     """Determine name_software for each webserver
     """
     if name_server == "subcons":
-        name_software = "docker_subcons"
-        if queue_method == "slurm":
-            name_software = "singularity_subcons"
+        name_software = "singularity_subcons"
     elif name_server == "prodres":
         name_software = "prodres"
     elif name_server == "topcons2":
