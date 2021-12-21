@@ -235,7 +235,7 @@ def ResetToRunDictByScampiSingle(toRunDict, script_scampi, tmpdir):# {{{
     if os.path.exists(torun_all_seqfile):
         # run scampi to estimate the number of TM helices
         cmd = [script_scampi, torun_all_seqfile, "-outpath", tmpdir]
-        webcom.RunCmd(cmd, runjob_logfile, runjob_errfile)
+        RunCmd(cmd, runjob_logfile, runjob_errfile)
     if os.path.exists(topfile_scampiseq):
         (idlist_scampi, annolist_scampi, toplist_scampi) = myfunc.ReadFasta(topfile_scampiseq)
         for jj in range(len(idlist_scampi)):
