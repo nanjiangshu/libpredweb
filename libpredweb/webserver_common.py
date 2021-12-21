@@ -216,7 +216,7 @@ def GetProQ3Option(query_para):#{{{
     return proq3opt
 
 #}}}
-def ResetToRunDictByScampiSingle(toRunDict, script_scampi, tmpdir):# {{{
+def ResetToRunDictByScampiSingle(toRunDict, script_scampi, tmpdir, runjob_logfile, runjob_errfile):# {{{
     """Reset the toRunDict and order the query sequences in the descending
     order of numTM, which is estimated by Scampi Single
     """

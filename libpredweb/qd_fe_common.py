@@ -1139,7 +1139,7 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
                 toRunDict[i] = [seqList[i], 0, seqAnnoList[i].replace('\t', ' ')]
 
         if name_server == "topcons2":
-            webcom.ResetToRunDictByScampiSingle(toRunDict, g_params['script_scampi'], tmpdir)
+            webcom.ResetToRunDictByScampiSingle(toRunDict, g_params['script_scampi'], tmpdir, runjob_logfile, runjob_errfile)
         sortedlist = sorted(list(toRunDict.items()), key=lambda x:x[1][1], reverse=True)
 
         # Write splitted fasta file and write a torunlist.txt
