@@ -147,7 +147,19 @@ def CountNumPredZB(predfile, threshold=0.45):#{{{
     else:
         return (cntZB, cntHomo)
 #}}}
-
+def LoadJsonFromFile(jsonfile):# {{{
+    """Load json object from the json file
+    """
+    query_para = {}
+    if os.path.exists(jsonfile):
+        content = myfunc.ReadFile(jsonfile)
+        if content != "":
+            try:
+                query_para = json.loads(content)
+            except:
+                query_para = {}
+    return query_para
+# }}}
 def ReadProQ3GlobalScore(infile):#{{{
     #return globalscore and itemList
     #itemList is the name of the items
@@ -204,6 +216,35 @@ def GetProQ3Option(query_para):#{{{
     return proq3opt
 
 #}}}
+def ResetToRunDictByScampiSingle(toRunDict, script_scampi, tmpdir, runjob_logfile, runjob_errfile):# {{{
+    """Reset the toRunDict and order the query sequences in the descending
+    order of numTM, which is estimated by Scampi Single
+    """
+    torun_all_seqfile = "%s/%s"%(tmpdir, "query.torun.fa")
+    dumplist = []
+    for key in toRunDict:
+        top = toRunDict[key][0]
+        dumplist.append(">%s\n%s"%(str(key), top))
+    if len(dumplist)>0:
+        myfunc.WriteFile("\n".join(dumplist)+"\n", torun_all_seqfile, "w", True)
+    else:
+        myfunc.WriteFile("", torun_all_seqfile, "w", True)
+    del dumplist
+
+    topfile_scampiseq = "%s/%s"%(tmpdir, "query.torun.fa.topo")
+    if os.path.exists(torun_all_seqfile):
+        # run scampi to estimate the number of TM helices
+        cmd = [script_scampi, torun_all_seqfile, "-outpath", tmpdir]
+        RunCmd(cmd, runjob_logfile, runjob_errfile)
+    if os.path.exists(topfile_scampiseq):
+        (idlist_scampi, annolist_scampi, toplist_scampi) = myfunc.ReadFasta(topfile_scampiseq)
+        for jj in range(len(idlist_scampi)):
+            numTM = myfunc.CountTM(toplist_scampi[jj])
+            try:
+                toRunDict[int(idlist_scampi[jj])][1] = numTM
+            except (KeyError, ValueError, TypeError):
+                pass
+# }}}
 
 def ReadJobInfo(infile):# {{{
     """Read file jobinfo. return a dictionary
@@ -237,6 +278,7 @@ def ReadJobInfo(infile):# {{{
 def WriteDumpedTextResultFile(name_server, outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile=""):#{{{
     """Write the prediction result to a single text file. This function does not work for proq3
     """
+    name_server = name_server.lower()
     if name_server == "topcons2":
         WriteTOPCONSTextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile)
     elif name_server == "subcons":
@@ -2069,6 +2111,7 @@ def ArchiveLogFile(path_log, threshold_logfilesize=20*1024*1024, g_params={}):# 
 # }}}
 
 def get_default_server_url(name_server):# {{{
+    name_server = name_server.lower()
     if name_server == "subcons":
         return "https://subcons.bioinfo.se"
     elif name_server == "prodres":
@@ -2093,6 +2136,7 @@ def get_default_server_url(name_server):# {{{
 def GetNameSoftware(name_server, queue_method):# {{{
     """Determine name_software for each webserver
     """
+    name_server = name_server.lower()
     if name_server == "subcons":
         name_software = "singularity_subcons"
     elif name_server == "prodres":
