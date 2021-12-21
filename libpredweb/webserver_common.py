@@ -216,6 +216,35 @@ def GetProQ3Option(query_para):#{{{
     return proq3opt
 
 #}}}
+def ResetToRunDictByScampiSingle(toRunDict, script_scampi, tmpdir):# {{{
+    """Reset the toRunDict and order the query sequences in the descending
+    order of numTM, which is estimated by Scampi Single
+    """
+    torun_all_seqfile = "%s/%s"%(tmpdir, "query.torun.fa")
+    dumplist = []
+    for key in toRunDict:
+        top = toRunDict[key][0]
+        dumplist.append(">%s\n%s"%(str(key), top))
+    if len(dumplist)>0:
+        myfunc.WriteFile("\n".join(dumplist)+"\n", torun_all_seqfile, "w", True)
+    else:
+        myfunc.WriteFile("", torun_all_seqfile, "w", True)
+    del dumplist
+
+    topfile_scampiseq = "%s/%s"%(tmpdir, "query.torun.fa.topo")
+    if os.path.exists(torun_all_seqfile):
+        # run scampi to estimate the number of TM helices
+        cmd = [script_scampi, torun_all_seqfile, "-outpath", tmpdir]
+        webcom.RunCmd(cmd, runjob_logfile, runjob_errfile)
+    if os.path.exists(topfile_scampiseq):
+        (idlist_scampi, annolist_scampi, toplist_scampi) = myfunc.ReadFasta(topfile_scampiseq)
+        for jj in range(len(idlist_scampi)):
+            numTM = myfunc.CountTM(toplist_scampi[jj])
+            try:
+                toRunDict[int(idlist_scampi[jj])][1] = numTM
+            except (KeyError, ValueError, TypeError):
+                pass
+# }}}
 
 def ReadJobInfo(infile):# {{{
     """Read file jobinfo. return a dictionary

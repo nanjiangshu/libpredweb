@@ -655,7 +655,7 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
         myfunc.WriteFile("", runjoblogfile, "w", True)
 
 #}}}
-def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
+def SubmitJob_old(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
 # for each job rstdir, keep three log files, 
 # 1.seqs finished, finished_seq log keeps all information, finished_index_log
 #   can be very compact to speed up reading, e.g.
@@ -981,6 +981,333 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
 
     return 0
 #}}}
+def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
+# for each job rstdir, keep three log files, 
+# 1.seqs finished, finished_seq log keeps all information, finished_index_log
+#   can be very compact to speed up reading, e.g.
+#   1-5 7-9 etc
+# 2.seqs queued remotely , format:
+#       index node remote_jobid
+# 3. format of the torun_idx_file
+#    origIndex
+    gen_logfile = g_params['gen_logfile']
+    gen_errfile = g_params['gen_errfile']
+    name_server = g_params['name_server']
+
+    webcom.loginfo("SubmitJob for %s, numseq_this_user=%d"%(jobid, numseq_this_user), gen_logfile)
+
+    path_static = g_params['path_static']
+    path_cache = g_params['path_cache']
+
+    path_result = os.path.join(path_static, 'result')
+    path_log = os.path.join(path_static, 'log')
+
+    rstdir = "%s/%s"%(path_result, jobid)
+    outpath_result = "%s/%s"%(rstdir, jobid)
+    if not os.path.exists(outpath_result):
+        os.mkdir(outpath_result)
+
+    finished_idx_file = "%s/finished_seqindex.txt"%(rstdir)
+    failed_idx_file = "%s/failed_seqindex.txt"%(rstdir)
+    remotequeue_idx_file = "%s/remotequeue_seqindex.txt"%(rstdir)
+    torun_idx_file = "%s/torun_seqindex.txt"%(rstdir) # ordered seq index to run
+    cnttry_idx_file = "%s/cntsubmittry_seqindex.txt"%(rstdir)#index file to keep log of tries
+
+    runjob_errfile = "%s/%s"%(rstdir, "runjob.err")
+    runjob_logfile = "%s/%s"%(rstdir, "runjob.log")
+    finished_seq_file = "%s/finished_seqs.txt"%(outpath_result)
+    query_parafile = "%s/query.para.txt"%(rstdir)
+    query_para = webcom.LoadJsonFromFile(query_parafile)
+    tmpdir = "%s/tmpdir"%(rstdir)
+    qdinittagfile = "%s/runjob.qdinit"%(rstdir)
+    failedtagfile = "%s/%s"%(rstdir, "runjob.failed")
+    starttagfile = "%s/%s"%(rstdir, "runjob.start")
+    cache_process_finish_tagfile = "%s/cache_processed.finish"%(rstdir)
+    fafile = "%s/query.fa"%(rstdir)
+    split_seq_dir = "%s/splitaa"%(tmpdir)
+    forceruntagfile = "%s/forcerun"%(rstdir)
+    lastprocessed_cache_idx_file = "%s/lastprocessed_cache_idx.txt"%(rstdir)
+    variant_file = "%s/variants.fa"%(rstdir)
+
+    if os.path.exists(forceruntagfile):
+        isForceRun = True
+    else:
+        isForceRun = False
+
+    finished_idx_list = []
+    failed_idx_list = []    # [origIndex]
+    if os.path.exists(finished_idx_file):
+        finished_idx_list = list(set(myfunc.ReadIDList(finished_idx_file)))
+    if os.path.exists(failed_idx_file):
+        failed_idx_list = list(set(myfunc.ReadIDList(failed_idx_file)))
+
+    processed_idx_set = set(finished_idx_list) | set(failed_idx_list)
+
+    jobinfofile = "%s/jobinfo"%(rstdir)
+    jobinfo = ""
+    if os.path.exists(jobinfofile):
+        jobinfo = myfunc.ReadFile(jobinfofile).strip()
+    jobinfolist = jobinfo.split("\t")
+    email = ""
+    if len(jobinfolist) >= 8:
+        email = jobinfolist[6]
+        method_submission = jobinfolist[7]
+
+    # the first time when the this jobid is processed, do the following
+    # 1. generate a file with sorted seqindex
+    # 2. generate splitted sequence files named by the original seqindex
+    if not os.path.exists(qdinittagfile): #initialization#{{{
+        if not os.path.exists(tmpdir):
+            os.mkdir(tmpdir)
+        if isForceRun or os.path.exists(cache_process_finish_tagfile):
+            isCacheProcessingFinished = True
+        else:
+            isCacheProcessingFinished = False
+
+        # ==== 1.dealing with cached results 
+        (seqIDList, seqAnnoList, seqList) = myfunc.ReadFasta(fafile)
+        if len(seqIDList) <= 0:
+            webcom.WriteDateTimeTagFile(failedtagfile, runjob_logfile, runjob_errfile)
+            webcom.loginfo("Read query seq file failed. Zero sequence read in", runjob_errfile)
+            return 1
+
+        if 'DEBUG' in g_params and g_params['DEBUG']:
+            msg = "jobid = %s, isCacheProcessingFinished=%s, MAX_CACHE_PROCESS=%d"%(
+                    jobid, str(isCacheProcessingFinished), g_params['MAX_CACHE_PROCESS'])
+            webcom.loginfo(msg, gen_logfile)
+
+        if not isCacheProcessingFinished:
+            finished_idx_set = set(finished_idx_list)
+
+            lastprocessed_idx = -1
+            if os.path.exists(lastprocessed_cache_idx_file):
+                try:
+                    lastprocessed_idx = int(myfunc.ReadFile(lastprocessed_cache_idx_file))
+                except:
+                    lastprocessed_idx = -1
+
+            cnt_processed_cache = 0
+            for i in range(lastprocessed_idx+1, len(seqIDList)):
+                if i in finished_idx_set:
+                    continue
+                outpath_this_seq = "%s/%s"%(outpath_result, "seq_%d"%i)
+                subfoldername_this_seq = "seq_%d"%(i)
+                md5_key = hashlib.md5(seqList[i].encode('utf-8')).hexdigest()
+                subfoldername = md5_key[:2]
+                cachedir = "%s/%s/%s"%(path_cache, subfoldername, md5_key)
+                zipfile_cache = cachedir + ".zip"
+
+                if os.path.exists(cachedir) or os.path.exists(zipfile_cache):
+                    if os.path.exists(cachedir):
+                        try:
+                            shutil.copytree(cachedir, outpath_this_seq)
+                        except Exception as e:
+                            msg = "Failed to copytree  %s -> %s"%(cachedir, outpath_this_seq)
+                            webcom.loginfo("%s with errmsg=%s"%(msg, str(e)), runjob_errfile)
+                    elif os.path.exists(zipfile_cache):
+                        cmd = ["unzip", zipfile_cache, "-d", outpath_result]
+                        webcom.RunCmd(cmd, runjob_logfile, runjob_errfile)
+                        if os.path.exists(outpath_this_seq):
+                            shutil.rmtree(outpath_this_seq)
+                        shutil.move("%s/%s"%(outpath_result, md5_key), outpath_this_seq)
+
+                    fafile_this_seq =  '%s/seq.fa'%(outpath_this_seq)
+                    if os.path.exists(outpath_this_seq) and webcom.IsCheckPredictionPassed(outpath_this_seq, name_server):
+                        myfunc.WriteFile('>%s\n%s\n'%(seqAnnoList[i], seqList[i]), fafile_this_seq, 'w', True)
+                        if not os.path.exists(starttagfile): #write start tagfile
+                            webcom.WriteDateTimeTagFile(starttagfile, runjob_logfile, runjob_errfile)
+
+                        info_finish = webcom.GetInfoFinish(name_server, outpath_this_seq,
+                                i, len(seqList[i]), seqAnnoList[i], source_result="cached", runtime=0.0)
+                        myfunc.WriteFile("\t".join(info_finish)+"\n",
+                                finished_seq_file, "a", isFlush=True)
+                        myfunc.WriteFile("%d\n"%(i), finished_idx_file, "a", True)
+
+                    if 'DEBUG' in g_params and g_params['DEBUG']:
+                        webcom.loginfo("Get result from cache for seq_%d"%(i), gen_logfile)
+                    if cnt_processed_cache+1 >= g_params['MAX_CACHE_PROCESS']:
+                        myfunc.WriteFile(str(i), lastprocessed_cache_idx_file, "w", True)
+                        return 0
+                    cnt_processed_cache += 1
+
+            webcom.WriteDateTimeTagFile(cache_process_finish_tagfile, runjob_logfile, runjob_errfile)
+
+        # Regenerate toRunDict
+        toRunDict = {}
+        for i in range(len(seqIDList)):
+            if not i in processed_idx_set:
+                toRunDict[i] = [seqList[i], 0, seqAnnoList[i].replace('\t', ' ')]
+
+        if name_server == "topcons2":
+            ResetToRunDictByScampiSingle(toRunDict, g_params['script_scampi'], tmpdir)
+        sortedlist = sorted(list(toRunDict.items()), key=lambda x:x[1][1], reverse=True)
+
+        # Write splitted fasta file and write a torunlist.txt
+        if not os.path.exists(split_seq_dir):
+            os.mkdir(split_seq_dir)
+
+        torun_index_str_list = [str(x[0]) for x in sortedlist]
+        if len(torun_index_str_list)>0:
+            myfunc.WriteFile("\n".join(torun_index_str_list)+"\n", torun_idx_file, "w", True)
+        else:
+            myfunc.WriteFile("", torun_idx_file, "w", True)
+
+        # write cnttry file for each jobs to run
+        cntTryDict = {}
+        for idx in torun_index_str_list:
+            cntTryDict[int(idx)] = 0
+        json.dump(cntTryDict, open(cnttry_idx_file, "w"))
+
+        for item in sortedlist:
+            origIndex = item[0]
+            seq = item[1][0]
+            description = item[1][2]
+            seqfile_this_seq = "%s/%s"%(split_seq_dir, "query_%d.fa"%(origIndex))
+            seqcontent = ">%s\n%s\n"%(description, seq)
+            myfunc.WriteFile(seqcontent, seqfile_this_seq, "w", True)
+        # qdinit file is written at the end of initialization, to make sure
+        # that initialization is either not started or completed
+        webcom.WriteDateTimeTagFile(qdinittagfile, runjob_logfile, runjob_errfile)
+#}}}
+
+
+    # 3. try to submit the job 
+    toRunIndexList = [] # index in str
+    processedIndexSet = set([]) #seq index set that are already processed
+    submitted_loginfo_list = []
+    if os.path.exists(torun_idx_file):
+        toRunIndexList = myfunc.ReadIDList(torun_idx_file)
+        # unique the list but keep the order
+        toRunIndexList = myfunc.uniquelist(toRunIndexList)
+    if len(toRunIndexList) > 0:
+        iToRun = 0
+        numToRun = len(toRunIndexList)
+        for node in cntSubmitJobDict:
+            if iToRun >= numToRun:
+                break
+            wsdl_url = "http://%s/pred/api_submitseq/?wsdl"%(node)
+            try:
+                myclient = Client(wsdl_url, cache=None, timeout=30)
+            except:
+                webcom.loginfo("Failed to access %s"%(wsdl_url), gen_logfile)
+                break
+
+            [cnt, maxnum, queue_method] = cntSubmitJobDict[node]
+            cnttry = 0
+            while cnt < maxnum and iToRun < numToRun:
+                origIndex = int(toRunIndexList[iToRun])
+                seqfile_this_seq = "%s/%s"%(split_seq_dir, "query_%d.fa"%(origIndex))
+                # ignore already existing query seq, this is an ugly solution,
+                # the generation of torunindexlist has a bug
+                outpath_this_seq = "%s/%s"%(outpath_result, "seq_%d"%origIndex)
+                if os.path.exists(outpath_this_seq):
+                    iToRun += 1
+                    continue
+
+                if 'DEBUG' in g_params and g_params['DEBUG']:
+                    webcom.loginfo("DEBUG: cnt (%d) < maxnum (%d) "\
+                            "and iToRun(%d) < numToRun(%d)"%(cnt, maxnum, iToRun, numToRun), gen_logfile)
+                fastaseq = ""
+                seqid = ""
+                seqanno = ""
+                seq = ""
+                if not os.path.exists(seqfile_this_seq):
+                    all_seqfile = "%s/query.fa"%(rstdir)
+                    try:
+                        (allseqidlist, allannolist, allseqlist) = myfunc.ReadFasta(all_seqfile)
+                        seqid = allseqidlist[origIndex]
+                        seqanno = allannolist[origIndex]
+                        seq = allseqlist[origIndex]
+                        fastaseq = ">%s\n%s\n"%(seqanno, seq)
+                    except:
+                        pass
+                else:
+                    fastaseq = myfunc.ReadFile(seqfile_this_seq)#seq text in fasta format
+                    (seqid, seqanno, seq) = myfunc.ReadSingleFasta(seqfile_this_seq)
+
+
+                isSubmitSuccess = False
+                if len(seq) > 0:
+                    query_para['name_software'] = webcom.GetNameSoftware(name_server.lower(), queue_method)
+                    query_para['queue_method'] = queue_method
+                    if name_server.lower() == "pathopred":
+                        variant_text = myfunc.ReadFile(variant_file)
+                        query_para['variants'] = variant_text
+                        #also include the identifier name as a query parameter
+                        query_para['identifier_name'] = seqid
+
+                    para_str = json.dumps(query_para, sort_keys=True)
+                    jobname = ""
+                    if not email in g_params['vip_user_list']:
+                        useemail = ""
+                    else:
+                        useemail = email
+                    try:
+                        myfunc.WriteFile("\tSubmitting seq %4d "%(origIndex),
+                                gen_logfile, "a", True)
+                        rtValue = myclient.service.submitjob_remote(fastaseq, para_str,
+                                jobname, useemail, str(numseq_this_user), str(isForceRun))
+                    except Exception as e:
+                        webcom.loginfo("Failed to run myclient.service.submitjob_remote with errmsg=%s"%(str(e)), gen_logfile)
+                        rtValue = []
+                        pass
+
+                    cnttry += 1
+                    if len(rtValue) >= 1:
+                        strs = rtValue[0]
+                        if len(strs) >=5:
+                            remote_jobid = strs[0]
+                            result_url = strs[1]
+                            numseq_str = strs[2]
+                            errinfo = strs[3]
+                            warninfo = strs[4]
+                            if remote_jobid != "None" and remote_jobid != "":
+                                isSubmitSuccess = True
+                                epochtime = time.time()
+                                # 6 fields in the file remotequeue_idx_file
+                                txt =  "%d\t%s\t%s\t%s\t%s\t%f"%( origIndex,
+                                        node, remote_jobid, seqanno.replace('\t', ' '), seq,
+                                        epochtime)
+                                submitted_loginfo_list.append(txt)
+                                cnttry = 0  #reset cnttry to zero
+                        else:
+                            webcom.loginfo("bad wsdl return value", gen_logfile)
+
+                if isSubmitSuccess:
+                    cnt += 1
+                    myfunc.WriteFile(" succeeded on node %s\n"%(node), gen_logfile, "a", True)
+                else:
+                    myfunc.WriteFile(" failed on node %s\n"%(node), gen_logfile, "a", True)
+
+                if isSubmitSuccess or cnttry >= g_params['MAX_SUBMIT_TRY']:
+                    iToRun += 1
+                    processedIndexSet.add(str(origIndex))
+                    if 'DEBUG' in g_params and g_params['DEBUG']:
+                        webcom.loginfo("DEBUG: jobid %s processedIndexSet.add(str(%d))\n"%(jobid, origIndex), gen_logfile)
+            # update cntSubmitJobDict for this node
+            cntSubmitJobDict[node][0] = cnt
+
+    # finally, append submitted_loginfo_list to remotequeue_idx_file 
+    if 'DEBUG' in g_params and g_params['DEBUG']:
+        webcom.loginfo("DEBUG: len(submitted_loginfo_list)=%d\n"%(len(submitted_loginfo_list)), gen_logfile)
+    if len(submitted_loginfo_list)>0:
+        myfunc.WriteFile("\n".join(submitted_loginfo_list)+"\n", remotequeue_idx_file, "a", True)
+    # update torun_idx_file
+    newToRunIndexList = []
+    for idx in toRunIndexList:
+        if not idx in processedIndexSet:
+            newToRunIndexList.append(idx)
+    if 'DEBUG' in g_params and g_params['DEBUG']:
+        webcom.loginfo("DEBUG: jobid %s, newToRunIndexList="%(jobid) + " ".join( newToRunIndexList), gen_logfile)
+
+    if len(newToRunIndexList)>0:
+        myfunc.WriteFile("\n".join(newToRunIndexList)+"\n", torun_idx_file, "w", True)
+    else:
+        myfunc.WriteFile("", torun_idx_file, "w", True)
+
+    return 0
+#}}}
+
 def GetResult(jobid, g_params):#{{{
     # retrieving result from the remote server for this job
     gen_logfile = g_params['gen_logfile']
