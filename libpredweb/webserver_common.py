@@ -278,6 +278,7 @@ def ReadJobInfo(infile):# {{{
 def WriteDumpedTextResultFile(name_server, outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile=""):#{{{
     """Write the prediction result to a single text file. This function does not work for proq3
     """
+    name_server = name_server.lower()
     if name_server == "topcons2":
         WriteTOPCONSTextResultFile(outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile)
     elif name_server == "subcons":
@@ -2110,6 +2111,7 @@ def ArchiveLogFile(path_log, threshold_logfilesize=20*1024*1024, g_params={}):# 
 # }}}
 
 def get_default_server_url(name_server):# {{{
+    name_server = name_server.lower()
     if name_server == "subcons":
         return "https://subcons.bioinfo.se"
     elif name_server == "prodres":
@@ -2134,6 +2136,7 @@ def get_default_server_url(name_server):# {{{
 def GetNameSoftware(name_server, queue_method):# {{{
     """Determine name_software for each webserver
     """
+    name_server = name_server.lower()
     if name_server == "subcons":
         name_software = "singularity_subcons"
     elif name_server == "prodres":
