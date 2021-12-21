@@ -151,8 +151,8 @@ def LoadJsonFromFile(jsonfile):# {{{
     """Load json object from the json file
     """
     query_para = {}
-    if os.path.exists(query_parafile):
-        content = myfunc.ReadFile(query_parafile)
+    if os.path.exists(jsonfile):
+        content = myfunc.ReadFile(jsonfile)
         if content != "":
             try:
                 query_para = json.loads(content)
