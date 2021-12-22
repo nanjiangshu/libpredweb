@@ -1403,11 +1403,12 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
         if base_www_url == "":
             base_www_url = webcom.get_default_server_url(name_server.lower())
 
-        date_str_epoch = time.time()
+        date_str_epoch_now = time.time()
 
         # Now write the text output to a single file
         statfile = "%s/%s"%(outpath_result, "stat.txt")
         resultfile_text = "%s/%s"%(outpath_result, "query.result.txt")
+        resultfile_html = "%s/%s"%(outpath_result, "query.result.html")
         if name_server.lower() == 'pconsc3':
             resultfile_text = os.path.join(outpath_result, "query.pconsc3.txt")
         elif name_server.lower() == "boctopus2":
@@ -1421,25 +1422,42 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
         maplist = []
         for i in range(len(seqIDList)):
             maplist.append("%s\t%d\t%s\t%s"%("seq_%d"%i, len(seqList[i]),
-                seqAnnoList[i], seqList[i]))
+                seqAnnoList[i].replace('\t', ' '), seqList[i]))
         start_date_str = myfunc.ReadFile(starttagfile).strip()
         start_date_epoch = webcom.datetime_str_to_epoch(start_date_str)
-        all_runtime_in_sec = float(date_str_epoch) - float(start_date_epoch)
+        all_runtime_in_sec = float(date_str_epoch_now) - float(start_date_epoch)
 
-        webcom.WriteDumpedTextResultFile(name_server.lower(), resultfile_text, outpath_result, maplist,
-                all_runtime_in_sec, base_www_url, statfile)
+        finishtagfile_result = "%s/%s"%(rstdir, "write_result_finish.tag")
+        if not os.path.exists(finishtagfile_result):
+            msg =  "Dump result to file %s ..."%(resultfile_text)
+            webcom.loginfo(msg, gen_logfile)
+            webcom.WriteDumpedTextResultFile(name_server.lower(), resultfile_text, outpath_result, maplist,
+                    all_runtime_in_sec, base_www_url, statfile)
+
+        if name_server.lower == "topcons2":
+            finishtagfile_resulthtml = "%s/%s"%(rstdir, "write_htmlresult_finish.tag")
+            if not os.path.exists(finishtagfile_resulthtml):
+                webcom.loginfo("Write HTML table to %s ..."%(resultfile_html), gen_logfile)
+                webcom.WriteHTMLResultTable_TOPCONS(resultfile_html, finished_seq_file)
 
         # note that zip rq will zip the real data for symbolic links
         zipfile = "%s.zip"%(jobid)
         zipfile_fullpath = "%s/%s"%(rstdir, zipfile)
         os.chdir(rstdir)
+        is_zip_success = True
         cmd = ["zip", "-rq", zipfile, jobid]
-        webcom.RunCmd(cmd, runjob_logfile, runjob_errfile)
+
+        finishtagfile_zipfile = "%s/%s"%(rstdir, "write_zipfile_finish.tag")
+        if not os.path.exists(finishtagfile_zipfile):
+            (is_zip_success, t_runtime) = webcom.RunCmd(cmd, runjob_logfile, runjob_errfile)
+            if is_zip_success:
+                webcom.WriteDateTimeTagFile(finishtagfile_zipfile, runjob_logfile, runjob_errfile)
 
         if len(failed_idx_list)>0:
-            myfunc.WriteFile(date_str, failedtagfile, "w", True)
+            webcom.WriteDateTimeTagFile(failedtagfile, runjob_logfile, runjob_errfile)
 
-        webcom.WriteDateTimeTagFile(finishtagfile, runjob_logfile, runjob_errfile)
+        if is_zip_success:
+            webcom.WriteDateTimeTagFile(finishtagfile, runjob_logfile, runjob_errfile)
 
         if finish_status == "success":
             shutil.rmtree(tmpdir)
