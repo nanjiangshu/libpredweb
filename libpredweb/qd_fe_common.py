@@ -27,7 +27,7 @@ import requests
 import urllib.request, urllib.parse, urllib.error
 
 def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):#{{{
-    """Function for qd_fe to run statistics for the web-server usage
+    """Function for qd_fe to run usage statistics for the web-server usage
     """
     path_log = os.path.join(webserver_root, 'proj','pred', 'static', 'log')
     path_result = os.path.join(webserver_root, 'proj','pred', 'static', 'result')
@@ -378,7 +378,10 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):#{{{
             webcom.RunCmd(cmd, gen_logfile, gen_errfile)
 
 #}}}
+
 def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
+    """Create the index file for the jobs to be run
+    """
     gen_logfile = g_params['gen_logfile']
     gen_errfile = g_params['gen_errfile']
     name_server = g_params['name_server']
@@ -655,7 +658,10 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
         myfunc.WriteFile("", runjoblogfile, "w", True)
 
 #}}}
+
 def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
+    """Submit a job to the remote computational node
+    """
 # for each job rstdir, keep three log files, 
 # 1.seqs finished, finished_seq log keeps all information, finished_index_log
 #   can be very compact to speed up reading, e.g.
@@ -989,6 +995,8 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
 #}}}
 
 def GetResult(jobid, g_params):#{{{
+    """Get the result from the remote computational node for a job
+    """
     # retrieving result from the remote server for this job
     gen_logfile = g_params['gen_logfile']
     gen_errfile = g_params['gen_errfile']
@@ -1339,8 +1347,10 @@ def GetResult(jobid, g_params):#{{{
         json.dump(cntTryDict, fpout)
     return 0
 #}}}
+
 def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
-    """check if the job is finished and write tag files"""
+    """check if the job is finished and write tag files
+    """
     gen_logfile = g_params['gen_logfile']
     gen_errfile = g_params['gen_errfile']
     name_server = g_params['name_server']
