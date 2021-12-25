@@ -14,6 +14,7 @@ import re
 from . import myfunc
 from . import webserver_common as webcom
 from . import dataprocess
+import math
 import time
 from datetime import datetime
 from pytz import timezone
@@ -398,7 +399,6 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
     runjoblogfile = "%s/runjob_log.log"%(path_log)
     finishedjoblogfile = "%s/finished_job.log"%(path_log)
 
-
     # Read entries from submitjoblogfile, checking in the result folder and
     # generate two logfiles: 
     #   1. runjoblogfile 
@@ -413,6 +413,9 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
     if os.path.exists(finishedjoblogfile):
         finished_job_dict = myfunc.ReadFinishedJobLog(finishedjoblogfile)
 
+    # these two list try to update the finished list and submitted list so that
+    # deleted jobs will not be included, there is a separate list started with
+    # all_xxx which keeps also the historical jobs
     new_finished_list = []  # Finished or Failed
     new_submitted_list = []  # 
 
@@ -471,8 +474,6 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
             if status in ["Finished", "Failed"]:
                 new_finished_list.append(li)
 
-            # single-sequence job submitted from the web-page will be
-            # submmitted by suq
             isValidSubmitDate = True
             try:
                 submit_date = webcom.datetime_str_to_time(submit_date_str)
@@ -486,9 +487,11 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
             else:
                 queuetime_in_sec = g_params['UPPER_WAIT_TIME_IN_SEC'] + 1
 
-            #if numseq > 1 or method_submission == "wsdl" or queuetime_in_sec > UPPER_WAIT_TIME_IN_SEC:
-            # note that all jobs are handled by the qd
-            if 1:
+            # for servers not in the list ["topcons2"] all jobs are handled by the qd_fe
+            if (name_server.lower() not in ["topcons2"]
+                or (numseq > 1
+                    or method_submission == "wsdl" 
+                    or queuetime_in_sec > g_params['UPPER_WAIT_TIME_IN_SEC'])):
                 if status == "Running":
                     new_runjob_list.append(li)
                 elif status == "Wait":
@@ -600,10 +603,20 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
                     if dd.find("seq_") == 0 and dd not in finished_seqs_idset:
                         origIndex = int(dd.split("_")[1])
                         outpath_this_seq = "%s/%s"%(outpath_result, dd)
+                        timefile = "%s/time.txt"%(outpath_this_seq)
+                        runtime = webcom.ReadRuntimeFromFile(timefile, default_runtime=0.0)
+                        # get origIndex and then read description the description list
+                        try:
+                            description = seqAnnoList[origIndex].replace('\t', ' ')
+                        except:
+                            description = "seq_%d"%(origIndex)
+                        try:
+                            seq = seqList[origIndex]
+                        except:
+                            seq = ""
                         info_finish = webcom.GetInfoFinish(name_server, outpath_this_seq,
-                                origIndex, len(seqList[origIndex]),
-                                seqAnnoList[origIndex], source_result="cached",
-                                runtime=0.0)
+                                origIndex, len(seq), description,
+                                source_result="newrun", runtime=runtime)
                         finished_info_list.append("\t".join(info_finish))
                 if len(finished_info_list)>0:
                     myfunc.WriteFile("\n".join(finished_info_list)+"\n", finished_seq_file, "a", True)
@@ -626,7 +639,7 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
             # note that the priority is deducted by numseq so that for jobs
             # from the same user, jobs with fewer sequences are placed with
             # higher priority
-            priority = myfunc.GetSuqPriority(numseq_this_user) - numseq
+            priority = myfunc.FloatDivision( myfunc.GetSuqPriority(numseq_this_user) - numseq, math.sqrt(numseq))
 
             if ip in g_params['blackiplist']:
                 priority = priority/1000.0
@@ -638,7 +651,6 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
 
             li.append(numseq_this_user)
             li.append(priority)
-
 
     # sort the new_waitjob_list in descending order by priority
     new_waitjob_list = sorted(new_waitjob_list, key=lambda x:x[11], reverse=True)
