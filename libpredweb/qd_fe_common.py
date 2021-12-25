@@ -767,7 +767,9 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
 
             # for servers not in the list ["topcons2"] all jobs are handled by the qd_fe
             if (name_server.lower() not in ["topcons2"]
-                or (numseq > 1 or method_submission == "wsdl" or queuetime_in_sec > UPPER_WAIT_TIME_IN_SEC)):
+                or (numseq > 1
+                    or method_submission == "wsdl" 
+                    or queuetime_in_sec > g_params['UPPER_WAIT_TIME_IN_SEC'])):
                 if status == "Running":
                     new_runjob_list.append(li)
                 elif status == "Wait":
