@@ -579,7 +579,10 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
 
             # if loop == 0 , for new_waitjob_list and new_runjob_list
             # re-generate finished_seqs.txt
-            if loop == 0 and os.path.exists(outpath_result):#{{{
+            runjob_lockfile = "%s/%s.lock"%(rstdir, "runjob.lock")
+            if 'DEBUG' in g_params and g_params['DEBUG'] and os.path.exists(runjob_lockfile):
+                webcom.loginfo("runjob_lockfile %s exists. "%(runjob_lockfile), gen_logfile)
+            if loop == 0 and os.path.exists(outpath_result) and not os.path.exists(runjob_lockfile):#{{{
                 finished_seq_file = "%s/finished_seqs.txt"%(outpath_result)
                 finished_idx_file = "%s/finished_seqindex.txt"%(rstdir)
                 finished_idx_set = set([])
