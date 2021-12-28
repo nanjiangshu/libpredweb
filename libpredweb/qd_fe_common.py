@@ -1515,6 +1515,7 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
         code = "\n".join(code_str_list)
         myfunc.WriteFile(code, scriptfile, mode="w", isFlush=True)
         os.chmod(scriptfile, 0o755)
+        os.chdir(rstdir)
         cmd = ['sbatch', scriptfile]
         cmdline = " ".join(cmd)
         verbose = False
