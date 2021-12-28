@@ -1516,6 +1516,8 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
         myfunc.WriteFile(code, scriptfile, mode="w", isFlush=True)
         os.chmod(scriptfile, 0o755)
         cmd = ['sbatch', scriptfile]
+        cmdline = " ".join(cmd)
+        webcom.loginfo("Run cmdline: %s"%(cmdline), gen_logfile)
         (isSubmitSuccess, t_runtime) = webcom.RunCmd(cmd, gen_logfile, gen_errfile)
 
     if isSubmitSuccess:
