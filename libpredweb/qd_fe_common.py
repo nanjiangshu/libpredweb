@@ -1510,7 +1510,7 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
         scriptfile = "%s/check_if_job_finished,%s,%s.sh"%(rstdir, name_server, jobid)
         code_str_list = []
         code_str_list.append("#!/bin/bash")
-        cmdline = "python %s/check_if_job_finished.py -i %s"%(binpath_script)
+        cmdline = "python %s/check_if_job_finished.py -i %s"%(binpath_script, jsonfile)
         code_str_list.append(cmdline)
         code = "\n".join(code_str_list)
         myfunc.WriteFile(code, scriptfile, mode="w", isFlush=True)
