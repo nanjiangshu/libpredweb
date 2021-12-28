@@ -177,7 +177,7 @@ Examples:
     g_params.update(webcom.LoadJsonFromFile(jsonfile))
 
     lockname = "check_if_job_finished.lock"
-    lock_file = os.path.join(g_params['path_result'], "result", lockname)
+    lock_file = os.path.join(g_params['path_result'], g_params['jobid'], lockname)
     fp = open(lock_file, 'w')
     try:
         fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
