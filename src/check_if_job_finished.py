@@ -178,6 +178,7 @@ Examples:
         webcom.loginfo("Another instance of %s is running"%(progname), g_params['gen_logfile'])
         return 1
 
+    time.sleep(60)
     return CheckIfJobFinished(g_params)
 # }}}
 
