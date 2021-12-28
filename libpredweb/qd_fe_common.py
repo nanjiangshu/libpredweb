@@ -1363,7 +1363,7 @@ def GetResult(jobid, g_params):#{{{
     return 0
 #}}}
 
-def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
+def CheckIfJobFinished_obselete(jobid, numseq, to_email, g_params):#{{{
     """check if the job is finished and write tag files
     """
     gen_logfile = g_params['gen_logfile']
@@ -1486,4 +1486,37 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
                     logfile=runjob_logfile, errfile=runjob_errfile)
         webcom.CleanJobFolder(rstdir, name_server.lower())
 
+#}}}
+def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
+    """check if the job is finished and write tag files
+    """
+    path_result = os.path.join(g_params['path_static'], 'result')
+    rstdir = os.path.join(path_result, jobid)
+    gen_logfile = g_params['gen_logfile']
+    gen_errfile = g_params['gen_errfile']
+    name_server = g_params['name_server']
+    jsonfile = os.path.join(rstdir, "check_if_job_finished.json")
+    myfunc.WriteFile(json.dumps(g_params, sort_keys=True), jsonfile, "w")
+    binpath_script = os.path.join(webserver_root, "env", "bin")
+
+    if ('THRESHOLD_NUMSEQ_CHECK_IF_JOB_FINISH' in g_params
+            and numseq <= g_params['THRESHOLD_NUMSEQ_CHECK_IF_JOB_FINISH']):
+        cmd = ["python", os.path.join(binpath_script, "check_if_job_finished.py"), "-i", jsonfile]
+        (isSubmitSuccess, t_runtime) = webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+    else:
+        scriptfile = "%s/check_if_job_finished,%s,%s.sh"%(rstdir, name_server, jobid)
+        code_str_list = []
+        code_str_list.append("#!/bin/bash")
+        cmdline = "python %s/check_if_job_finished.py -i %s"%(binpath_script)
+        code_str_list.append(cmdline)
+        code = "\n".join(code_str_list)
+        myfunc.WriteFile(code, scriptfile, mode="w", isFlush=True)
+        os.chmod(scriptfile, 0o755)
+        cmd = ['sbatch', scriptfile]
+        (isSubmitSuccess, t_runtime) = webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+
+    if isSubmitSuccess:
+        return 0
+    else:
+        return 1
 #}}}
