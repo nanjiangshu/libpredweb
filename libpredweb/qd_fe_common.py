@@ -1495,6 +1495,9 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
     gen_logfile = g_params['gen_logfile']
     gen_errfile = g_params['gen_errfile']
     name_server = g_params['name_server']
+    g_params['jobid'] = jobid
+    g_params['numseq'] = numseq
+    g_params['to_email'] = to_email
     jsonfile = os.path.join(rstdir, "check_if_job_finished.json")
     myfunc.WriteFile(json.dumps(g_params, sort_keys=True), jsonfile, "w")
     binpath_script = os.path.join(webserver_root, "env", "bin")
