@@ -2,19 +2,12 @@
 
 import sys
 import os
-import sqlite3
 import shutil
 import argparse
 
 import time
-from datetime import datetime
-from pytz import timezone
-import tempfile
 from libpredweb import myfunc
 from libpredweb import webserver_common as webcom
-
-FORMAT_DATETIME = webcom.FORMAT_DATETIME
-TZ = webcom.TZ
 
 progname=os.path.basename(sys.argv[0])
 rootname_progname = os.path.splitext(progname)[0]
