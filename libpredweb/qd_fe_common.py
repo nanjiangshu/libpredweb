@@ -1517,9 +1517,13 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
         os.chmod(scriptfile, 0o755)
         cmd = ['sbatch', scriptfile]
         cmdline = " ".join(cmd)
-        webcom.loginfo("Run cmdline: %s"%(cmdline), gen_logfile)
-        (isSubmitSuccess, t_runtime) = webcom.RunCmd(cmd, gen_logfile, gen_errfile)
-        webcom.loginfo("isSubmitSuccess: %s"%(str(isSubmitSuccess)), gen_logfile)
+        verbose = False
+        if 'DEBUG' in g_params and g_params['DEBUG']:
+            verbose = True
+            webcom.loginfo("Run cmdline: %s"%(cmdline), gen_logfile)
+        (isSubmitSuccess, t_runtime) = webcom.RunCmd(cmd, gen_logfile, gen_errfile, verbose)
+        if 'DEBUG' in g_params and g_params['DEBUG']:
+            webcom.loginfo("isSubmitSuccess: %s"%(str(isSubmitSuccess)), gen_logfile)
 
     if isSubmitSuccess:
         return 0
