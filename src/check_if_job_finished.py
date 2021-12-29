@@ -147,7 +147,7 @@ def main(g_params):# {{{
             description='Check if a given job is finished',
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog='''\
-Created 2021-12-28, updated 2021-12-28, Nanjiang Shu
+Created 2021-12-28, updated 2021-12-29, Nanjiang Shu
 
 Examples:
     %s -i check_if_job_finished.json
@@ -171,6 +171,7 @@ Examples:
 
     lockname = "check_if_job_finished.lock"
     lock_file = os.path.join(g_params['path_result'], g_params['jobid'], lockname)
+    g_params['lockfile'] = lock_file
     fp = open(lock_file, 'w')
     try:
         fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -178,17 +179,20 @@ Examples:
         webcom.loginfo("Another instance of %s is running"%(progname), g_params['gen_logfile'])
         return 1
 
-    time.sleep(60)
     return CheckIfJobFinished(g_params)
 # }}}
 
 def InitGlobalParameter():#{{{
     g_params = {}
+    g_params['lockfile'] = ""
     return g_params
 #}}}
 if __name__ == '__main__' :
     g_params = InitGlobalParameter()
-    try:
-        sys.exit(main(g_params))
-    except:
-        raise
+    status = main(g_params)
+    if os.path.exists(g_params['lockfile']):
+        try:
+            os.remove(g_params['lockfile'])
+        except:
+            webcom.loginfo("Failed to delete lockfile %s\n"%(g_params['lockfile']), g_params['gen_logfile'])
+    sys.exit(status)
