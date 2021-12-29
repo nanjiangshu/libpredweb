@@ -1504,7 +1504,7 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
 
     finished_idx_file = "%s/finished_seqindex.txt"%(rstdir)
     failed_idx_file = "%s/failed_seqindex.txt"%(rstdir)
-    scriptfile = os.path.join(binpath_script, "job_final_process.py")
+    py_scriptfile = os.path.join(binpath_script, "job_final_process.py")
     finished_idx_list = []
     failed_idx_list = []
     if os.path.exists(finished_idx_file):
@@ -1516,19 +1516,19 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
     if num_processed >= numseq:# finished
         if ('THRESHOLD_NUMSEQ_CHECK_IF_JOB_FINISH' in g_params
                 and numseq <= g_params['THRESHOLD_NUMSEQ_CHECK_IF_JOB_FINISH']):
-            cmd = ["python", scriptfile, "-i", jsonfile]
+            cmd = ["python", py_scriptfile, "-i", jsonfile]
             (isSubmitSuccess, t_runtime) = webcom.RunCmd(cmd, gen_logfile, gen_errfile)
         else:
-            scriptfile = "%s/job_final_process,%s,%s.sh"%(rstdir, name_server, jobid)
+            bash_scriptfile = "%s/job_final_process,%s,%s.sh"%(rstdir, name_server, jobid)
             code_str_list = []
             code_str_list.append("#!/bin/bash")
-            cmdline = "python %s -i %s"%(scriptfile, jsonfile)
+            cmdline = "python %s -i %s"%(py_scriptfile, jsonfile)
             code_str_list.append(cmdline)
             code = "\n".join(code_str_list)
-            myfunc.WriteFile(code, scriptfile, mode="w", isFlush=True)
-            os.chmod(scriptfile, 0o755)
+            myfunc.WriteFile(code, bash_scriptfile, mode="w", isFlush=True)
+            os.chmod(bash_scriptfile, 0o755)
             os.chdir(rstdir)
-            cmd = ['sbatch', scriptfile]
+            cmd = ['sbatch', bash_scriptfile]
             cmdline = " ".join(cmd)
             verbose = False
             if 'DEBUG' in g_params and g_params['DEBUG']:
