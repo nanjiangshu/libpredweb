@@ -1502,32 +1502,39 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
     myfunc.WriteFile(json.dumps(g_params, sort_keys=True), jsonfile, "w")
     binpath_script = os.path.join(g_params['webserver_root'], "env", "bin")
 
-    if ('THRESHOLD_NUMSEQ_CHECK_IF_JOB_FINISH' in g_params
-            and numseq <= g_params['THRESHOLD_NUMSEQ_CHECK_IF_JOB_FINISH']):
-        cmd = ["python", os.path.join(binpath_script, "check_if_job_finished.py"), "-i", jsonfile]
-        (isSubmitSuccess, t_runtime) = webcom.RunCmd(cmd, gen_logfile, gen_errfile)
-    else:
-        scriptfile = "%s/check_if_job_finished,%s,%s.sh"%(rstdir, name_server, jobid)
-        code_str_list = []
-        code_str_list.append("#!/bin/bash")
-        cmdline = "python %s/check_if_job_finished.py -i %s"%(binpath_script, jsonfile)
-        code_str_list.append(cmdline)
-        code = "\n".join(code_str_list)
-        myfunc.WriteFile(code, scriptfile, mode="w", isFlush=True)
-        os.chmod(scriptfile, 0o755)
-        os.chdir(rstdir)
-        cmd = ['sbatch', scriptfile]
-        cmdline = " ".join(cmd)
-        verbose = False
-        if 'DEBUG' in g_params and g_params['DEBUG']:
-            verbose = True
-            webcom.loginfo("Run cmdline: %s"%(cmdline), gen_logfile)
-        (isSubmitSuccess, t_runtime) = webcom.RunCmd(cmd, gen_logfile, gen_errfile, verbose)
-        if 'DEBUG' in g_params and g_params['DEBUG']:
-            webcom.loginfo("isSubmitSuccess: %s"%(str(isSubmitSuccess)), gen_logfile)
+    finished_idx_file = "%s/finished_seqindex.txt"%(rstdir)
+    failed_idx_file = "%s/failed_seqindex.txt"%(rstdir)
+    finished_idx_list = []
+    failed_idx_list = []
+    if os.path.exists(finished_idx_file):
+        finished_idx_list = list(set(myfunc.ReadIDList(finished_idx_file)))
+    if os.path.exists(failed_idx_file):
+        failed_idx_list = list(set(myfunc.ReadIDList(failed_idx_file)))
 
-    if isSubmitSuccess:
-        return 0
-    else:
-        return 1
+    num_processed = len(finished_idx_list)+len(failed_idx_list)
+    if num_processed >= numseq:# finished
+        if ('THRESHOLD_NUMSEQ_CHECK_IF_JOB_FINISH' in g_params
+                and numseq <= g_params['THRESHOLD_NUMSEQ_CHECK_IF_JOB_FINISH']):
+            cmd = ["python", os.path.join(binpath_script,
+                "check_if_job_finished.py"), "-i", jsonfile]
+            (isSubmitSuccess, t_runtime) = webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+        else:
+            scriptfile = "%s/check_if_job_finished,%s,%s.sh"%(rstdir, name_server, jobid)
+            code_str_list = []
+            code_str_list.append("#!/bin/bash")
+            cmdline = "python %s/check_if_job_finished.py -i %s"%(binpath_script, jsonfile)
+            code_str_list.append(cmdline)
+            code = "\n".join(code_str_list)
+            myfunc.WriteFile(code, scriptfile, mode="w", isFlush=True)
+            os.chmod(scriptfile, 0o755)
+            os.chdir(rstdir)
+            cmd = ['sbatch', scriptfile]
+            cmdline = " ".join(cmd)
+            verbose = False
+            if 'DEBUG' in g_params and g_params['DEBUG']:
+                verbose = True
+                webcom.loginfo("Run cmdline: %s"%(cmdline), gen_logfile)
+            (isSubmitSuccess, t_runtime) = webcom.RunCmd(cmd, gen_logfile, gen_errfile, verbose)
+            if 'DEBUG' in g_params and g_params['DEBUG']:
+                webcom.loginfo("isSubmitSuccess: %s"%(str(isSubmitSuccess)), gen_logfile)
 #}}}
