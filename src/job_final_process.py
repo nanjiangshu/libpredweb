@@ -14,8 +14,8 @@ rootname_progname = os.path.splitext(progname)[0]
 lockname = os.path.realpath(__file__).replace(" ", "").replace("/", "-")
 import fcntl
 
-def CheckIfJobFinished(g_params):#{{{
-    """check if the job is finished and write tag files
+def JobFinalProcess(g_params):#{{{
+    """Run final process of a job
     """
     jobid = g_params['jobid']
     numseq = g_params['numseq']
@@ -24,7 +24,7 @@ def CheckIfJobFinished(g_params):#{{{
     gen_errfile = g_params['gen_errfile']
     name_server = g_params['name_server']
 
-    webcom.loginfo("CheckIfJobFinished for %s.\n" %(jobid), gen_logfile)
+    webcom.loginfo("JobFinalProcess for %s.\n" %(jobid), gen_logfile)
 
     path_static = g_params['path_static']
     path_result = os.path.join(path_static, 'result')
@@ -47,11 +47,9 @@ def CheckIfJobFinished(g_params):#{{{
     finished_idx_list = []
     failed_idx_list = []
     if os.path.exists(finished_idx_file):
-        finished_idx_list = myfunc.ReadIDList(finished_idx_file)
-        finished_idx_list = list(set(finished_idx_list))
+        finished_idx_list = list(set(myfunc.ReadIDList(finished_idx_file)))
     if os.path.exists(failed_idx_file):
-        failed_idx_list = myfunc.ReadIDList(failed_idx_file)
-        failed_idx_list = list(set(failed_idx_list))
+        failed_idx_list = list(set(myfunc.ReadIDList(failed_idx_file)))
 
     finishtagfile = "%s/%s"%(rstdir, "runjob.finish")
     failedtagfile = "%s/%s"%(rstdir, "runjob.failed")
@@ -144,13 +142,13 @@ def CheckIfJobFinished(g_params):#{{{
 
 def main(g_params):# {{{
     parser = argparse.ArgumentParser(
-            description='Check if a given job is finished',
+            description='Run final process of a given job',
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog='''\
 Created 2021-12-28, updated 2021-12-29, Nanjiang Shu
 
 Examples:
-    %s -i check_if_job_finished.json
+    %s -i job_final_process.json
 '''%(sys.argv[0]))
     parser.add_argument('-i' , metavar='JSONFILE', dest='jsonfile',
             type=str, required=True,
@@ -169,7 +167,7 @@ Examples:
 
     g_params.update(webcom.LoadJsonFromFile(jsonfile))
 
-    lockname = "check_if_job_finished.lock"
+    lockname = "job_final_process.lock"
     lock_file = os.path.join(g_params['path_result'], g_params['jobid'], lockname)
     g_params['lockfile'] = lock_file
     fp = open(lock_file, 'w')
@@ -179,7 +177,7 @@ Examples:
         webcom.loginfo("Another instance of %s is running"%(progname), g_params['gen_logfile'])
         return 1
 
-    return CheckIfJobFinished(g_params)
+    return JobFinalProcess(g_params)
 # }}}
 
 def InitGlobalParameter():#{{{
