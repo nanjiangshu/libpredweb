@@ -177,6 +177,8 @@ Examples:
         webcom.loginfo("Another instance of %s is running"%(progname), g_params['gen_logfile'])
         return 1
 
+    if 'DEBUG_LOCK_FILE' in g_params and g_params['DEBUG_LOCK_FILE']:
+        time.sleep(g_params['SLEEP_INTERVAL']*6)
     return JobFinalProcess(g_params)
 # }}}
 
