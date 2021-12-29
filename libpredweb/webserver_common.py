@@ -1709,7 +1709,7 @@ def RunCmd(cmd, logfile, errfile, verbose=False):# {{{
     try:
         rmsg = subprocess.check_output(cmd, encoding='UTF-8')
         if verbose:
-            msg = "workflow: %s"%(cmdline)
+            msg = "workflow: %s returned rmsg \"%s\""%(cmdline, rmsg)
             myfunc.WriteFile("[%s] %s\n"%(date_str, msg),  logfile, "a", True)
         isCmdSuccess = True
     except subprocess.CalledProcessError as e:
