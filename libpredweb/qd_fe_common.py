@@ -1388,13 +1388,17 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
     if os.path.exists(failed_idx_file):
         failed_idx_list = list(set(myfunc.ReadIDList(failed_idx_file)))
 
+
+    lockname = "job_final_process.lock"
+    lock_file = os.path.join(g_params['path_result'], g_params['jobid'], lockname)
+
     num_processed = len(finished_idx_list)+len(failed_idx_list)
     if num_processed >= numseq:# finished
         if ('THRESHOLD_NUMSEQ_CHECK_IF_JOB_FINISH' in g_params
                 and numseq <= g_params['THRESHOLD_NUMSEQ_CHECK_IF_JOB_FINISH']):
             cmd = ["python", py_scriptfile, "-i", jsonfile]
             (isSubmitSuccess, t_runtime) = webcom.RunCmd(cmd, gen_logfile, gen_errfile)
-        else:
+        elif not os.path.exists(lock_file):
             bash_scriptfile = "%s/job_final_process,%s,%s.sh"%(rstdir, name_server, jobid)
             code_str_list = []
             code_str_list.append("#!/bin/bash")
