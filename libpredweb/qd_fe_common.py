@@ -1498,12 +1498,13 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
     g_params['jobid'] = jobid
     g_params['numseq'] = numseq
     g_params['to_email'] = to_email
-    jsonfile = os.path.join(rstdir, "check_if_job_finished.json")
+    jsonfile = os.path.join(rstdir, "job_final_process.json")
     myfunc.WriteFile(json.dumps(g_params, sort_keys=True), jsonfile, "w")
     binpath_script = os.path.join(g_params['webserver_root'], "env", "bin")
 
     finished_idx_file = "%s/finished_seqindex.txt"%(rstdir)
     failed_idx_file = "%s/failed_seqindex.txt"%(rstdir)
+    scriptfile = os.path.join(binpath_script, "job_final_process.py")
     finished_idx_list = []
     failed_idx_list = []
     if os.path.exists(finished_idx_file):
@@ -1515,14 +1516,13 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
     if num_processed >= numseq:# finished
         if ('THRESHOLD_NUMSEQ_CHECK_IF_JOB_FINISH' in g_params
                 and numseq <= g_params['THRESHOLD_NUMSEQ_CHECK_IF_JOB_FINISH']):
-            cmd = ["python", os.path.join(binpath_script,
-                "check_if_job_finished.py"), "-i", jsonfile]
+            cmd = ["python", scriptfile, "-i", jsonfile]
             (isSubmitSuccess, t_runtime) = webcom.RunCmd(cmd, gen_logfile, gen_errfile)
         else:
-            scriptfile = "%s/check_if_job_finished,%s,%s.sh"%(rstdir, name_server, jobid)
+            scriptfile = "%s/job_final_process,%s,%s.sh"%(rstdir, name_server, jobid)
             code_str_list = []
             code_str_list.append("#!/bin/bash")
-            cmdline = "python %s/check_if_job_finished.py -i %s"%(binpath_script, jsonfile)
+            cmdline = "python %s -i %s"%(scriptfile, jsonfile)
             code_str_list.append(cmdline)
             code = "\n".join(code_str_list)
             myfunc.WriteFile(code, scriptfile, mode="w", isFlush=True)
