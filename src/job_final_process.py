@@ -101,7 +101,7 @@ def JobFinalProcess(g_params):#{{{
             webcom.WriteDumpedTextResultFile(name_server.lower(), resultfile_text, outpath_result, maplist,
                     all_runtime_in_sec, base_www_url, statfile)
 
-        if name_server.lower == "topcons2":
+        if name_server.lower() == "topcons2":
             finishtagfile_resulthtml = "%s/%s"%(rstdir, "write_htmlresult_finish.tag")
             if not os.path.exists(finishtagfile_resulthtml):
                 webcom.loginfo("Write HTML table to %s ..."%(resultfile_html), gen_logfile)
