@@ -2254,7 +2254,7 @@ def get_queue_method_name():# {{{
 # functions for views.py
 def SubmitQueryToLocalQueue(query, tmpdir, rstdir, g_params, isOnlyGetCache=False):#{{{
     scriptfile = "%s/app/submit_job_to_queue.py"%(g_params['SITE_ROOT'])
-    rstdir = "%s/%s"%(path_result, query['jobid'])
+    rstdir = "%s/%s"%(g_params['path_result'], query['jobid'])
     runjob_logfile = "%s/runjob.log"%(rstdir)
     runjob_errfile = "%s/runjob.err"%(rstdir)
     failedtagfile = "%s/%s"%(rstdir, "submit_job_to_queue.py.failed")
@@ -2275,9 +2275,9 @@ def SubmitQueryToLocalQueue(query, tmpdir, rstdir, g_params, isOnlyGetCache=Fals
     if isOnlyGetCache:
         cmd += ["-only-get-cache"]
 
-    (isSuccess, t_runtime) = webcom.RunCmd(cmd, runjob_logfile, runjob_errfile)
+    (isSuccess, t_runtime) = RunCmd(cmd, runjob_logfile, runjob_errfile)
     if not isSuccess:
-        webcom.WriteDateTimeTagFile(failedtagfile, runjob_logfile, runjob_errfile)
+        WriteDateTimeTagFile(failedtagfile, runjob_logfile, runjob_errfile)
         return 1
     else:
         return 0
