@@ -2264,13 +2264,13 @@ def SubmitQueryToLocalQueue(query, tmpdir, rstdir, g_params, isOnlyGetCache=Fals
             "%d"%query['numseq_this_user'], "-jobid", query['jobid'],
             "-outpath", rstdir, "-datapath", tmpdir, "-baseurl",
             query['base_www_url'] ]
-    if query['email'] != "":
+    if 'email' in query and query['email'] != "":
         cmd += ["-email", query['email']]
-    if query['client_ip'] != "":
+    if 'client_ip' in query and query['client_ip'] != "":
         cmd += ["-host", query['client_ip']]
-    if query['app_type'] != "":
+    if 'app_type' in query and query['app_type'] != "":
         cmd += ["-apptype", query['app_type']]
-    if query['isForceRun']:
+    if 'isForceRun' in query and query['isForceRun']:
         cmd += ["-force"]
     if isOnlyGetCache:
         cmd += ["-only-get-cache"]
