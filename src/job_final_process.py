@@ -76,6 +76,7 @@ def JobFinalProcess(g_params):#{{{
         statfile = "%s/%s"%(outpath_result, "stat.txt")
         resultfile_text = "%s/%s"%(outpath_result, "query.result.txt")
         resultfile_html = "%s/%s"%(outpath_result, "query.result.html")
+        finished_seq_file = "%s/finished_seqs.txt"%(outpath_result)
         if name_server.lower() == 'pconsc3':
             resultfile_text = os.path.join(outpath_result, "query.pconsc3.txt")
         elif name_server.lower() == "boctopus2":
