@@ -2252,6 +2252,36 @@ def get_queue_method_name():# {{{
 
 
 # functions for views.py
+def SubmitQueryToLocalQueue(query, tmpdir, rstdir, g_params, isOnlyGetCache=False):#{{{
+    scriptfile = "%s/app/submit_job_to_queue.py"%(g_params['SITE_ROOT'])
+    rstdir = "%s/%s"%(g_params['path_result'], query['jobid'])
+    runjob_logfile = "%s/runjob.log"%(rstdir)
+    runjob_errfile = "%s/runjob.err"%(rstdir)
+    failedtagfile = "%s/%s"%(rstdir, "submit_job_to_queue.py.failed")
+    debugfile = "%s/debug.log"%(rstdir) #this log file is only for debugging
+
+    cmd = ["python", scriptfile, "-nseq", "%d"%query['numseq'], "-nseq-this-user",
+            "%d"%query['numseq_this_user'], "-jobid", query['jobid'],
+            "-outpath", rstdir, "-datapath", tmpdir, "-baseurl",
+            query['base_www_url'] ]
+    if 'email' in query and query['email'] != "":
+        cmd += ["-email", query['email']]
+    if 'client_ip' in query and query['client_ip'] != "":
+        cmd += ["-host", query['client_ip']]
+    if 'app_type' in query and query['app_type'] != "":
+        cmd += ["-apptype", query['app_type']]
+    if 'isForceRun' in query and query['isForceRun']:
+        cmd += ["-force"]
+    if isOnlyGetCache:
+        cmd += ["-only-get-cache"]
+
+    (isSuccess, t_runtime) = RunCmd(cmd, runjob_logfile, runjob_errfile)
+    if not isSuccess:
+        WriteDateTimeTagFile(failedtagfile, runjob_logfile, runjob_errfile)
+        return 1
+    else:
+        return 0
+#}}}
 def set_basic_config(request, info, g_params):# {{{
     """Set basic configurations for the template dict"""
     username = request.user.username
