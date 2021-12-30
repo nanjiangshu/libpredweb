@@ -2260,7 +2260,7 @@ def SubmitQueryToLocalQueue(query, tmpdir, rstdir, g_params, isOnlyGetCache=Fals
     failedtagfile = "%s/%s"%(rstdir, "submit_job_to_queue.py.failed")
     debugfile = "%s/debug.log"%(rstdir) #this log file is only for debugging
 
-    cmd = [python_exec, scriptfile, "-nseq", "%d"%query['numseq'], "-nseq-this-user",
+    cmd = ["python", scriptfile, "-nseq", "%d"%query['numseq'], "-nseq-this-user",
             "%d"%query['numseq_this_user'], "-jobid", query['jobid'],
             "-outpath", rstdir, "-datapath", tmpdir, "-baseurl",
             query['base_www_url'] ]
