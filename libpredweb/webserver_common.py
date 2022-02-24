@@ -275,29 +275,15 @@ def ReadJobInfo(infile):# {{{
     return dt
 # }}}
 
-def GetNameServerFromNameSoftware(name_software):# {{{
-    """Get name_server from name_software
-    """
+
+def GetNameServerFromNameSoftware(name_software):  # {{{
+    """Get name_server from name_software"""
     name_software = name_software.lower()
-    if name_software in ["topcons2", "docker_topcons2", "singularity_topcons2"]:
-        name_server = "topcons2"
-    elif name_software in ["subcons", "docker_subcons", "singularity_subcons"]:
-        name_server = "subcons"
-    elif name_software in ["boctopus2", "docker_boctopus2", "singularity_boctopus2"]:
-        name_server = "boctopus2"
-    elif name_software in ["scampi2", "docker_scampi2", "singularity_scampi2"]:
-        name_server = "scampi2"
-    elif name_software in ["pconsc3", "docker_pconsc3", "singularity_pconsc3"]:
-        name_server = "pconsc3"
-    elif name_software in ["proq3", "docker_proq3", "singularity_proq3"]:
-        name_server = "proq3"
-    elif name_software in ["prodres", "docker_prodres", "singularity_prodres"]:
-        name_server = "prodres"
-    elif name_software in ["predzinc", "docker_predzinc", "singularity_predzinc"]:
-        name_server = "predzinc"
-    elif name_software in ["frag1d", "docker_frag1d", "singularity_frag1d"]:
-        name_server = "frag1d"
-    return name_server
+    strs = re.split('_|-', name_software)
+    for aux in ["docker", "singularity"]:
+        if aux in strs:
+            strs.remove(aux)
+    return strs[0]
 # }}}
 
 def WriteDumpedTextResultFile(name_server, outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile=""):#{{{
