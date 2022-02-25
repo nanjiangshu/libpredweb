@@ -250,10 +250,16 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
             fpout.close()
             # plot
             if os.path.exists(outfile) and len(sortedlist) > 0:  # plot only when there are valid data
-                cmd = ["%s/plot_numseq_of_job.sh" % (binpath_plot), outfile]
+                cmd = [f"{binpath_plot}/plot_numseq_of_job.sh", outfile]
                 webcom.RunCmd(cmd, gen_logfile, gen_errfile)
         except IOError:
             continue
+    cmd = [
+            f"{binpath_plot}/plot_numseq_of_job_mtp.sh",
+            "-web", outfile_numseqjob_web,
+            "-wsdl", outfile_numseqjob_wsdl
+            ]
+    webcom.RunCmd(cmd, gen_logfile, gen_errfile)
 
 # 5. output num-submission time series with different bins (day, week, month, year)
     hdl = myfunc.ReadLineByBlock(allsubmitjoblogfile)
