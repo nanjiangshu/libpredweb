@@ -8,9 +8,9 @@ use CGI qw(:upload);
 use Cwd 'abs_path';
 use File::Basename;
 my $rundir = dirname(abs_path(__FILE__));
-my $python = abs_path("$rundir/../../env/bin/python");
+my $python = abs_path("$rundir/python");
 # at proj
-my $basedir = abs_path("$rundir/../pred");
+my $basedir = abs_path("$rundir/../../proj/pred");
 my $auth_ip_file = "$basedir/config/auth_iplist.txt";#ip address which allows to run cgi script
 my $name_targetprog = "qd_fe.py";
 my $path_targetprog = "$basedir/app/$name_targetprog";
