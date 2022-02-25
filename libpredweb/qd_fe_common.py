@@ -522,6 +522,7 @@ def RunStatistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
     binpath_plot = os.path.join(webserver_root, "env", "bin")
     runtimelogfile = f"{path_log}/jobruntime.log"
 
+    webcom.loginfo("Run usage statistics specifically for TOPCONS2...\n", gen_logfile)
 # get longest predicted seq
 # get query with most TM helics
 # get query takes the longest time
