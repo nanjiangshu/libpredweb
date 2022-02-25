@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Description:
-#   A collection of classes and functions for the qd_fe.py
-#
-# Author: Nanjiang Shu (nanjiang.shu@scilifelab.se)
-#
-# Address: Science for Life Laboratory Stockholm, Box 1031, 17121 Solna, Sweden
+"""Description:
+A collection of classes and functions for the qd_fe.py
+
+Author: Nanjiang Shu (nanjiang.shu@scilifelab.se)
+
+Address: Science for Life Laboratory Stockholm, Box 1031, 17121 Solna, Sweden
+"""
 
 import os
 import sys
@@ -45,23 +46,26 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
     """Function for qd_fe to run usage statistics for the web-server usage
     """
     path_log = os.path.join(webserver_root, 'proj', 'pred', 'static', 'log')
-    path_result = os.path.join(webserver_root, 'proj', 'pred', 'static', 'result')
+    path_result = os.path.join(
+            webserver_root, 'proj', 'pred', 'static', 'result')
     path_stat = os.path.join(path_log, 'stat')
     binpath_plot = os.path.join(webserver_root, "env", "bin")
 
-# 1. calculate average running time, only for those sequences with time.txt
-# show also runtime of type and runtime -vs- seqlength
+    # 1. calculate average running time, only for those sequences with time.txt
+    # show also runtime of type and runtime -vs- seqlength
     webcom.loginfo("Run basic usage statistics...\n", gen_logfile)
     allfinishedjoblogfile = f"{path_log}/all_finished_job.log"
-    runtimelogfile = "%s/jobruntime.log"%(path_log)
+    runtimelogfile = f"{path_log}/jobruntime.log"
     runtimelogfile_finishedjobid = f"{path_log}/jobruntime_finishedjobid.log"
     allsubmitjoblogfile = f"{path_log}/all_submitted_seq.log"
     if not os.path.exists(path_stat):
         os.mkdir(path_stat)
 
-    allfinishedjobidlist = myfunc.ReadIDList2(allfinishedjoblogfile, col=0, delim="\t")
+    allfinishedjobidlist = myfunc.ReadIDList2(
+            allfinishedjoblogfile, col=0, delim="\t")
     runtime_finishedjobidlist = myfunc.ReadIDList(runtimelogfile_finishedjobid)
-    toana_jobidlist = list(set(allfinishedjobidlist)-set(runtime_finishedjobidlist))
+    toana_jobidlist = list(
+            set(allfinishedjobidlist) - set(runtime_finishedjobidlist))
 
     for jobid in toana_jobidlist:
         runtimeloginfolist = []
@@ -80,8 +84,9 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                 source = strs[4]
                 if source == "newrun":
                     subfolder = strs[0]
-                    timefile = "%s/%s/%s"%(outpath_result, subfolder, "time.txt")
-                    if os.path.exists(timefile) and os.path.getsize(timefile) > 0:
+                    timefile = f"{outpath_result}/{subfolder}/time.txt"
+                    if (os.path.exists(timefile)
+                            and os.path.getsize(timefile) > 0):
                         txt = myfunc.ReadFile(timefile).strip()
                         try:
                             ss2 = txt.split(";")
@@ -98,9 +103,12 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                             sys.stderr.write("bad timefile %s\n" % (timefile))
 
         if len(runtimeloginfolist) > 0:
-            # items 
-            # jobid, seq_no, newrun_or_cached, runtime, mtd_profile, seqlen, numTM, iShasSP
-            myfunc.WriteFile("\n".join(runtimeloginfolist)+"\n", runtimelogfile, "a", True)
+            # items for the elelment of the list
+            # jobid, seq_no, newrun_or_cached, runtime,
+            # mtd_profile, seqlen, numTM, iShasSP
+            myfunc.WriteFile(
+                    "\n".join(runtimeloginfolist)+"\n",
+                    runtimelogfile, "a", True)
         myfunc.WriteFile(jobid+"\n", runtimelogfile_finishedjobid, "a", True)
 
 # 2. get numseq_in_job vs count_of_jobs, logscale in x-axis
@@ -108,13 +116,13 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
 #    get numseq_in_job vs finish time  (time_finish - time_submit)
 
     allfinished_job_dict = myfunc.ReadFinishedJobLog(allfinishedjoblogfile)
-    countjob_country = {}  # countjob_country['country'] = [numseq, numjob, ip_set]
+    countjob_country = {}  # ['country'] = [numseq, numjob, ip_set]
     outfile_numseqjob = f"{path_stat}/numseq_of_job.stat.txt"
     outfile_numseqjob_web = f"{path_stat}/numseq_of_job.web.stat.txt"
     outfile_numseqjob_wsdl = f"{path_stat}/numseq_of_job.wsdl.stat.txt"
     countjob_numseq_dict = {}  # count the number jobs for each numseq
-    countjob_numseq_dict_web = {}  # count the number jobs for each numseq submitted via web
-    countjob_numseq_dict_wsdl = {}  # count the number jobs for each numseq submitted via wsdl
+    countjob_numseq_dict_web = {}  # numJob for each numseq submitted via web
+    countjob_numseq_dict_wsdl = {}  # numJob for each numseq submitted via wsdl
 
     waittime_numseq_dict = {}
     waittime_numseq_dict_web = {}
@@ -142,15 +150,16 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
         except IndexError:
             pass
 
-        country = "N/A"           # this is slow
+        country = "N/A"  # this is slow
         try:
             match = geolite2.lookup(ip)
             country = pycountry.countries.get(alpha_2=match.country).name
-        except:
+        except Exception:
             pass
         if country != "N/A":
             if country not in countjob_country:
-                countjob_country[country] = [0, 0, set([])]  # [numseq, numjob, ip_set] 
+                # [numseq, numjob, ip_set]
+                countjob_country[country] = [0, 0, set([])]
             if numseq != -1:
                 countjob_country[country][0] += numseq
             countjob_country[country][1] += 1
@@ -226,8 +235,11 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
     li_str = []
     li_str.append("#Country\tNumSeq\tNumJob\tNumIP")
     for li in li_countjob:
-        li_str.append("%s\t%d\t%d\t%d"%(li[0], li[1][0], li[1][1], len(li[1][2])))
-    myfunc.WriteFile(("\n".join(li_str)+"\n").encode('utf-8'), outfile_countjob_by_country, "wb", True)
+        li_str.append(
+                "%s\t%d\t%d\t%d" % (li[0], li[1][0], li[1][1], len(li[1][2])))
+    myfunc.WriteFile(
+            ("\n".join(li_str)+"\n").encode('utf-8'),
+            outfile_countjob_by_country, "wb", True)
 
     flist = [
             outfile_numseqjob, outfile_numseqjob_web, outfile_numseqjob_wsdl
@@ -242,7 +254,7 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
         sortedlist = sorted(list(dt.items()), key=lambda x: x[0])
         try:
             fpout = open(outfile, "w")
-            fpout.write("%s\t%s\n" % ('numseq','count'))
+            fpout.write("%s\t%s\n" % ('numseq', 'count'))
             for j in range(len(sortedlist)):
                 nseq = sortedlist[j][0]
                 count = sortedlist[j][1]
@@ -473,7 +485,7 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
         sortedlist = sorted(list(dt.items()), key=lambda x: x[0])
         try:
             fpout = open(outfile1, "w")
-            fpout.write("%s\t%s\n"%('numseq', 'time'))
+            fpout.write("%s\t%s\n" % ('numseq', 'time'))
             for j in range(len(sortedlist)):
                 nseq = sortedlist[j][0]
                 li_time = sortedlist[j][1]
@@ -495,7 +507,7 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
             pass
         try:
             fpout = open(outfile3, "w")
-            fpout.write("%s\t%s\n" % ('numseq','time'))
+            fpout.write("%s\t%s\n" % ('numseq', 'time'))
             for j in range(len(sortedlist)):
                 nseq = sortedlist[j][0]
                 li_time = sortedlist[j][1]
@@ -505,7 +517,7 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
         except IOError:
             pass
 
-    # plotting 
+    # plotting
     flist = flist1
     for i in range(len(flist)):
         outfile = flist[i]
@@ -529,10 +541,10 @@ def RunStatistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
     binpath_plot = os.path.join(webserver_root, "env", "bin")
     runtimelogfile = f"{path_log}/jobruntime.log"
 
-    webcom.loginfo("Run usage statistics specifically for TOPCONS2...\n", gen_logfile)
-# get longest predicted seq
-# get query with most TM helics
-# get query takes the longest time
+    webcom.loginfo("Run usage statistics for TOPCONS2...\n", gen_logfile)
+    # get longest predicted seq
+    # get query with most TM helics
+    # get query takes the longest time
     extreme_runtimelogfile = f"{path_log}/stat/extreme_jobruntime.log"
 
     longestlength = -1
@@ -541,7 +553,7 @@ def RunStatistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
     line_mostTM = ""
     line_longestruntime = ""
 
-# 3. get running time vs sequence length
+    # 3. get running time vs sequence length
     cntseq = 0
     cnt_hasSP = 0
     outfile_runtime = f"{path_stat}/length_runtime.stat.txt"
@@ -730,31 +742,30 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
     """Create the index file for the jobs to be run
     """
     gen_logfile = g_params['gen_logfile']
-    gen_errfile = g_params['gen_errfile']
+    # gen_errfile = g_params['gen_errfile']
     name_server = g_params['name_server']
 
     webcom.loginfo("CreateRunJoblog for server %s..."%(name_server), gen_logfile)
 
     path_static = g_params['path_static']
-    path_cache = g_params['path_cache']
+    # path_cache = g_params['path_cache']
 
     path_result = os.path.join(path_static, 'result')
     path_log = os.path.join(path_static, 'log')
 
-    submitjoblogfile = "%s/submitted_seq.log"%(path_log)
-    runjoblogfile = "%s/runjob_log.log"%(path_log)
-    finishedjoblogfile = "%s/finished_job.log"%(path_log)
+    submitjoblogfile = f"{path_log}/submitted_seq.log"
+    runjoblogfile = f"{path_log}/runjob_log.log"
+    finishedjoblogfile = f"{path_log}/finished_job.log"
 
     # Read entries from submitjoblogfile, checking in the result folder and
-    # generate two logfiles: 
-    #   1. runjoblogfile 
+    # generate two logfiles:
+    #   1. runjoblogfile
     #   2. finishedjoblogfile
     # when loop == 0, for unfinished jobs, regenerate finished_seqs.txt
     hdl = myfunc.ReadLineByBlock(submitjoblogfile)
     if hdl.failure:
         return 1
 
-    finished_jobid_list = []
     finished_job_dict = {}
     if os.path.exists(finishedjoblogfile):
         finished_job_dict = myfunc.ReadFinishedJobLog(finishedjoblogfile)
@@ -763,12 +774,12 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
     # deleted jobs will not be included, there is a separate list started with
     # all_xxx which keeps also the historical jobs
     new_finished_list = []  # Finished or Failed
-    new_submitted_list = []  # 
+    new_submitted_list = []
 
     new_runjob_list = []    # Running
     new_waitjob_list = []    # Queued
     lines = hdl.readlines()
-    while lines != None:
+    while lines is not None:
         for line in lines:
             strs = line.split("\t")
             if len(strs) < 8:
@@ -782,12 +793,12 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
             method_submission = strs[7]
             start_date_str = ""
             finish_date_str = ""
-            rstdir = "%s/%s"%(path_result, jobid)
+            rstdir = os.path.join(path_result, jobid)
 
             numseq = 1
             try:
                 numseq = int(numseq_str)
-            except:
+            except Exception:
                 pass
 
             isRstFolderExist = False
@@ -795,7 +806,7 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
                 isRstFolderExist = True
 
             if isRstFolderExist:
-                new_submitted_list.append([jobid,line])
+                new_submitted_list.append([jobid, line])
 
             if jobid in finished_job_dict:
                 if isRstFolderExist:
@@ -859,7 +870,7 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
     for li in new_finished_list:
         li = [str(x) for x in li]
         li_str.append("\t".join(li))
-    if len(li_str)>0:
+    if len(li_str) > 0:
         myfunc.WriteFile("\n".join(li_str)+"\n", finishedjoblogfile, "w", True)
     else:
         myfunc.WriteFile("", finishedjoblogfile, "w", True)
@@ -872,8 +883,7 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
         new_finished_dict[ip].append(li)
     for ip in new_finished_dict:
         finished_list_for_this_ip = new_finished_dict[ip]
-        divide_finishedjoblogfile = "%s/divided/%s_finished_job.log"%(path_log,
-                ip)
+        divide_finishedjoblogfile = "%s/divided/%s_finished_job.log"%(path_log, ip)
         li_str = []
         for li in finished_list_for_this_ip:
             li = [str(x) for x in li]
@@ -1022,10 +1032,10 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
 
 
 @timeit
-def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
+def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):  # {{{
     """Submit a job to the remote computational node
     """
-# for each job rstdir, keep three log files, 
+# for each job rstdir, keep three log files,
 # 1.seqs finished, finished_seq log keeps all information, finished_index_log
 #   can be very compact to speed up reading, e.g.
 #   1-5 7-9 etc
@@ -1034,7 +1044,7 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
 # 3. format of the torun_idx_file
 #    origIndex
     gen_logfile = g_params['gen_logfile']
-    gen_errfile = g_params['gen_errfile']
+    # gen_errfile = g_params['gen_errfile']
     name_server = g_params['name_server']
 
     webcom.loginfo("SubmitJob for %s, numseq_this_user=%d"%(jobid, numseq_this_user), gen_logfile)
