@@ -10,41 +10,53 @@
 
 import os
 import sys
-import re
 from . import myfunc
 from . import webserver_common as webcom
 from . import dataprocess
 import math
 import time
 from datetime import datetime
-from pytz import timezone
+# from pytz import timezone
 from geoip import geolite2
 import pycountry
 import shutil
 from suds.client import Client
 import json
 import hashlib
-import requests
-import urllib.request, urllib.parse, urllib.error
+from .timeit import timeit
 
-def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):#{{{
+
+@timeit
+def RunStatistics(g_params):  # {{{
+    """Server usage analysis"""
+    name_server = g_params['name_server']
+    gen_logfile = g_params['gen_logfile']
+    gen_errfile = g_params['gen_errfile']
+    webserver_root = g_params['webserver_root']
+    RunStatistics_basic(webserver_root, gen_logfile, gen_errfile)
+    if name_server == "topcons2":
+        RunStatistics_topcons2(webserver_root, gen_logfile, gen_errfile)
+# }}}
+
+
+@timeit
+def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
     """Function for qd_fe to run usage statistics for the web-server usage
     """
-    path_log = os.path.join(webserver_root, 'proj','pred', 'static', 'log')
-    path_result = os.path.join(webserver_root, 'proj','pred', 'static', 'result')
+    path_log = os.path.join(webserver_root, 'proj', 'pred', 'static', 'log')
+    path_result = os.path.join(webserver_root, 'proj', 'pred', 'static', 'result')
     path_stat = os.path.join(path_log, 'stat')
+    binpath_plot = os.path.join(webserver_root, "env", "bin")
 
 # 1. calculate average running time, only for those sequences with time.txt
 # show also runtime of type and runtime -vs- seqlength
-    webcom.loginfo("RunStatistics...\n", gen_logfile)
+    webcom.loginfo("Run basic usage statistics...\n", gen_logfile)
     allfinishedjoblogfile = "%s/all_finished_job.log"%(path_log)
     runtimelogfile = "%s/jobruntime.log"%(path_log)
     runtimelogfile_finishedjobid = "%s/jobruntime_finishedjobid.log"%(path_log)
     allsubmitjoblogfile = "%s/all_submitted_seq.log"%(path_log)
     if not os.path.exists(path_stat):
         os.mkdir(path_stat)
-
-    binpath_plotscript = "%s/env/bin"%(webserver_root)
 
     allfinishedjobidlist = myfunc.ReadIDList2(allfinishedjoblogfile, col=0, delim="\t")
     runtime_finishedjobidlist = myfunc.ReadIDList(runtimelogfile_finishedjobid)
@@ -68,7 +80,7 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):#{{{
                 if source == "newrun":
                     subfolder = strs[0]
                     timefile = "%s/%s/%s"%(outpath_result, subfolder, "time.txt")
-                    if os.path.exists(timefile) and os.path.getsize(timefile)>0:
+                    if os.path.exists(timefile) and os.path.getsize(timefile) > 0:
                         txt = myfunc.ReadFile(timefile).strip()
                         try:
                             ss2 = txt.split(";")
@@ -77,21 +89,21 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):#{{{
                             runtimeloginfolist.append("\t".join([jobid, subfolder,
                                 source, runtime_str, database_mode, str_seqlen,
                                 str_numTM, str_isHasSP]))
-                        except:
+                        except IndexError:
                             sys.stderr.write("bad timefile %s\n"%(timefile))
 
-        if len(runtimeloginfolist)>0:
+        if len(runtimeloginfolist) > 0:
             # items 
             # jobid, seq_no, newrun_or_cached, runtime, mtd_profile, seqlen, numTM, iShasSP
-            myfunc.WriteFile("\n".join(runtimeloginfolist)+"\n",runtimelogfile, "a", True)
+            myfunc.WriteFile("\n".join(runtimeloginfolist)+"\n", runtimelogfile, "a", True)
         myfunc.WriteFile(jobid+"\n", runtimelogfile_finishedjobid, "a", True)
 
-#2. get numseq_in_job vs count_of_jobs, logscale in x-axis
-#   get numseq_in_job vs waiting time (time_start - time_submit)
-#   get numseq_in_job vs finish time  (time_finish - time_submit)
+# 2. get numseq_in_job vs count_of_jobs, logscale in x-axis
+#    get numseq_in_job vs waiting time (time_start - time_submit)
+#    get numseq_in_job vs finish time  (time_finish - time_submit)
 
     allfinished_job_dict = myfunc.ReadFinishedJobLog(allfinishedjoblogfile)
-    countjob_country = {} # countjob_country['country'] = [numseq, numjob, ip_set]
+    countjob_country = {}  # countjob_country['country'] = [numseq, numjob, ip_set]
     outfile_numseqjob = "%s/numseq_of_job.stat.txt"%(path_stat)
     outfile_numseqjob_web = "%s/numseq_of_job.web.stat.txt"%(path_stat)
     outfile_numseqjob_wsdl = "%s/numseq_of_job.wsdl.stat.txt"%(path_stat)
@@ -226,9 +238,9 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):#{{{
                 count = sortedlist[j][1]
                 fpout.write("%d\t%d\n"%(nseq,count))
             fpout.close()
-            #plot
+            # plot
             if os.path.exists(outfile) and len(sortedlist)>0: #plot only when there are valid data
-                cmd = ["%s/plot_numseq_of_job.sh"%(binpath_plotscript), outfile]
+                cmd = ["%s/plot_numseq_of_job.sh"%(binpath_plot), outfile]
                 webcom.RunCmd(cmd, gen_logfile, gen_errfile)
         except IOError:
             continue
@@ -365,8 +377,8 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):#{{{
             fpout.close()
         except IOError:
             pass
-        #plot
-        if os.path.exists(outfile) and len(li) > 0: #have at least one record
+        # plot
+        if os.path.exists(outfile) and len(li) > 0:  # have at least one record
             #if os.path.basename(outfile).find('day') == -1:
             # extends date time series for missing dates
             freq = dataprocess.date_range_frequency(os.path.basename(outfile))
@@ -375,11 +387,316 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):#{{{
             except Exception as e:
                 webcom.loginfo("Failed to extend data for the file '%s' with error message: '%s'"%(outfile, str(e)), gen_errfile)
                 pass
-            cmd = ["%s/plot_numsubmit.sh"%(binpath_plotscript), outfile]
+            cmd = ["%s/plot_numsubmit.sh"%(binpath_plot), outfile]
             webcom.RunCmd(cmd, gen_logfile, gen_errfile)
 
-#}}}
+    # output waittime vs numseq_of_job
+    # output finishtime vs numseq_of_job
+    outfile_waittime_nseq = "%s/waittime_nseq.stat.txt"%(path_stat)
+    outfile_waittime_nseq_web = "%s/waittime_nseq_web.stat.txt"%(path_stat)
+    outfile_waittime_nseq_wsdl = "%s/waittime_nseq_wsdl.stat.txt"%(path_stat)
+    outfile_finishtime_nseq = "%s/finishtime_nseq.stat.txt"%(path_stat)
+    outfile_finishtime_nseq_web = "%s/finishtime_nseq_web.stat.txt"%(path_stat)
+    outfile_finishtime_nseq_wsdl = "%s/finishtime_nseq_wsdl.stat.txt"%(path_stat)
 
+    outfile_avg_waittime_nseq = "%s/avg_waittime_nseq.stat.txt"%(path_stat)
+    outfile_avg_waittime_nseq_web = "%s/avg_waittime_nseq_web.stat.txt"%(path_stat)
+    outfile_avg_waittime_nseq_wsdl = "%s/avg_waittime_nseq_wsdl.stat.txt"%(path_stat)
+    outfile_avg_finishtime_nseq = "%s/avg_finishtime_nseq.stat.txt"%(path_stat)
+    outfile_avg_finishtime_nseq_web = "%s/avg_finishtime_nseq_web.stat.txt"%(path_stat)
+    outfile_avg_finishtime_nseq_wsdl = "%s/avg_finishtime_nseq_wsdl.stat.txt"%(path_stat)
+
+    outfile_median_waittime_nseq = "%s/median_waittime_nseq.stat.txt"%(path_stat)
+    outfile_median_waittime_nseq_web = "%s/median_waittime_nseq_web.stat.txt"%(path_stat)
+    outfile_median_waittime_nseq_wsdl = "%s/median_waittime_nseq_wsdl.stat.txt"%(path_stat)
+    outfile_median_finishtime_nseq = "%s/median_finishtime_nseq.stat.txt"%(path_stat)
+    outfile_median_finishtime_nseq_web = "%s/median_finishtime_nseq_web.stat.txt"%(path_stat)
+    outfile_median_finishtime_nseq_wsdl = "%s/median_finishtime_nseq_wsdl.stat.txt"%(path_stat)
+
+    flist1 = [
+            outfile_waittime_nseq, outfile_waittime_nseq_web,
+            outfile_waittime_nseq_wsdl, outfile_finishtime_nseq,
+            outfile_finishtime_nseq_web, outfile_finishtime_nseq_wsdl
+            ]
+
+    flist2 = [
+            outfile_avg_waittime_nseq, outfile_avg_waittime_nseq_web,
+            outfile_avg_waittime_nseq_wsdl, outfile_avg_finishtime_nseq,
+            outfile_avg_finishtime_nseq_web, outfile_avg_finishtime_nseq_wsdl
+            ]
+
+    flist3 = [
+            outfile_median_waittime_nseq, outfile_median_waittime_nseq_web,
+            outfile_median_waittime_nseq_wsdl, outfile_median_finishtime_nseq,
+            outfile_median_finishtime_nseq_web, outfile_median_finishtime_nseq_wsdl
+            ]
+
+    dict_list = [
+            waittime_numseq_dict, waittime_numseq_dict_web,
+            waittime_numseq_dict_wsdl, finishtime_numseq_dict,
+            finishtime_numseq_dict_web, finishtime_numseq_dict_wsdl
+            ]
+
+    for i in range(len(flist1)):
+        dt = dict_list[i]
+        outfile1 = flist1[i]
+        outfile2 = flist2[i]
+        outfile3 = flist3[i]
+        sortedlist = sorted(list(dt.items()), key=lambda x: x[0])
+        try:
+            fpout = open(outfile1, "w")
+            fpout.write("%s\t%s\n"%('numseq', 'time'))
+            for j in range(len(sortedlist)):
+                nseq = sortedlist[j][0]
+                li_time = sortedlist[j][1]
+                for k in range(len(li_time)):
+                    fpout.write("%d\t%f\n" % (nseq, li_time[k]))
+            fpout.close()
+        except IOError:
+            pass
+        try:
+            fpout = open(outfile2, "w")
+            fpout.write("%s\t%s\n"%('numseq', 'time'))
+            for j in range(len(sortedlist)):
+                nseq = sortedlist[j][0]
+                li_time = sortedlist[j][1]
+                avg_time = myfunc.FloatDivision(sum(li_time), len(li_time))
+                fpout.write("%d\t%f\n"%(nseq, avg_time))
+            fpout.close()
+        except IOError:
+            pass
+        try:
+            fpout = open(outfile3, "w")
+            fpout.write("%s\t%s\n"%('numseq','time'))
+            for j in range(len(sortedlist)):
+                nseq = sortedlist[j][0]
+                li_time = sortedlist[j][1]
+                median_time = numpy.median(li_time)
+                fpout.write("%d\t%f\n"%(nseq, median_time))
+            fpout.close()
+        except IOError:
+            pass
+
+    # plotting 
+    flist = flist1
+    for i in range(len(flist)):
+        outfile = flist[i]
+        if os.path.exists(outfile):
+            cmd = [f"{binpath_plot}/plot_nseq_waitfinishtime.sh", outfile]
+            webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+    flist = flist2 + flist3
+    for i in range(len(flist)):
+        outfile = flist[i]
+        if os.path.exists(outfile):
+            cmd = [f"{binpath_plot}/plot_avg_waitfinishtime.sh", outfile]
+            webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+# }}}
+
+
+@timeit
+def RunStatistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
+    """Server usage analysis specifically for topcons2"""
+    path_log = os.path.join(webserver_root, 'proj', 'pred', 'static', 'log')
+    path_stat = os.path.join(path_log, 'stat')
+    binpath_plot = os.path.join(webserver_root, "env", "bin")
+    runtimelogfile = f"{path_log}/jobruntime.log"
+
+# get longest predicted seq
+# get query with most TM helics
+# get query takes the longest time
+    extreme_runtimelogfile = f"{path_log}/stat/extreme_jobruntime.log"
+
+    longestlength = -1
+    mostTM = -1
+    longestruntime = -1.0
+    line_mostTM = ""
+    line_longestruntime = ""
+
+# 3. get running time vs sequence length
+    cntseq = 0
+    cnt_hasSP = 0
+    outfile_runtime = f"{path_stat}/length_runtime.stat.txt"
+    outfile_runtime_pfam = f"{path_stat}/length_runtime.pfam.stat.txt"
+    outfile_runtime_cdd = f"{path_stat}/length_runtime.cdd.stat.txt"
+    outfile_runtime_uniref = f"{path_stat}/length_runtime.uniref.stat.txt"
+    outfile_runtime_avg = f"{path_stat}/length_runtime.stat.avg.txt"
+    outfile_runtime_pfam_avg = f"{path_stat}/length_runtime.pfam.stat.avg.txt"
+    outfile_runtime_cdd_avg = f"{path_stat}/length_runtime.cdd.stat.avg.txt"
+    outfile_runtime_uniref_avg = f"{path_stat}/length_runtime.uniref.stat.avg.txt"
+    li_length_runtime = []
+    li_length_runtime_pfam = []
+    li_length_runtime_cdd = []
+    li_length_runtime_uniref = []
+    dict_length_runtime = {}
+    dict_length_runtime_pfam = {}
+    dict_length_runtime_cdd = {}
+    dict_length_runtime_uniref = {}
+    li_length_runtime_avg = []
+    li_length_runtime_pfam_avg = []
+    li_length_runtime_cdd_avg = []
+    li_length_runtime_uniref_avg = []
+    hdl = myfunc.ReadLineByBlock(runtimelogfile)
+    if not hdl.failure:
+        lines = hdl.readlines()
+        while lines is not None:
+            for line in lines:
+                strs = line.split("\t")
+                if len(strs) < 8:
+                    continue
+                # jobid = strs[0]
+                # seqidx = strs[1]
+                runtime = -1.0
+                try:
+                    runtime = float(strs[3])
+                except IndexError:
+                    pass
+                mtd_profile = strs[4]
+                lengthseq = -1
+                try:
+                    lengthseq = int(strs[5])
+                except IndexError:
+                    pass
+
+                numTM = -1
+                try:
+                    numTM = int(strs[6])
+                except (IndexError, ValueError):
+                    pass
+                isHasSP = strs[7]
+
+                cntseq += 1
+                if isHasSP == "True":
+                    cnt_hasSP += 1
+
+                if runtime > longestruntime:
+                    line_longestruntime = line
+                    longestruntime = runtime
+                if lengthseq > longestlength:
+                    line_longestseq = line
+                    longestlength = lengthseq
+                if numTM > mostTM:
+                    mostTM = numTM
+                    line_mostTM = line
+
+                if lengthseq != -1:
+                    li_length_runtime.append([lengthseq, runtime])
+                    if lengthseq not in dict_length_runtime:
+                        dict_length_runtime[lengthseq] = []
+                    dict_length_runtime[lengthseq].append(runtime)
+                    if mtd_profile == "pfam":
+                        li_length_runtime_pfam.append([lengthseq, runtime])
+                        if lengthseq not in dict_length_runtime_pfam:
+                            dict_length_runtime_pfam[lengthseq] = []
+                        dict_length_runtime_pfam[lengthseq].append(runtime)
+                    elif mtd_profile == "cdd":
+                        li_length_runtime_cdd.append([lengthseq, runtime])
+                        if lengthseq not in dict_length_runtime_cdd:
+                            dict_length_runtime_cdd[lengthseq] = []
+                        dict_length_runtime_cdd[lengthseq].append(runtime)
+                    elif mtd_profile == "uniref":
+                        li_length_runtime_uniref.append([lengthseq, runtime])
+                        if lengthseq not in dict_length_runtime_uniref:
+                            dict_length_runtime_uniref[lengthseq] = []
+                        dict_length_runtime_uniref[lengthseq].append(runtime)
+            lines = hdl.readlines()
+        hdl.close()
+
+    li_content = []
+    for line in [line_mostTM, line_longestseq, line_longestruntime]:
+        li_content.append(line)
+    myfunc.WriteFile("\n".join(li_content)+"\n", extreme_runtimelogfile, "w", True)
+
+    # get lengthseq -vs- average_runtime
+    dict_list = [
+            dict_length_runtime, dict_length_runtime_pfam,
+            dict_length_runtime_cdd, dict_length_runtime_uniref
+            ]
+    li_list = [
+            li_length_runtime_avg, li_length_runtime_pfam_avg,
+            li_length_runtime_cdd_avg, li_length_runtime_uniref_avg
+            ]
+    li_sum_runtime = [0.0]*len(dict_list)
+    for i in range(len(dict_list)):
+        dt = dict_list[i]
+        li = li_list[i]
+        for lengthseq in dt:
+            avg_runtime = sum(dt[lengthseq])/float(len(dt[lengthseq]))
+            li.append([lengthseq, avg_runtime])
+            li_sum_runtime[i] += sum(dt[lengthseq])
+
+    avg_runtime = myfunc.FloatDivision(li_sum_runtime[0], len(li_length_runtime))
+    avg_runtime_pfam = myfunc.FloatDivision(li_sum_runtime[1], len(li_length_runtime_pfam))
+    avg_runtime_cdd = myfunc.FloatDivision(li_sum_runtime[2], len(li_length_runtime_cdd))
+    avg_runtime_uniref = myfunc.FloatDivision(li_sum_runtime[3], len(li_length_runtime_uniref))
+
+    li_list = [
+            li_length_runtime, li_length_runtime_pfam,
+            li_length_runtime_cdd, li_length_runtime_uniref,
+            li_length_runtime_avg, li_length_runtime_pfam_avg,
+            li_length_runtime_cdd_avg, li_length_runtime_uniref_avg]
+    flist = [
+            outfile_runtime, outfile_runtime_pfam, outfile_runtime_cdd,
+            outfile_runtime_uniref, outfile_runtime_avg,
+            outfile_runtime_pfam_avg, outfile_runtime_cdd_avg,
+            outfile_runtime_uniref_avg]
+    for i in range(len(flist)):
+        outfile = flist[i]
+        li = li_list[i]
+        sortedlist = sorted(li, key=lambda x: x[0])
+        try:
+            fpout = open(outfile, "w")
+            fpout.write("%s\t%s\n" % ('lengthseq', 'runtime'))
+            for j in range(len(sortedlist)):
+                lengthseq = sortedlist[j][0]
+                runtime = sortedlist[j][1]
+                fpout.write("%d\t%f\n" % (lengthseq, runtime))
+            fpout.close()
+        except IOError:
+            continue
+
+    outfile_avg_runtime = "%s/avg_runtime.stat.txt" % (path_stat)
+    try:
+        fpout = open(outfile_avg_runtime, "w")
+        fpout.write("%s\t%f\n" % ("All", avg_runtime))
+        fpout.write("%s\t%f\n" % ("Pfam", avg_runtime_pfam))
+        fpout.write("%s\t%f\n" % ("CDD", avg_runtime_cdd))
+        fpout.write("%s\t%f\n" % ("Uniref", avg_runtime_uniref))
+        fpout.close()
+    except IOError:
+        pass
+    if os.path.exists(outfile_avg_runtime):
+        cmd = [f"{binpath_plot}/plot_avg_runtime.sh", outfile_avg_runtime]
+        webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+
+    flist = [
+            outfile_runtime, outfile_runtime_pfam, outfile_runtime_cdd,
+            outfile_runtime_uniref]
+    for outfile in flist:
+        if os.path.exists(outfile):
+            cmd = [f"{binpath_plot}/plot_length_runtime.sh", outfile]
+            webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+
+    cmd = [
+            f"{binpath_plot}/plot_length_runtime_mtp.sh", "-pfam",
+            outfile_runtime_pfam, "-cdd", outfile_runtime_cdd, "-uniref",
+            outfile_runtime_uniref, "-sep-avg"]
+    webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+
+# 4. analysis for those predicted with signal peptide
+    outfile_hasSP = f"{path_stat}/noSP_hasSP.stat.txt"
+    content = "%s\t%d\t%f\n%s\t%d\t%f\n" % (
+            "\"Without SP\"", cntseq-cnt_hasSP,
+            myfunc.FloatDivision(cntseq-cnt_hasSP, cntseq),
+            "\"With SP\"", cnt_hasSP, myfunc.FloatDivision(cnt_hasSP, cntseq))
+    myfunc.WriteFile(content, outfile_hasSP, "w", True)
+    cmd = [
+            f"{binpath_plot}/plot_nosp_sp.sh", outfile_hasSP]
+    webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+
+# }}}
+
+
+@timeit
 def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
     """Create the index file for the jobs to be run
     """
@@ -403,7 +720,7 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
     # generate two logfiles: 
     #   1. runjoblogfile 
     #   2. finishedjoblogfile
-    # when loop == 0, for unfinished jobs, re-generate finished_seqs.txt
+    # when loop == 0, for unfinished jobs, regenerate finished_seqs.txt
     hdl = myfunc.ReadLineByBlock(submitjoblogfile)
     if hdl.failure:
         return 1
@@ -499,7 +816,7 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
         lines = hdl.readlines()
     hdl.close()
 
-# re-write logs of submitted jobs
+# rewrite logs of submitted jobs
     li_str = []
     for li in new_submitted_list:
         li_str.append(li[1])
@@ -508,7 +825,7 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
     else:
         myfunc.WriteFile("", submitjoblogfile, "w", True)
 
-# re-write logs of finished jobs
+# rewrite logs of finished jobs
     li_str = []
     for li in new_finished_list:
         li = [str(x) for x in li]
@@ -517,7 +834,7 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
         myfunc.WriteFile("\n".join(li_str)+"\n", finishedjoblogfile, "w", True)
     else:
         myfunc.WriteFile("", finishedjoblogfile, "w", True)
-# re-write logs of finished jobs for each IP
+# rewrite logs of finished jobs for each IP
     new_finished_dict = {}
     for li in new_finished_list:
         ip = li[3]
@@ -578,7 +895,7 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
             outpath_result = "%s/%s"%(rstdir, jobid)
 
             # if loop == 0 , for new_waitjob_list and new_runjob_list
-            # re-generate finished_seqs.txt
+            # regenerate finished_seqs.txt
             runjob_lockfile = "%s/%s.lock"%(rstdir, "runjob.lock")
             if 'DEBUG' in g_params and g_params['DEBUG'] and os.path.exists(runjob_lockfile):
                 webcom.loginfo("runjob_lockfile %s exists. "%(runjob_lockfile), gen_logfile)
@@ -672,8 +989,10 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
     else:
         myfunc.WriteFile("", runjoblogfile, "w", True)
 
-#}}}
+# }}}
 
+
+@timeit
 def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
     """Submit a job to the remote computational node
     """
@@ -1007,9 +1326,11 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):#{{{
         myfunc.WriteFile("", torun_idx_file, "w", True)
 
     return 0
-#}}}
+# }}}
 
-def GetResult(jobid, g_params):#{{{
+
+@timeit
+def GetResult(jobid, g_params):  # {{{
     """Get the result from the remote computational node for a job
     """
     # retrieving result from the remote server for this job
@@ -1072,7 +1393,7 @@ def GetResult(jobid, g_params):#{{{
                 cntTryDict = {}
 
     # in case of missing queries, if remotequeue_idx_file is empty  but the job
-    # is still not finished, force re-creating torun_idx_file
+    # is still not finished, force recreating torun_idx_file
     if ((not os.path.exists(remotequeue_idx_file) or
         os.path.getsize(remotequeue_idx_file)<1)):
         idlist1 = []
@@ -1290,7 +1611,7 @@ def GetResult(jobid, g_params):#{{{
                                     time.sleep(random.random()/1.0)
 #}}}
                 elif status in ["Failed", "None"]:
-                    # the job is failed for this sequence, try to re-submit
+                    # the job is failed for this sequence, try to resubmit
                     isFinish_remote = True
                 if status != "Wait" and not os.path.exists(starttagfile):
                     webcom.WriteDateTimeTagFile(starttagfile, runjob_logfile, runjob_errfile)
@@ -1361,9 +1682,11 @@ def GetResult(jobid, g_params):#{{{
     with open(cnttry_idx_file, 'w') as fpout:
         json.dump(cntTryDict, fpout)
     return 0
-#}}}
+# }}}
 
-def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
+
+@timeit
+def CheckIfJobFinished(jobid, numseq, to_email, g_params):  # {{{
     """check if the job is finished and write tag files
     """
     path_result = os.path.join(g_params['path_static'], 'result')
@@ -1417,4 +1740,4 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):#{{{
             (isSubmitSuccess, t_runtime) = webcom.RunCmd(cmd, gen_logfile, gen_errfile, verbose)
             if 'DEBUG' in g_params and g_params['DEBUG']:
                 webcom.loginfo("isSubmitSuccess: %s"%(str(isSubmitSuccess)), gen_logfile)
-#}}}
+# }}}
