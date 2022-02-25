@@ -1,23 +1,32 @@
 #!/usr/bin/env python
-from setuptools import setup, find_packages
+"""setup script for libpredweb"""
 import glob
+from setuptools import setup, find_packages
 
 with open("README.md", "r") as fh:
-    long_description = fh.read()
+    LONG_DESCRIPTION = fh.read()
 
-plotting_scripts = glob.glob('src/plot*.sh')
+PLOTTING_SCRIPTS = glob.glob('src/plot*.sh')
 
 setup(
         name='libpredweb',
         version='1.0.0',
-        scripts=['src/clean_cached_result.py', 'src/clean_server_file.sh',
-            'src/nanjianglib.pl', 'src/check_web_server.pl',
-            'src/check_jobqueuestatus.pl', 'src/my_ip2country.py', 'src/stat_usage_web_server.sh',
-            'src/show_jobqueuestatus.py', 'src/job_final_process.py']+plotting_scripts ,
+        scripts=[
+            'src/clean_cached_result.py',
+            'src/clean_server_file.sh',
+            'src/nanjianglib.pl',
+            'src/check_web_server.pl',
+            'src/check_jobqueuestatus.pl',
+            'src/my_ip2country.py',
+            'src/stat_usage_web_server.sh',
+            'src/show_jobqueuestatus.py',
+            'src/job_final_process.py',
+            'src/restart_qd_fe.cgi'
+            ] + PLOTTING_SCRIPTS,
         author="Nanjiang Shu",
         author_email="nanjiang.shu@gmail.com",
         description="A library for the prediction protein web-server",
-        long_description=long_description,
+        long_description=LONG_DESCRIPTION,
         long_description_content_type="text/markdown",
         url="https://github.com/nanjiang/libpredweb",
         zip_safe=False,
