@@ -35,7 +35,7 @@ def RunStatistics(g_params):  # {{{
     gen_errfile = g_params['gen_errfile']
     webserver_root = g_params['webserver_root']
     RunStatistics_basic(webserver_root, gen_logfile, gen_errfile)
-    if name_server == "topcons2":
+    if name_server.lower() == "topcons2":
         RunStatistics_topcons2(webserver_root, gen_logfile, gen_errfile)
 # }}}
 
