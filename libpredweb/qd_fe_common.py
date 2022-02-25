@@ -248,8 +248,8 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                 count = sortedlist[j][1]
                 fpout.write("%d\t%d\n" % (nseq, count))
             fpout.close()
-            # plot
-            if os.path.exists(outfile) and len(sortedlist) > 0:  # plot only when there are valid data
+            # plotting
+            if os.path.exists(outfile) and len(sortedlist) > 0:
                 cmd = [f"{binpath_plot}/plot_numseq_of_job.sh", outfile]
                 webcom.RunCmd(cmd, gen_logfile, gen_errfile)
         except IOError:
@@ -261,7 +261,8 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
             ]
     webcom.RunCmd(cmd, gen_logfile, gen_errfile)
 
-# 5. output num-submission time series with different bins (day, week, month, year)
+# 5. output num-submission time series with different bins
+# (day, week, month, year)
     hdl = myfunc.ReadLineByBlock(allsubmitjoblogfile)
     dict_submit_day = {}   # ["name" numjob, numseq, numjob_web, numseq_web,numjob_wsdl, numseq_wsdl]
     dict_submit_week = {}
