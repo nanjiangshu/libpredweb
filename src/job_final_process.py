@@ -128,7 +128,8 @@ def JobFinalProcess(g_params):#{{{
             webcom.WriteDateTimeTagFile(finishtagfile, runjob_logfile, runjob_errfile)
 
         if finish_status == "success":
-            shutil.rmtree(tmpdir)
+            if os.path.exists(tmpdir):
+                shutil.rmtree(tmpdir)
 
         # send the result to to_email
         from_email = webcom.get_email_address_outsending(name_server.lower())
