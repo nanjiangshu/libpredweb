@@ -1819,7 +1819,7 @@ def GetResult(jobid, g_params):  # {{{
             for idx in torun_idx_str_list:
                 try:
                     cntTryDict[int(idx)] += 1
-                except (ValueError, IndexError):
+                except (ValueError, IndexError, KeyError):
                     cntTryDict[int(idx)] = 1
             myfunc.WriteFile("\n".join(torun_idx_str_list)+"\n", torun_idx_file, "w", True)
 
