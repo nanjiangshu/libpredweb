@@ -16,6 +16,7 @@ from . import webserver_common as webcom
 from . import dataprocess
 import math
 import numpy
+import random
 import time
 from datetime import datetime
 # from pytz import timezone
@@ -1369,7 +1370,7 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):  # {{{
 
 
 @timeit
-def GetResult(jobid, g_params):  # {{{
+def GetResult_obselete(jobid, g_params):  # {{{
     """Get the result from the remote computational node for a job
     """
     # retrieving result from the remote server for this job
@@ -1720,6 +1721,393 @@ def GetResult(jobid, g_params):  # {{{
 
     with open(cnttry_idx_file, 'w') as fpout:
         json.dump(cntTryDict, fpout)
+    return 0
+# }}}
+
+
+@timeit
+def GetResult(jobid, g_params):  # {{{
+    """Get the result from the remote computational node for a job
+    """
+    # retrieving result from the remote server for this job
+    gen_logfile = g_params['gen_logfile']
+    gen_errfile = g_params['gen_errfile']
+
+    webcom.loginfo(f"GetResult for {jobid}.\n", gen_logfile)
+
+    path_static = g_params['path_static']
+    path_result = os.path.join(path_static, 'result')
+    path_cache = g_params['path_cache']
+    finished_date_db = g_params['finished_date_db']
+    name_server = g_params['name_server']
+
+    rstdir = os.path.join(path_result, jobid)
+    runjob_logfile = os.path.join(rstdir, "runjob.log")
+    runjob_errfile = os.path.join(rstdir, "runjob.err")
+    outpath_result = os.path.join(rstdir, jobid)
+    if not os.path.exists(outpath_result):
+        os.mkdir(outpath_result)
+
+    remotequeue_idx_file = os.path.join(rstdir, "remotequeue_seqindex.txt")
+
+    torun_idx_file = os.path.join(rstdir, "torun_seqindex.txt")
+    finished_idx_file = os.path.join(rstdir, "finished_seqindex.txt")
+    query_parafile = os.path.join(rstdir, "query.para.txt")
+
+    query_para = {}
+    if os.path.exists(query_parafile):
+        content = myfunc.ReadFile(query_parafile)
+        if content != "":
+            try:
+                query_para = json.loads(content)
+            except ValueError:
+                query_para = {}
+    failed_idx_file = os.path.join(rstdir, "failed_seqindex.txt")
+
+    starttagfile = os.path.join(rstdir, "runjob.start")
+    cnttry_idx_file = os.path.join(rstdir, "cntsubmittry_seqindex.txt")  # index file to keep log of tries
+    tmpdir = os.path.join(rstdir, "tmpdir")
+    finished_seq_file = os.path.join(outpath_result, "finished_seqs.txt")
+
+    if not os.path.exists(tmpdir):
+        os.mkdir(tmpdir)
+
+    finished_info_list = []  # [info for finished record]
+    finished_idx_list = []  # [origIndex]
+    failed_idx_list = []    # [origIndex]
+    resubmit_idx_list = []  # [origIndex]
+    keep_queueline_list = []  # [line] still in queue
+
+    cntTryDict = {}
+    if os.path.exists(cnttry_idx_file):
+        with open(cnttry_idx_file, 'r') as fpin:
+            try:
+                cntTryDict = json.load(fpin)
+            except Exception:
+                cntTryDict = {}
+
+    # in case of missing queries, if remotequeue_idx_file is empty  but the job
+    # is still not finished, force recreating torun_idx_file
+    if 'DEBUG' in g_params and g_params['DEBUG']:
+        try:
+            webcom.loginfo("DEBUG: %s: remotequeue_idx_file=%s, size(remotequeue_idx_file)=%d, content=\"%s\"\n" %(jobid, remotequeue_idx_file, os.path.getsize(remotequeue_idx_file), myfunc.ReadFile(remotequeue_idx_file)), gen_logfile)
+        except Exception:
+            pass
+    if ((not os.path.exists(remotequeue_idx_file) or  # {{{
+        os.path.getsize(remotequeue_idx_file) < 1)):
+        idlist1 = []
+        idlist2 = []
+        if os.path.exists(finished_idx_file):
+           idlist1 = myfunc.ReadIDList(finished_idx_file)
+        if os.path.exists(failed_idx_file):
+           idlist2 = myfunc.ReadIDList(failed_idx_file)
+
+        completed_idx_set = set(idlist1 + idlist2)
+
+        jobinfofile = os.path.join(rstdir, "jobinfo")
+        jobinfo = myfunc.ReadFile(jobinfofile).strip()
+        jobinfolist = jobinfo.split("\t")
+        if len(jobinfolist) >= 8:
+            numseq = int(jobinfolist[3])
+
+        if 'DEBUG' in g_params and g_params['DEBUG']:
+            webcom.loginfo("DEBUG: len(completed_idx_set)=%d+%d=%d, numseq=%d\n"%(len(idlist1), len(idlist2), len(completed_idx_set), numseq), gen_logfile)
+
+        if len(completed_idx_set) < numseq:
+            all_idx_list = [str(x) for x in range(numseq)]
+            torun_idx_str_list = list(set(all_idx_list)-completed_idx_set)
+            for idx in torun_idx_str_list:
+                try:
+                    cntTryDict[int(idx)] += 1
+                except (ValueError, IndexError):
+                    cntTryDict[int(idx)] = 1
+            myfunc.WriteFile("\n".join(torun_idx_str_list)+"\n", torun_idx_file, "w", True)
+
+            if 'DEBUG' in g_params and g_params['DEBUG']:
+                webcom.loginfo("recreate torun_idx_file: jobid = %s, numseq=%d, len(completed_idx_set)=%d, len(torun_idx_str_list)=%d\n"%(jobid, numseq, len(completed_idx_set), len(torun_idx_str_list)), gen_logfile)
+        else:
+            myfunc.WriteFile("", torun_idx_file, "w", True)
+    else:
+        if 'DEBUG' in g_params and g_params['DEBUG']:
+            webcom.loginfo("DEBUG: %s: remotequeue_idx_file %s is not empty\n" %(jobid, remotequeue_idx_file), gen_logfile)
+# }}}
+
+    text = ""
+    if os.path.exists(remotequeue_idx_file):
+        text = myfunc.ReadFile(remotequeue_idx_file)
+    if text == "":
+        return 1
+    lines = text.split("\n")
+
+    nodeSet = set([])
+    for i in range(len(lines)):
+        line = lines[i]
+        if not line or line[0] == "#":
+            continue
+        strs = line.split("\t")
+        if len(strs) != 6:
+            continue
+        node = strs[1]
+        nodeSet.add(node)
+
+    myclientDict = {}
+    for node in nodeSet:
+        wsdl_url = f"http://{node}/pred/api_submitseq/?wsdl"
+        try:
+            myclient = Client(wsdl_url, cache=None, timeout=30)
+            myclientDict[node] = myclient
+        except:
+            webcom.loginfo(f"Failed to access {wsdl_url}", gen_logfile)
+            pass
+
+
+    for i in range(len(lines)):  # {{{
+        line = lines[i]
+
+        if 'DEBUG' in g_params and g_params['DEBUG']:
+            myfunc.WriteFile(f"Process {line}\n", gen_logfile, "a", True)
+        if not line or line[0] == "#":
+            if 'DEBUG' in g_params and g_params['DEBUG']:
+                webcom.loginfo("DEBUG: line empty or line[0] = '#', ignore", gen_logfile)
+            continue
+        strs = line.split("\t")
+        if len(strs) != 6:
+            if 'DEBUG' in g_params and g_params['DEBUG']:
+                webcom.loginfo("DEBUG: len(strs)=%d (!=6), ignore\n"%(len(strs)), gen_logfile)
+            continue
+        origIndex = int(strs[0])
+        node = strs[1]
+        remote_jobid = strs[2]
+        description = strs[3]
+        seq = strs[4]
+        submit_time_epoch = float(strs[5])
+        subfoldername_this_seq = f"seq_{origIndex}"
+        outpath_this_seq = os.path.join(outpath_result, subfoldername_this_seq)
+
+        try:
+            myclient = myclientDict[node]
+        except KeyError:
+            if 'DEBUG' in g_params and g_params['DEBUG']:
+                webcom.loginfo("DEBUG: node (%s) not found in myclientDict, ignore"%(node), gen_logfile)
+            keep_queueline_list.append(line)
+            continue
+        try:
+            rtValue = myclient.service.checkjob(remote_jobid)
+        except Exception as e:
+            msg = "checkjob(%s) at node %s failed with errmsg %s"%(remote_jobid, node, str(e))
+            webcom.loginfo(msg, gen_logfile)
+            rtValue = []
+            pass
+        isSuccess = False
+        isFinish_remote = False
+        status = ""
+        if len(rtValue) >= 1:
+            ss2 = rtValue[0]
+            if len(ss2) >= 3:
+                status = ss2[0]
+                result_url = ss2[1]
+                errinfo = ss2[2]
+
+                if errinfo and errinfo.find("does not exist") != -1:
+                    if 'DEBUG' in g_params and g_params['DEBUG']:
+                        msg = "Failed for remote_jobid %s with errmsg %s"%(remote_jobid, str(errinfo))
+                        webcom.loginfo(msg, gen_logfile)
+
+                    isFinish_remote = True
+
+                if status == "Finished":  # {{{
+                    isFinish_remote = True
+                    outfile_zip = f"{tmpdir}/{remote_jobid}.zip"
+                    isRetrieveSuccess = False
+                    myfunc.WriteFile("\tFetching result for %s/seq_%d from %s " % (
+                        jobid, origIndex, result_url), gen_logfile, "a", True)
+                    if myfunc.IsURLExist(result_url, timeout=5):
+                        try:
+                            myfunc.urlretrieve(result_url, outfile_zip, timeout=10)
+                            isRetrieveSuccess = True
+                            myfunc.WriteFile(f" succeeded on node {node}\n", gen_logfile, "a", True)
+                        except Exception as e:
+                            myfunc.WriteFile(" failed with %s\n"%(str(e)), gen_logfile, "a", True)
+                            pass
+                    if os.path.exists(outfile_zip) and isRetrieveSuccess:
+                        cmd = ["unzip", outfile_zip, "-d", tmpdir]
+                        webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+                        rst_fetched = os.path.join(tmpdir, remote_jobid)
+                        if name_server.lower() == "pconsc3":
+                            rst_this_seq = rst_fetched
+                        elif name_server.lower() == "boctopus2":
+                            rst_this_seq = os.path.join(rst_fetched, "seq_0", "seq_0")
+                            rst_this_seq_parent = os.path.join(rst_fetched, "seq_0")
+                        else:
+                            rst_this_seq = os.path.join(rst_fetched, "seq_0")
+
+                        if os.path.islink(outpath_this_seq):
+                            os.unlink(outpath_this_seq)
+                        elif os.path.exists(outpath_this_seq):
+                            shutil.rmtree(outpath_this_seq)
+
+                        if os.path.exists(rst_this_seq) and not os.path.exists(outpath_this_seq):
+                            cmd = ["mv", "-f", rst_this_seq, outpath_this_seq]
+                            webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+                            if name_server.lower() == "boctopus2":
+                                # move also seq.fa and time.txt for boctopus2
+                                file1 = os.path.join(rst_this_seq_parent, "seq.fa")
+                                file2 = os.path.join(rst_this_seq_parent, "time.txt")
+                                for f in [file1, file2]:
+                                    if os.path.exists(f):
+                                        try:
+                                            shutil.move(f, outpath_this_seq)
+                                        except:
+                                            pass
+
+                            fafile_this_seq = os.path.join(outpath_this_seq, "seq.fa")
+                            if webcom.IsCheckPredictionPassed(outpath_this_seq, name_server):
+                                # relpace the seq.fa with original description
+                                myfunc.WriteFile('>%s\n%s\n'%(description, seq), fafile_this_seq, 'w', True)
+                                isSuccess = True
+
+                            if isSuccess:
+                                # delete the data on the remote server
+                                try:
+                                    rtValue2 = myclient.service.deletejob(remote_jobid)
+                                except Exception as e:
+                                    msg = "Failed to deletejob(%s) on node %s with errmsg %s"%(remote_jobid, node, str(e))
+                                    webcom.loginfo(msg, gen_logfile)
+                                    rtValue2 = []
+                                    pass
+
+                                logmsg = ""
+                                if len(rtValue2) >= 1:
+                                    ss2 = rtValue2[0]
+                                    if len(ss2) >= 2:
+                                        status = ss2[0]
+                                        errmsg = ss2[1]
+                                        if status == "Succeeded":
+                                            logmsg = "Successfully deleted data on %s "\
+                                                    "for %s"%(node, remote_jobid)
+                                        else:
+                                            logmsg = "Failed to delete data on %s for "\
+                                                    "%s\nError message:\n%s\n"%(node, remote_jobid, errmsg)
+                                else:
+                                    logmsg = "Failed to call deletejob %s via WSDL on %s\n"%(remote_jobid, node)
+
+                                # delete the downloaded temporary zip file and
+                                # extracted file
+                                if os.path.exists(outfile_zip):
+                                    os.remove(outfile_zip)
+                                if os.path.exists(rst_fetched):
+                                    shutil.rmtree(rst_fetched)
+
+                                # create or update the md5 cache
+                                if name_server.lower() == "prodres" and query_para != {}:
+                                    md5_key = hashlib.md5((seq+str(query_para)).encode('utf-8')).hexdigest()
+                                else:
+                                    md5_key = hashlib.md5(seq.encode('utf-8')).hexdigest()
+                                subfoldername = md5_key[:2]
+                                md5_subfolder = "%s/%s"%(path_cache, subfoldername)
+                                cachedir = "%s/%s/%s"%(path_cache, subfoldername, md5_key)
+
+                                # copy the zipped folder to the cache path
+                                origpath = os.getcwd()
+                                os.chdir(outpath_result)
+                                shutil.copytree("seq_%d"%(origIndex), md5_key)
+                                cmd = ["zip", "-rq", "%s.zip"%(md5_key), md5_key]
+                                webcom.RunCmd(cmd, runjob_logfile, runjob_errfile)
+                                if not os.path.exists(md5_subfolder):
+                                    os.makedirs(md5_subfolder)
+                                shutil.move("%s.zip"%(md5_key), "%s.zip"%(cachedir))
+                                shutil.rmtree(md5_key) # delete the temp folder named as md5 hash
+                                os.chdir(origpath)
+
+                                # Add the finished date to the database
+                                date_str = time.strftime(g_params['FORMAT_DATETIME'])
+                                MAX_TRY_INSERT_DB = 3
+                                cnttry = 0
+                                while cnttry < MAX_TRY_INSERT_DB:
+                                    t_rv = webcom.InsertFinishDateToDB(date_str, md5_key, seq, finished_date_db)
+                                    if t_rv == 0:
+                                        break
+                                    cnttry += 1
+                                    time.sleep(random.random()/1.0)
+
+# }}}
+                elif status in ["Failed", "None"]:
+                    # the job is failed for this sequence, try to resubmit
+                    isFinish_remote = True
+                    if 'DEBUG' in g_params and g_params['DEBUG']:
+                        webcom.loginfo("DEBUG: %s, status = %s\n"%(remote_jobid, status), gen_logfile)
+
+                if status != "Wait" and not os.path.exists(starttagfile):
+                    webcom.WriteDateTimeTagFile(starttagfile, runjob_logfile, runjob_errfile)
+
+        if isSuccess:  # {{{
+            time_now = time.time()
+            runtime1 = time_now - submit_time_epoch  # in seconds
+            timefile = os.path.join(outpath_this_seq, "time.txt")
+            runtime = webcom.ReadRuntimeFromFile(timefile, default_runtime=runtime1)
+            info_finish = webcom.GetInfoFinish(
+                    name_server, outpath_this_seq,
+                    origIndex, len(seq), description,
+                    source_result="newrun", runtime=runtime)
+            finished_info_list.append("\t".join(info_finish))
+            finished_idx_list.append(str(origIndex))
+            # }}}
+
+        # if the job is finished on the remote but the prediction is failed,
+        # try resubmit a few times and if all failed, add the origIndex to the
+        # failed_idx_file
+        if isFinish_remote and not isSuccess:
+            cnttry = 1
+            try:
+                cnttry = cntTryDict[int(origIndex)]
+            except KeyError:
+                cnttry = 1
+            if cnttry < g_params['MAX_RESUBMIT']:
+                resubmit_idx_list.append(str(origIndex))
+                cntTryDict[int(origIndex)] = cnttry+1
+            else:
+                failed_idx_list.append(str(origIndex))
+
+        if not isFinish_remote:
+            time_in_remote_queue = time.time() - submit_time_epoch
+            # for jobs queued in the remote queue more than one day (but not
+            # running) delete it and try to resubmit it. This solved the
+            # problem of dead jobs in the remote server due to server
+            # rebooting)
+            if status != "Running" and status != "" and time_in_remote_queue > g_params['MAX_TIME_IN_REMOTE_QUEUE']:
+                # delete the remote job on the remote server
+                try:
+                    rtValue2 = myclient.service.deletejob(remote_jobid)
+                except Exception as e:
+                    webcom.loginfo("Failed to run myclient.service.deletejob(%s) on node %s with msg %s"%(remote_jobid, node, str(e)), gen_logfile)
+                    rtValue2 = []
+                    pass
+            else:
+                keep_queueline_list.append(line)
+# }}}
+    # Finally, write log files
+    finished_idx_list = list(set(finished_idx_list))
+    failed_idx_list = list(set(failed_idx_list))
+    resubmit_idx_list = list(set(resubmit_idx_list))
+
+    if len(finished_info_list) > 0:
+        myfunc.WriteFile("\n".join(finished_info_list)+"\n", finished_seq_file, "a", True)
+    if len(finished_idx_list) > 0:
+        myfunc.WriteFile("\n".join(finished_idx_list)+"\n", finished_idx_file, "a", True)
+    if len(failed_idx_list) > 0:
+        myfunc.WriteFile("\n".join(failed_idx_list)+"\n", failed_idx_file, "a", True)
+    if len(resubmit_idx_list) > 0:
+        myfunc.WriteFile("\n".join(resubmit_idx_list)+"\n", torun_idx_file, "a", True)
+
+    if len(keep_queueline_list) > 0:
+        keep_queueline_list = list(set(keep_queueline_list))
+        myfunc.WriteFile("\n".join(keep_queueline_list)+"\n", remotequeue_idx_file, "w", True)
+    else:
+        myfunc.WriteFile("", remotequeue_idx_file, "w", True)
+
+    with open(cnttry_idx_file, 'w') as fpout:
+        json.dump(cntTryDict, fpout)
+
     return 0
 # }}}
 
