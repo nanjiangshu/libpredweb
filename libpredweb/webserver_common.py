@@ -1784,6 +1784,8 @@ Attached below is the error message:
     else:
         return 0
 # }}}
+
+@timeit
 def GetJobCounter(info): #{{{
 # get job counter for the client_ip
 # get the table from runlog, 
@@ -2335,6 +2337,7 @@ def SetColorStatus(status):#{{{
         return "black"
 #}}}
 
+@timeit
 def get_queue(request, g_params):#{{{
     info = {}
     path_result = "%s/result"%(g_params['path_static'])
@@ -2432,6 +2435,9 @@ def get_queue(request, g_params):#{{{
     #return render(request, 'pred/queue.html', info)
     return info
 #}}}
+
+
+@timeit
 def get_running(request, g_params):#{{{
     # Get running jobs
     info = {}
@@ -2543,6 +2549,9 @@ def get_running(request, g_params):#{{{
     info['jobcounter'] = GetJobCounter(info)
     return info
 #}}}
+
+
+@timeit
 def get_finished_job(request, g_params):#{{{
     info = {}
     path_result = "%s/result"%(g_params['path_static'])
@@ -2677,6 +2686,9 @@ def get_finished_job(request, g_params):#{{{
     info['jobcounter'] = GetJobCounter(info)
     return info
 #}}}
+
+
+@timeit
 def get_failed_job(request, g_params):#{{{
     info = {}
     path_result = "%s/result"%(g_params['path_static'])
