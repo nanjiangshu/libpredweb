@@ -38,7 +38,7 @@ def RunStatistics(g_params):  # {{{
     jsonfile = os.path.join(path_tmp, f"{bsname}.json")
     myfunc.WriteFile(json.dumps(g_params, sort_keys=True), jsonfile, "w")
     name_server = g_params['name_server']
-    if 'RUN_STATISTICS_IN_QD' and g_params['RUN_STATISTICS_IN_QD']:
+    if 'RUN_STATISTICS_IN_QD' in g_params and g_params['RUN_STATISTICS_IN_QD']:
         cmd = ["python", py_scriptfile, "-i", jsonfile]
         (isSubmitSuccess, t_runtime) = webcom.RunCmd(cmd,
                                                      gen_logfile,
