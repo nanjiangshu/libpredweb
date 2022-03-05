@@ -250,12 +250,12 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
             fpout.close()
             # plotting
             if os.path.exists(outfile) and len(sortedlist) > 0:
-                cmd = [f"{binpath_plot}/plot_numseq_f_job.sh", outfile]
+                cmd = [f"{binpath_plot}/plot_numseq_of_job.sh", outfile]
                 webcom.RunCmd(cmd, gen_logfile, gen_errfile)
         except IOError:
             continue
     cmd = [
-            f"{binpath_plot}/plot_numseq_f_job_mtp.sh",
+            f"{binpath_plot}/plot_numseq_of_job_mtp.sh",
             "-web", f_numseqjob_web,
             "-wsdl", f_numseqjob_wsdl
             ]
