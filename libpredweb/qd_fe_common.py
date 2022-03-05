@@ -44,7 +44,7 @@ def RunStatistics(g_params):  # {{{
         myfunc.WriteFile(json.dumps(g_params, sort_keys=True), jsonfile, "w")
         binpath_script = os.path.join(g_params['webserver_root'], "env", "bin")
         py_scriptfile = os.path.join(binpath_script, f"{bsname}.py")
-        bash_scriptfile = f"{path_tmp}/${bsname}-{name_server}.sh"
+        bash_scriptfile = f"{path_tmp}/{bsname}-{name_server}.sh"
         code_str_list = []
         code_str_list.append("#!/bin/bash")
         cmdline = f"python {py_scriptfile} -i {jsonfile}"
