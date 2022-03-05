@@ -33,12 +33,17 @@ def RunStatistics(g_params):  # {{{
     path_tmp = os.path.join(g_params['path_static'], "tmp")
     gen_logfile = g_params['gen_logfile']
     gen_errfile = g_params['gen_errfile']
+    binpath_script = os.path.join(g_params['webserver_root'], "env", "bin")
+    py_scriptfile = os.path.join(binpath_script, f"{bsname}.py")
+    jsonfile = os.path.join(path_tmp, f"{bsname}.json")
+    myfunc.WriteFile(json.dumps(g_params, sort_keys=True), jsonfile, "w")
     name_server = g_params['name_server']
-    if not os.path.exists(lock_file):
-        jsonfile = os.path.join(path_tmp, f"{bsname}.json")
-        myfunc.WriteFile(json.dumps(g_params, sort_keys=True), jsonfile, "w")
-        binpath_script = os.path.join(g_params['webserver_root'], "env", "bin")
-        py_scriptfile = os.path.join(binpath_script, f"{bsname}.py")
+    if 'RUN_STATISTICS_IN_QD' and g_params['RUN_STATISTICS_IN_QD']:
+        cmd = ["python", py_scriptfile, "-i", jsonfile]
+        (isSubmitSuccess, t_runtime) = webcom.RunCmd(cmd,
+                                                     gen_logfile,
+                                                     gen_errfile)
+    elif not os.path.exists(lock_file):
         bash_scriptfile = f"{path_tmp}/{bsname}-{name_server}.sh"
         code_str_list = []
         code_str_list.append("#!/bin/bash")
