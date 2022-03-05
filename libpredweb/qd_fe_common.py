@@ -32,6 +32,45 @@ from .timeit import timeit
 @timeit
 def RunStatistics(g_params):  # {{{
     """Server usage analysis"""
+    bsname = "run_server_statistics"
+    lockname = f"{bsname}.lock"
+    lock_file = os.path.join(g_params['path_log'], lockname)
+    path_tmp = os.path.join(g_params['path_static'], "tmp")
+    gen_logfile = g_params['gen_logfile']
+    gen_errfile = g_params['gen_errfile']
+    name_server = g_params['name_server']
+    if not os.path.exists(lock_file):
+        jsonfile = os.path.join(path_tmp, f"{bsname}.json")
+        myfunc.WriteFile(json.dumps(g_params, sort_keys=True), jsonfile, "w")
+        binpath_script = os.path.join(g_params['webserver_root'], "env", "bin")
+        py_scriptfile = os.path.join(binpath_script, f"{bsname}.py")
+        bash_scriptfile = f"{path_tmp}/${bsname}-{name_server}.sh"
+        code_str_list = []
+        code_str_list.append("#!/bin/bash")
+        cmdline = f"python {py_scriptfile} -i {jsonfile}"
+        code_str_list.append(cmdline)
+        code = "\n".join(code_str_list)
+        myfunc.WriteFile(code, bash_scriptfile, mode="w", isFlush=True)
+        os.chmod(bash_scriptfile, 0o755)
+        os.chdir(path_tmp)
+        cmd = ['sbatch', bash_scriptfile]
+        cmdline = " ".join(cmd)
+        verbose = False
+        if 'DEBUG' in g_params and g_params['DEBUG']:
+            verbose = True
+            webcom.loginfo(f"Run cmdline: {cmdline}", gen_logfile)
+        (isSubmitSuccess, t_runtime) = webcom.RunCmd(cmd,
+                                                     gen_logfile,
+                                                     gen_errfile,
+                                                     verbose)
+        if 'DEBUG' in g_params and g_params['DEBUG']:
+            webcom.loginfo("isSubmitSuccess: {isSubmitSuccess}", gen_logfile)
+# }}}
+
+
+@timeit
+def RunStatistics_obselete(g_params):  # {{{
+    """Server usage analysis"""
     name_server = g_params['name_server']
     gen_logfile = g_params['gen_logfile']
     gen_errfile = g_params['gen_errfile']
