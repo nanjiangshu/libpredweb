@@ -17,20 +17,20 @@ from libpredweb import dataprocess
 PROGNAME = os.path.basename(sys.argv[0])
 
 
-def RunStatistics(g_params):  # {{{
+def run_statistics(g_params):  # {{{
     """Server usage analysis"""
     name_server = g_params['name_server']
     gen_logfile = g_params['gen_logfile']
     gen_errfile = g_params['gen_errfile']
     webserver_root = g_params['webserver_root']
-    RunStatistics_basic(webserver_root, gen_logfile, gen_errfile)
+    run_statistics_basic(webserver_root, gen_logfile, gen_errfile)
     if name_server.lower() == "topcons2":
-        RunStatistics_topcons2(webserver_root, gen_logfile, gen_errfile)
+        run_statistics_topcons2(webserver_root, gen_logfile, gen_errfile)
     return 0
 # }}}
 
 
-def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
+def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
     """Function for qd_fe to run usage statistics for the web-server usage
     """
     path_static = os.path.join(webserver_root, "proj", "pred", "static")
@@ -504,7 +504,7 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
 # }}}
 
 
-def RunStatistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
+def run_statistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
     """Server usage analysis specifically for topcons2"""
     path_log = os.path.join(webserver_root, 'proj', 'pred', 'static', 'log')
     path_stat = os.path.join(path_log, 'stat')
@@ -745,7 +745,7 @@ Examples:
 
     if 'DEBUG_LOCK_FILE' in g_params and g_params['DEBUG_LOCK_FILE']:
         time.sleep(g_params['SLEEP_INTERVAL']*6)
-    status = RunStatistics(g_params)
+    status = run_statistics(g_params)
     if os.path.exists(lock_file):
         try:
             os.remove(lock_file)
