@@ -99,15 +99,15 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                     runtimelogfile, "a", True)
         myfunc.WriteFile(jobid+"\n", runtimelogfile_finishedjobid, "a", True)
 
-# 2. get numseq_in_job vs count_f_jobs, logscale in x-axis
+# 2. get numseq_in_job vs count_of_jobs, logscale in x-axis
 #    get numseq_in_job vs waiting time (time_start - time_submit)
 #    get numseq_in_job vs finish time  (time_finish - time_submit)
 
     allfinished_job_dict = myfunc.ReadFinishedJobLog(allfinishedjoblogfile)
     countjob_country = {}  # ['country'] = [numseq, numjob, ip_set]
-    f_numseqjob = f"{path_stat}/numseq_f_job.stat.txt"
-    f_numseqjob_web = f"{path_stat}/numseq_f_job.web.stat.txt"
-    f_numseqjob_wsdl = f"{path_stat}/numseq_f_job.wsdl.stat.txt"
+    f_numseqjob = f"{path_stat}/numseq_of_job.stat.txt"
+    f_numseqjob_web = f"{path_stat}/numseq_of_job.web.stat.txt"
+    f_numseqjob_wsdl = f"{path_stat}/numseq_of_job.wsdl.stat.txt"
     countjob_numseq_dict = {}  # count the number jobs for each numseq
     countjob_numseq_dict_web = {}  # numJob for each numseq submitted via web
     countjob_numseq_dict_wsdl = {}  # numJob for each numseq submitted via wsdl
@@ -290,8 +290,8 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                     isValidSubmitDate = False
                 if isValidSubmitDate:  # {{{
                     day_str = submit_date_str.split()[0]
-                    (beginning_f_week, end_f_week) = myfunc.week_beg_end(submit_date)
-                    week_str = beginning_f_week.strftime("%Y-%m-%d")
+                    (beginning_of_week, end_of_week) = myfunc.week_beg_end(submit_date)
+                    week_str = beginning_of_week.strftime("%Y-%m-%d")
                     month_str = submit_date.replace(day=1).strftime("%Y-%m-%d")
                     year_str = submit_date.replace(month=1, day=1).strftime("%Y-%m-%d")
                     day = int(day_str.replace("-", ""))
@@ -419,8 +419,8 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
             cmd = [f"{binpath_plot}/plot_numsubmit.sh", outfile]
             webcom.RunCmd(cmd, gen_logfile, gen_errfile)
 
-    # output waittime vs numseq_f_job
-    # output finishtime vs numseq_f_job
+    # output waittime vs numseq_of_job
+    # output finishtime vs numseq_of_job
     f_waittime_nseq = f"{path_stat}/waittime_nseq.stat.txt"
     f_waittime_nseq_web = f"{path_stat}/waittime_nseq_web.stat.txt"
     f_waittime_nseq_wsdl = f"{path_stat}/waittime_nseq_wsdl.stat.txt"
