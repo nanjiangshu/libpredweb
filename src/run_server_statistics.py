@@ -105,9 +105,9 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
 
     allfinished_job_dict = myfunc.ReadFinishedJobLog(allfinishedjoblogfile)
     countjob_country = {}  # ['country'] = [numseq, numjob, ip_set]
-    f_numseqjob = f"{path_stat}/numseq_of_job.stat.txt"
-    f_numseqjob_web = f"{path_stat}/numseq_of_job.web.stat.txt"
-    f_numseqjob_wsdl = f"{path_stat}/numseq_of_job.wsdl.stat.txt"
+    outfile_numseqjob = f"{path_stat}/numseq_of_job.stat.txt"
+    outfile_numseqjob_web = f"{path_stat}/numseq_of_job.web.stat.txt"
+    outfile_numseqjob_wsdl = f"{path_stat}/numseq_of_job.wsdl.stat.txt"
     countjob_numseq_dict = {}  # count the number jobs for each numseq
     countjob_numseq_dict_web = {}  # numJob for each numseq submitted via web
     countjob_numseq_dict_wsdl = {}  # numJob for each numseq submitted via wsdl
@@ -215,7 +215,7 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                     finishtime_numseq_dict_wsdl[numseq].append(finishtime_sec)
 
     # output countjob by country
-    f_countjob_by_country = f"{path_stat}/countjob_by_country.txt"
+    outfile_countjob_by_country = f"{path_stat}/countjob_by_country.txt"
     # sort by numseq in descending order
     li_countjob = sorted(
             list(countjob_country.items()),
@@ -227,10 +227,10 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                 "%s\t%d\t%d\t%d" % (li[0], li[1][0], li[1][1], len(li[1][2])))
     myfunc.WriteFile(
             ("\n".join(li_str)+"\n").encode('utf-8'),
-            f_countjob_by_country, "wb", True)
+            outfile_countjob_by_country, "wb", True)
 
     flist = [
-            f_numseqjob, f_numseqjob_web, f_numseqjob_wsdl
+            outfile_numseqjob, outfile_numseqjob_web, outfile_numseqjob_wsdl
             ]
     dictlist = [
             countjob_numseq_dict, countjob_numseq_dict_web,
@@ -256,8 +256,8 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
             continue
     cmd = [
             f"{binpath_plot}/plot_numseq_of_job_mtp.sh",
-            "-web", f_numseqjob_web,
-            "-wsdl", f_numseqjob_wsdl
+            "-web", outfile_numseqjob_web,
+            "-wsdl", outfile_numseqjob_wsdl
             ]
     webcom.RunCmd(cmd, gen_logfile, gen_errfile)
 
@@ -371,25 +371,25 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                 if items[1][k1] > 0 or items[1][k2] > 0:
                     li.append([items[1][0], items[1][k1], items[1][k2]])
 
-    f_submit_day = f"{path_stat}/submit_day.stat.txt"
-    f_submit_week = f"{path_stat}/submit_week.stat.txt"
-    f_submit_month = f"{path_stat}/submit_month.stat.txt"
-    f_submit_year = f"{path_stat}/submit_year.stat.txt"
-    f_submit_day_web = f"{path_stat}/submit_day_web.stat.txt"
-    f_submit_week_web = f"{path_stat}/submit_week_web.stat.txt"
-    f_submit_month_web = f"{path_stat}/submit_month_web.stat.txt"
-    f_submit_year_web = f"{path_stat}/submit_year_web.stat.txt"
-    f_submit_day_wsdl = f"{path_stat}/submit_day_wsdl.stat.txt"
-    f_submit_week_wsdl = f"{path_stat}/submit_week_wsdl.stat.txt"
-    f_submit_month_wsdl = f"{path_stat}/submit_month_wsdl.stat.txt"
-    f_submit_year_wsdl = f"{path_stat}/submit_year_wsdl.stat.txt"
+    outfile_submit_day = f"{path_stat}/submit_day.stat.txt"
+    outfile_submit_week = f"{path_stat}/submit_week.stat.txt"
+    outfile_submit_month = f"{path_stat}/submit_month.stat.txt"
+    outfile_submit_year = f"{path_stat}/submit_year.stat.txt"
+    outfile_submit_day_web = f"{path_stat}/submit_day_web.stat.txt"
+    outfile_submit_week_web = f"{path_stat}/submit_week_web.stat.txt"
+    outfile_submit_month_web = f"{path_stat}/submit_month_web.stat.txt"
+    outfile_submit_year_web = f"{path_stat}/submit_year_web.stat.txt"
+    outfile_submit_day_wsdl = f"{path_stat}/submit_day_wsdl.stat.txt"
+    outfile_submit_week_wsdl = f"{path_stat}/submit_week_wsdl.stat.txt"
+    outfile_submit_month_wsdl = f"{path_stat}/submit_month_wsdl.stat.txt"
+    outfile_submit_year_wsdl = f"{path_stat}/submit_year_wsdl.stat.txt"
     flist = [
-            f_submit_day, f_submit_week, f_submit_month,
-            f_submit_year,
-            f_submit_day_web, f_submit_week_web,
-            f_submit_month_web, f_submit_year_web,
-            f_submit_day_wsdl, f_submit_week_wsdl,
-            f_submit_month_wsdl, f_submit_year_wsdl
+            outfile_submit_day, outfile_submit_week, outfile_submit_month,
+            outfile_submit_year,
+            outfile_submit_day_web, outfile_submit_week_web,
+            outfile_submit_month_web, outfile_submit_year_web,
+            outfile_submit_day_wsdl, outfile_submit_week_wsdl,
+            outfile_submit_month_wsdl, outfile_submit_year_wsdl
             ]
     for i in range(len(flist)):
         outfile = flist[i]
@@ -421,46 +421,46 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
 
     # output waittime vs numseq_of_job
     # output finishtime vs numseq_of_job
-    f_waittime_nseq = f"{path_stat}/waittime_nseq.stat.txt"
-    f_waittime_nseq_web = f"{path_stat}/waittime_nseq_web.stat.txt"
-    f_waittime_nseq_wsdl = f"{path_stat}/waittime_nseq_wsdl.stat.txt"
-    f_finishtime_nseq = f"{path_stat}/finishtime_nseq.stat.txt"
-    f_finishtime_nseq_web = f"{path_stat}/finishtime_nseq_web.stat.txt"
-    f_finishtime_nseq_wsdl = f"{path_stat}/finishtime_nseq_wsdl.stat.txt"
+    outfile_waittime_nseq = f"{path_stat}/waittime_nseq.stat.txt"
+    outfile_waittime_nseq_web = f"{path_stat}/waittime_nseq_web.stat.txt"
+    outfile_waittime_nseq_wsdl = f"{path_stat}/waittime_nseq_wsdl.stat.txt"
+    outfile_finishtime_nseq = f"{path_stat}/finishtime_nseq.stat.txt"
+    outfile_finishtime_nseq_web = f"{path_stat}/finishtime_nseq_web.stat.txt"
+    outfile_finishtime_nseq_wsdl = f"{path_stat}/finishtime_nseq_wsdl.stat.txt"
 
-    f_avg_waittime_nseq = f"{path_stat}/avg_waittime_nseq.stat.txt"
-    f_avg_waittime_nseq_web = f"{path_stat}/avg_waittime_nseq_web.stat.txt"
-    f_avg_waittime_nseq_wsdl = f"{path_stat}/avg_waittime_nseq_wsdl.stat.txt"
-    f_avg_finishtime_nseq = f"{path_stat}/avg_finishtime_nseq.stat.txt"
-    f_avg_finishtime_nseq_web = f"{path_stat}/avg_finishtime_nseq_web.stat.txt"
-    f_avg_finishtime_nseq_wsdl = f"{path_stat}/avg_finishtime_nseq_wsdl.stat.txt"
+    outfile_avg_waittime_nseq = f"{path_stat}/avg_waittime_nseq.stat.txt"
+    outfile_avg_waittime_nseq_web = f"{path_stat}/avg_waittime_nseq_web.stat.txt"
+    outfile_avg_waittime_nseq_wsdl = f"{path_stat}/avg_waittime_nseq_wsdl.stat.txt"
+    outfile_avg_finishtime_nseq = f"{path_stat}/avg_finishtime_nseq.stat.txt"
+    outfile_avg_finishtime_nseq_web = f"{path_stat}/avg_finishtime_nseq_web.stat.txt"
+    outfile_avg_finishtime_nseq_wsdl = f"{path_stat}/avg_finishtime_nseq_wsdl.stat.txt"
 
-    f_median_waittime_nseq = f"{path_stat}/median_waittime_nseq.stat.txt"
-    f_median_waittime_nseq_web = f"{path_stat}/median_waittime_nseq_web.stat.txt"
-    f_median_waittime_nseq_wsdl = f"{path_stat}/median_waittime_nseq_wsdl.stat.txt"
-    f_median_finishtime_nseq = f"{path_stat}/median_finishtime_nseq.stat.txt"
-    f_median_finishtime_nseq_web = f"{path_stat}/median_finishtime_nseq_web.stat.txt"
-    f_median_finishtime_nseq_wsdl = f"{path_stat}/median_finishtime_nseq_wsdl.stat.txt"
+    outfile_median_waittime_nseq = f"{path_stat}/median_waittime_nseq.stat.txt"
+    outfile_median_waittime_nseq_web = f"{path_stat}/median_waittime_nseq_web.stat.txt"
+    outfile_median_waittime_nseq_wsdl = f"{path_stat}/median_waittime_nseq_wsdl.stat.txt"
+    outfile_median_finishtime_nseq = f"{path_stat}/median_finishtime_nseq.stat.txt"
+    outfile_median_finishtime_nseq_web = f"{path_stat}/median_finishtime_nseq_web.stat.txt"
+    outfile_median_finishtime_nseq_wsdl = f"{path_stat}/median_finishtime_nseq_wsdl.stat.txt"
 
     flist1 = [
-            f_waittime_nseq, f_waittime_nseq_web,
-            f_waittime_nseq_wsdl, f_finishtime_nseq,
-            f_finishtime_nseq_web, f_finishtime_nseq_wsdl
+            outfile_waittime_nseq, outfile_waittime_nseq_web,
+            outfile_waittime_nseq_wsdl, outfile_finishtime_nseq,
+            outfile_finishtime_nseq_web, outfile_finishtime_nseq_wsdl
             ]
 
     flist2 = [
-            f_avg_waittime_nseq, f_avg_waittime_nseq_web,
-            f_avg_waittime_nseq_wsdl, f_avg_finishtime_nseq,
-            f_avg_finishtime_nseq_web, f_avg_finishtime_nseq_wsdl
+            outfile_avg_waittime_nseq, outfile_avg_waittime_nseq_web,
+            outfile_avg_waittime_nseq_wsdl, outfile_avg_finishtime_nseq,
+            outfile_avg_finishtime_nseq_web, outfile_avg_finishtime_nseq_wsdl
             ]
 
     flist3 = [
-            f_median_waittime_nseq,
-            f_median_waittime_nseq_web,
-            f_median_waittime_nseq_wsdl,
-            f_median_finishtime_nseq,
-            f_median_finishtime_nseq_web,
-            f_median_finishtime_nseq_wsdl
+            outfile_median_waittime_nseq,
+            outfile_median_waittime_nseq_web,
+            outfile_median_waittime_nseq_wsdl,
+            outfile_median_finishtime_nseq,
+            outfile_median_finishtime_nseq_web,
+            outfile_median_finishtime_nseq_wsdl
             ]
 
     dict_list = [
@@ -547,14 +547,14 @@ def RunStatistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
     # 3. get running time vs sequence length
     cntseq = 0
     cnt_hasSP = 0
-    f_runtime = f"{path_stat}/length_runtime.stat.txt"
-    f_runtime_pfam = f"{path_stat}/length_runtime.pfam.stat.txt"
-    f_runtime_cdd = f"{path_stat}/length_runtime.cdd.stat.txt"
-    f_runtime_uniref = f"{path_stat}/length_runtime.uniref.stat.txt"
-    f_runtime_avg = f"{path_stat}/length_runtime.stat.avg.txt"
-    f_runtime_pfam_avg = f"{path_stat}/length_runtime.pfam.stat.avg.txt"
-    f_runtime_cdd_avg = f"{path_stat}/length_runtime.cdd.stat.avg.txt"
-    f_runtime_uniref_avg = f"{path_stat}/length_runtime.uniref.stat.avg.txt"
+    outfile_runtime = f"{path_stat}/length_runtime.stat.txt"
+    outfile_runtime_pfam = f"{path_stat}/length_runtime.pfam.stat.txt"
+    outfile_runtime_cdd = f"{path_stat}/length_runtime.cdd.stat.txt"
+    outfile_runtime_uniref = f"{path_stat}/length_runtime.uniref.stat.txt"
+    outfile_runtime_avg = f"{path_stat}/length_runtime.stat.avg.txt"
+    outfile_runtime_pfam_avg = f"{path_stat}/length_runtime.pfam.stat.avg.txt"
+    outfile_runtime_cdd_avg = f"{path_stat}/length_runtime.cdd.stat.avg.txt"
+    outfile_runtime_uniref_avg = f"{path_stat}/length_runtime.uniref.stat.avg.txt"
     li_length_runtime = []
     li_length_runtime_pfam = []
     li_length_runtime_cdd = []
@@ -672,10 +672,10 @@ def RunStatistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
             li_length_runtime_avg, li_length_runtime_pfam_avg,
             li_length_runtime_cdd_avg, li_length_runtime_uniref_avg]
     flist = [
-            f_runtime, f_runtime_pfam, f_runtime_cdd,
-            f_runtime_uniref, f_runtime_avg,
-            f_runtime_pfam_avg, f_runtime_cdd_avg,
-            f_runtime_uniref_avg]
+            outfile_runtime, outfile_runtime_pfam, outfile_runtime_cdd,
+            outfile_runtime_uniref, outfile_runtime_avg,
+            outfile_runtime_pfam_avg, outfile_runtime_cdd_avg,
+            outfile_runtime_uniref_avg]
     for i in range(len(flist)):
         outfile = flist[i]
         li = li_list[i]
@@ -691,9 +691,9 @@ def RunStatistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
         except IOError:
             continue
 
-    f_avg_runtime = "%s/avg_runtime.stat.txt" % (path_stat)
+    outfile_avg_runtime = "%s/avg_runtime.stat.txt" % (path_stat)
     try:
-        fpout = open(f_avg_runtime, "w")
+        fpout = open(outfile_avg_runtime, "w")
         fpout.write("%s\t%f\n" % ("All", avg_runtime))
         fpout.write("%s\t%f\n" % ("Pfam", avg_runtime_pfam))
         fpout.write("%s\t%f\n" % ("CDD", avg_runtime_cdd))
@@ -701,13 +701,13 @@ def RunStatistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
         fpout.close()
     except IOError:
         pass
-    if os.path.exists(f_avg_runtime):
-        cmd = [f"{binpath_plot}/plot_avg_runtime.sh", f_avg_runtime]
+    if os.path.exists(outfile_avg_runtime):
+        cmd = [f"{binpath_plot}/plot_avg_runtime.sh", outfile_avg_runtime]
         webcom.RunCmd(cmd, gen_logfile, gen_errfile)
 
     flist = [
-            f_runtime, f_runtime_pfam, f_runtime_cdd,
-            f_runtime_uniref]
+            outfile_runtime, outfile_runtime_pfam, outfile_runtime_cdd,
+            outfile_runtime_uniref]
     for outfile in flist:
         if os.path.exists(outfile):
             cmd = [f"{binpath_plot}/plot_length_runtime.sh", outfile]
@@ -715,19 +715,19 @@ def RunStatistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
 
     cmd = [
             f"{binpath_plot}/plot_length_runtime_mtp.sh", "-pfam",
-            f_runtime_pfam, "-cdd", f_runtime_cdd, "-uniref",
-            f_runtime_uniref, "-sep-avg"]
+            outfile_runtime_pfam, "-cdd", outfile_runtime_cdd, "-uniref",
+            outfile_runtime_uniref, "-sep-avg"]
     webcom.RunCmd(cmd, gen_logfile, gen_errfile)
 
 # 4. analysis for those predicted with signal peptide
-    f_hasSP = f"{path_stat}/noSP_hasSP.stat.txt"
+    outfile_hasSP = f"{path_stat}/noSP_hasSP.stat.txt"
     content = "%s\t%d\t%f\n%s\t%d\t%f\n" % (
             "\"Without SP\"", cntseq-cnt_hasSP,
             myfunc.FloatDivision(cntseq-cnt_hasSP, cntseq),
             "\"With SP\"", cnt_hasSP, myfunc.FloatDivision(cnt_hasSP, cntseq))
-    myfunc.WriteFile(content, f_hasSP, "w", True)
+    myfunc.WriteFile(content, outfile_hasSP, "w", True)
     cmd = [
-            f"{binpath_plot}/plot_nosp_sp.sh", f_hasSP]
+            f"{binpath_plot}/plot_nosp_sp.sh", outfile_hasSP]
     webcom.RunCmd(cmd, gen_logfile, gen_errfile)
 
 # }}}
