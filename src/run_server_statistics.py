@@ -14,8 +14,7 @@ from libpredweb import myfunc
 from libpredweb import webserver_common as webcom
 from libpredweb import dataprocess
 
-progname = os.path.basename(sys.argv[0])
-rootname_progname = os.path.splitext(progname)[0]
+PROGNAME = os.path.basename(sys.argv[0])
 
 
 def RunStatistics(g_params):  # {{{
@@ -33,9 +32,9 @@ def RunStatistics(g_params):  # {{{
 def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
     """Function for qd_fe to run usage statistics for the web-server usage
     """
-    path_log = os.path.join(webserver_root, 'proj', 'pred', 'static', 'log')
-    path_result = os.path.join(
-            webserver_root, 'proj', 'pred', 'static', 'result')
+    path_static = os.path.join(webserver_root, "proj", "pred", "static")
+    path_log = os.path.join(path_static, 'log')
+    path_result = os.path.join(path_static, 'result')
     path_stat = os.path.join(path_log, 'stat')
     binpath_plot = os.path.join(webserver_root, "env", "bin")
 
@@ -49,11 +48,11 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
     if not os.path.exists(path_stat):
         os.mkdir(path_stat)
 
-    allfinishedjobidlist = myfunc.ReadIDList2(
-            allfinishedjoblogfile, col=0, delim="\t")
+    allfinishedjobidlist = myfunc.ReadIDList2(allfinishedjoblogfile,
+                                              col=0, delim="\t")
     runtime_finishedjobidlist = myfunc.ReadIDList(runtimelogfile_finishedjobid)
-    toana_jobidlist = list(
-            set(allfinishedjobidlist) - set(runtime_finishedjobidlist))
+    toana_jobidlist = list(set(allfinishedjobidlist) -
+                           set(runtime_finishedjobidlist))
 
     for jobid in toana_jobidlist:
         runtimeloginfolist = []
@@ -94,9 +93,8 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
             # items for the elelment of the list
             # jobid, seq_no, newrun_or_cached, runtime,
             # mtd_profile, seqlen, numTM, iShasSP
-            myfunc.WriteFile(
-                    "\n".join(runtimeloginfolist)+"\n",
-                    runtimelogfile, "a", True)
+            myfunc.WriteFile("\n".join(runtimeloginfolist)+"\n",
+                             runtimelogfile, "a", True)
         myfunc.WriteFile(jobid+"\n", runtimelogfile_finishedjobid, "a", True)
 
 # 2. get numseq_in_job vs count_of_jobs, logscale in x-axis
@@ -217,25 +215,21 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
     # output countjob by country
     outfile_countjob_by_country = f"{path_stat}/countjob_by_country.txt"
     # sort by numseq in descending order
-    li_countjob = sorted(
-            list(countjob_country.items()),
-            key=lambda x: x[1][0], reverse=True)
+    li_countjob = sorted(list(countjob_country.items()),
+                         key=lambda x: x[1][0], reverse=True)
     li_str = []
     li_str.append("#Country\tNumSeq\tNumJob\tNumIP")
     for li in li_countjob:
-        li_str.append(
-                "%s\t%d\t%d\t%d" % (li[0], li[1][0], li[1][1], len(li[1][2])))
-    myfunc.WriteFile(
-            ("\n".join(li_str)+"\n").encode('utf-8'),
-            outfile_countjob_by_country, "wb", True)
+        li_str.append("%s\t%d\t%d\t%d" % (li[0], li[1][0], li[1][1], len(li[1][2])))
+    myfunc.WriteFile(("\n".join(li_str)+"\n").encode('utf-8'),
+                     outfile_countjob_by_country, "wb", True)
 
-    flist = [
-            outfile_numseqjob, outfile_numseqjob_web, outfile_numseqjob_wsdl
-            ]
-    dictlist = [
-            countjob_numseq_dict, countjob_numseq_dict_web,
-            countjob_numseq_dict_wsdl
-            ]
+    flist = [outfile_numseqjob,
+             outfile_numseqjob_web,
+             outfile_numseqjob_wsdl]
+    dictlist = [countjob_numseq_dict,
+                countjob_numseq_dict_web,
+                countjob_numseq_dict_wsdl]
     for i in range(len(flist)):
         dt = dictlist[i]
         outfile = flist[i]
@@ -254,11 +248,9 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                 webcom.RunCmd(cmd, gen_logfile, gen_errfile)
         except IOError:
             continue
-    cmd = [
-            f"{binpath_plot}/plot_numseq_of_job_mtp.sh",
-            "-web", outfile_numseqjob_web,
-            "-wsdl", outfile_numseqjob_wsdl
-            ]
+    cmd = [f"{binpath_plot}/plot_numseq_of_job_mtp.sh",
+           "-web", outfile_numseqjob_web,
+           "-wsdl", outfile_numseqjob_wsdl]
     webcom.RunCmd(cmd, gen_logfile, gen_errfile)
 
 # 5. output num-submission time series with different bins
@@ -349,15 +341,12 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
     li_submit_week_wsdl = []
     li_submit_month_wsdl = []
     li_submit_year_wsdl = []
-    dict_list = [
-            dict_submit_day, dict_submit_week, dict_submit_month,
-            dict_submit_year]
-    li_list = [
-            li_submit_day, li_submit_week, li_submit_month, li_submit_year,
-            li_submit_day_web, li_submit_week_web, li_submit_month_web,
-            li_submit_year_web, li_submit_day_wsdl, li_submit_week_wsdl,
-            li_submit_month_wsdl, li_submit_year_wsdl
-            ]
+    dict_list = [dict_submit_day, dict_submit_week, dict_submit_month,
+                 dict_submit_year]
+    li_list = [li_submit_day, li_submit_week, li_submit_month, li_submit_year,
+               li_submit_day_web, li_submit_week_web, li_submit_month_web,
+               li_submit_year_web, li_submit_day_wsdl, li_submit_week_wsdl,
+               li_submit_month_wsdl, li_submit_year_wsdl]
 
     for i in range(len(dict_list)):
         dt = dict_list[i]
@@ -383,14 +372,12 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
     outfile_submit_week_wsdl = f"{path_stat}/submit_week_wsdl.stat.txt"
     outfile_submit_month_wsdl = f"{path_stat}/submit_month_wsdl.stat.txt"
     outfile_submit_year_wsdl = f"{path_stat}/submit_year_wsdl.stat.txt"
-    flist = [
-            outfile_submit_day, outfile_submit_week, outfile_submit_month,
-            outfile_submit_year,
-            outfile_submit_day_web, outfile_submit_week_web,
-            outfile_submit_month_web, outfile_submit_year_web,
-            outfile_submit_day_wsdl, outfile_submit_week_wsdl,
-            outfile_submit_month_wsdl, outfile_submit_year_wsdl
-            ]
+    flist = [outfile_submit_day, outfile_submit_week, outfile_submit_month,
+             outfile_submit_year,
+             outfile_submit_day_web, outfile_submit_week_web,
+             outfile_submit_month_web, outfile_submit_year_web,
+             outfile_submit_day_wsdl, outfile_submit_week_wsdl,
+             outfile_submit_month_wsdl, outfile_submit_year_wsdl]
     for i in range(len(flist)):
         outfile = flist[i]
         li = li_list[i]
@@ -408,13 +395,12 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
             # extends date time series for missing dates
             freq = dataprocess.date_range_frequency(os.path.basename(outfile))
             try:
-                dataprocess.extend_data(
-                        outfile, value_columns=['numjob', 'numseq'],
-                        freq=freq, outfile=outfile)
+                dataprocess.extend_data(outfile,
+                                        value_columns=['numjob', 'numseq'],
+                                        freq=freq, outfile=outfile)
             except Exception as e:
-                webcom.loginfo(
-                        "Failed to extend data for file %s with errmsg: %s" % (
-                            outfile, str(e)), gen_errfile)
+                webcom.loginfo(f"Failed to extend data for {outfile} with errmsg: {e}",
+                               gen_errfile)
                 pass
             cmd = [f"{binpath_plot}/plot_numsubmit.sh", outfile]
             webcom.RunCmd(cmd, gen_logfile, gen_errfile)
@@ -442,32 +428,24 @@ def RunStatistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
     outfile_median_finishtime_nseq_web = f"{path_stat}/median_finishtime_nseq_web.stat.txt"
     outfile_median_finishtime_nseq_wsdl = f"{path_stat}/median_finishtime_nseq_wsdl.stat.txt"
 
-    flist1 = [
-            outfile_waittime_nseq, outfile_waittime_nseq_web,
-            outfile_waittime_nseq_wsdl, outfile_finishtime_nseq,
-            outfile_finishtime_nseq_web, outfile_finishtime_nseq_wsdl
-            ]
+    flist1 = [outfile_waittime_nseq, outfile_waittime_nseq_web,
+              outfile_waittime_nseq_wsdl, outfile_finishtime_nseq,
+              outfile_finishtime_nseq_web, outfile_finishtime_nseq_wsdl]
 
-    flist2 = [
-            outfile_avg_waittime_nseq, outfile_avg_waittime_nseq_web,
-            outfile_avg_waittime_nseq_wsdl, outfile_avg_finishtime_nseq,
-            outfile_avg_finishtime_nseq_web, outfile_avg_finishtime_nseq_wsdl
-            ]
+    flist2 = [outfile_avg_waittime_nseq, outfile_avg_waittime_nseq_web,
+              outfile_avg_waittime_nseq_wsdl, outfile_avg_finishtime_nseq,
+              outfile_avg_finishtime_nseq_web, outfile_avg_finishtime_nseq_wsdl]
 
-    flist3 = [
-            outfile_median_waittime_nseq,
-            outfile_median_waittime_nseq_web,
-            outfile_median_waittime_nseq_wsdl,
-            outfile_median_finishtime_nseq,
-            outfile_median_finishtime_nseq_web,
-            outfile_median_finishtime_nseq_wsdl
-            ]
+    flist3 = [outfile_median_waittime_nseq,
+              outfile_median_waittime_nseq_web,
+              outfile_median_waittime_nseq_wsdl,
+              outfile_median_finishtime_nseq,
+              outfile_median_finishtime_nseq_web,
+              outfile_median_finishtime_nseq_wsdl]
 
-    dict_list = [
-            waittime_numseq_dict, waittime_numseq_dict_web,
-            waittime_numseq_dict_wsdl, finishtime_numseq_dict,
-            finishtime_numseq_dict_web, finishtime_numseq_dict_wsdl
-            ]
+    dict_list = [waittime_numseq_dict, waittime_numseq_dict_web,
+                 waittime_numseq_dict_wsdl, finishtime_numseq_dict,
+                 finishtime_numseq_dict_web, finishtime_numseq_dict_wsdl]
 
     for i in range(len(flist1)):
         dt = dict_list[i]
@@ -640,14 +618,10 @@ def RunStatistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
                      "w", True)
 
     # get lengthseq -vs- average_runtime
-    dict_list = [
-            dict_length_runtime, dict_length_runtime_pfam,
-            dict_length_runtime_cdd, dict_length_runtime_uniref
-            ]
-    li_list = [
-            li_length_runtime_avg, li_length_runtime_pfam_avg,
-            li_length_runtime_cdd_avg, li_length_runtime_uniref_avg
-            ]
+    dict_list = [dict_length_runtime, dict_length_runtime_pfam,
+                 dict_length_runtime_cdd, dict_length_runtime_uniref]
+    li_list = [li_length_runtime_avg, li_length_runtime_pfam_avg,
+               li_length_runtime_cdd_avg, li_length_runtime_uniref_avg]
     li_sum_runtime = [0.0]*len(dict_list)
     for i in range(len(dict_list)):
         dt = dict_list[i]
@@ -666,16 +640,14 @@ def RunStatistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
     avg_runtime_uniref = myfunc.FloatDivision(li_sum_runtime[3],
                                               len(li_length_runtime_uniref))
 
-    li_list = [
-            li_length_runtime, li_length_runtime_pfam,
-            li_length_runtime_cdd, li_length_runtime_uniref,
-            li_length_runtime_avg, li_length_runtime_pfam_avg,
-            li_length_runtime_cdd_avg, li_length_runtime_uniref_avg]
-    flist = [
-            outfile_runtime, outfile_runtime_pfam, outfile_runtime_cdd,
-            outfile_runtime_uniref, outfile_runtime_avg,
-            outfile_runtime_pfam_avg, outfile_runtime_cdd_avg,
-            outfile_runtime_uniref_avg]
+    li_list = [li_length_runtime, li_length_runtime_pfam,
+               li_length_runtime_cdd, li_length_runtime_uniref,
+               li_length_runtime_avg, li_length_runtime_pfam_avg,
+               li_length_runtime_cdd_avg, li_length_runtime_uniref_avg]
+    flist = [outfile_runtime, outfile_runtime_pfam, outfile_runtime_cdd,
+             outfile_runtime_uniref, outfile_runtime_avg,
+             outfile_runtime_pfam_avg, outfile_runtime_cdd_avg,
+             outfile_runtime_uniref_avg]
     for i in range(len(flist)):
         outfile = flist[i]
         li = li_list[i]
@@ -691,7 +663,7 @@ def RunStatistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
         except IOError:
             continue
 
-    outfile_avg_runtime = "%s/avg_runtime.stat.txt" % (path_stat)
+    outfile_avg_runtime = f"{path_stat}/avg_runtime.stat.txt"
     try:
         fpout = open(outfile_avg_runtime, "w")
         fpout.write("%s\t%f\n" % ("All", avg_runtime))
@@ -705,39 +677,37 @@ def RunStatistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
         cmd = [f"{binpath_plot}/plot_avg_runtime.sh", outfile_avg_runtime]
         webcom.RunCmd(cmd, gen_logfile, gen_errfile)
 
-    flist = [
-            outfile_runtime, outfile_runtime_pfam, outfile_runtime_cdd,
-            outfile_runtime_uniref]
+    flist = [outfile_runtime, outfile_runtime_pfam,
+             outfile_runtime_cdd, outfile_runtime_uniref]
     for outfile in flist:
         if os.path.exists(outfile):
             cmd = [f"{binpath_plot}/plot_length_runtime.sh", outfile]
             webcom.RunCmd(cmd, gen_logfile, gen_errfile)
 
-    cmd = [
-            f"{binpath_plot}/plot_length_runtime_mtp.sh", "-pfam",
-            outfile_runtime_pfam, "-cdd", outfile_runtime_cdd, "-uniref",
-            outfile_runtime_uniref, "-sep-avg"]
+    cmd = [f"{binpath_plot}/plot_length_runtime_mtp.sh", "-pfam",
+           outfile_runtime_pfam, "-cdd", outfile_runtime_cdd, "-uniref",
+           outfile_runtime_uniref, "-sep-avg"]
     webcom.RunCmd(cmd, gen_logfile, gen_errfile)
 
 # 4. analysis for those predicted with signal peptide
     outfile_hasSP = f"{path_stat}/noSP_hasSP.stat.txt"
-    content = "%s\t%d\t%f\n%s\t%d\t%f\n" % (
-            "\"Without SP\"", cntseq-cnt_hasSP,
-            myfunc.FloatDivision(cntseq-cnt_hasSP, cntseq),
-            "\"With SP\"", cnt_hasSP, myfunc.FloatDivision(cnt_hasSP, cntseq))
+    content = "%s\t%d\t%f\n%s\t%d\t%f\n" % ("\"Without SP\"",
+                                            cntseq-cnt_hasSP,
+                                            myfunc.FloatDivision(cntseq-cnt_hasSP, cntseq),
+                                            "\"With SP\"",
+                                            cnt_hasSP,
+                                            myfunc.FloatDivision(cnt_hasSP, cntseq))
     myfunc.WriteFile(content, outfile_hasSP, "w", True)
-    cmd = [
-            f"{binpath_plot}/plot_nosp_sp.sh", outfile_hasSP]
+    cmd = [f"{binpath_plot}/plot_nosp_sp.sh", outfile_hasSP]
     webcom.RunCmd(cmd, gen_logfile, gen_errfile)
 
 # }}}
 
 
 def main(g_params):  # {{{
-    parser = argparse.ArgumentParser(
-            description='Run server statistics',
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            epilog='''\
+    parser = argparse.ArgumentParser(description='Run server statistics',
+                                     formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     epilog='''\
 Created 2022-03-05, updated 2022-03-05, Nanjiang Shu
 
 Examples:
@@ -755,20 +725,20 @@ Examples:
     jsonfile = args.jsonfile
 
     if not os.path.exists(jsonfile):
-        print(f"Jsonfile {jsonfile} does not exist. Exit {progname}!",
+        print(f"Jsonfile {jsonfile} does not exist. Exit {PROGNAME}!",
               file=sys.stderr)
         return 1
 
     g_params.update(webcom.LoadJsonFromFile(jsonfile))
 
-    lockname = f"{progname}.lock"
+    lockname = f"{PROGNAME}.lock"
     lock_file = os.path.join(g_params['path_log'], lockname)
     g_params['lockfile'] = lock_file
     fp = open(lock_file, 'w')
     try:
         fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except IOError:
-        webcom.loginfo(f"Another instance of {progname} is running",
+        webcom.loginfo(f"Another instance of {PROGNAME} is running",
                        g_params['gen_logfile'])
         return 1
 
