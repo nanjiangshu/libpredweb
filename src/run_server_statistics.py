@@ -141,7 +141,7 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
         try:
             match = geolite2.lookup(ip)
             country = pycountry.countries.get(alpha_2=match.country).name
-        except ValueError:
+        except (ValueError, KeyError):
             pass
         if country != "N/A":
             if country not in countjob_country:
