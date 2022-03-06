@@ -90,7 +90,7 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                         except IndexError:
                             sys.stderr.write("bad timefile %s\n" % (timefile))
 
-        if len(runtimeloginfolist) > 0:
+        if runtimeloginfolist:
             # items for the elelment of the list
             # jobid, seq_no, newrun_or_cached, runtime,
             # mtd_profile, seqlen, numTM, iShasSP
@@ -141,7 +141,7 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
         try:
             match = geolite2.lookup(ip)
             country = pycountry.countries.get(alpha_2=match.country).name
-        except Exception:
+        except ValueError:
             pass
         if country != "N/A":
             if country not in countjob_country:
