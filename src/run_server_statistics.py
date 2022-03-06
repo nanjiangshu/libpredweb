@@ -5,11 +5,11 @@ import sys
 import os
 import argparse
 import fcntl
+import time
 from geoip import geolite2
 import pycountry
 import numpy
 
-import time
 from libpredweb import myfunc
 from libpredweb import webserver_common as webcom
 from libpredweb import dataprocess
@@ -170,23 +170,23 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                 countjob_numseq_dict_wsdl[numseq] += 1
 
 #           # calculate waittime and finishtime
-            isValidSubmitDate = True
-            isValidStartDate = True
-            isValidFinishDate = True
+            is_valid_submit_date = True
+            is_valid_start_date = True
+            is_valid_finish_date = True
             try:
                 submit_date = webcom.datetime_str_to_time(submit_date_str)
             except ValueError:
-                isValidSubmitDate = False
+                is_valid_submit_date = False
             try:
                 start_date = webcom.datetime_str_to_time(start_date_str)
             except ValueError:
-                isValidStartDate = False
+                is_valid_start_date = False
             try:
                 finish_date = webcom.datetime_str_to_time(finish_date_str)
             except ValueError:
-                isValidFinishDate = False
+                is_valid_finish_date = False
 
-            if isValidSubmitDate and isValidStartDate:
+            if is_valid_submit_date and is_valid_start_date:
                 waittime_sec = (start_date - submit_date).total_seconds()
                 if numseq not in waittime_numseq_dict:
                     waittime_numseq_dict[numseq] = []
@@ -199,7 +199,7 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                     if numseq not in waittime_numseq_dict_wsdl:
                         waittime_numseq_dict_wsdl[numseq] = []
                     waittime_numseq_dict_wsdl[numseq].append(waittime_sec)
-            if isValidSubmitDate and isValidFinishDate:
+            if is_valid_submit_date and is_valid_finish_date:
                 finishtime_sec = (finish_date - submit_date).total_seconds()
                 if numseq not in finishtime_numseq_dict:
                     finishtime_numseq_dict[numseq] = []
@@ -231,9 +231,8 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
     dictlist = [countjob_numseq_dict,
                 countjob_numseq_dict_web,
                 countjob_numseq_dict_wsdl]
-    for i in range(len(flist)):
+    for i, outfile in enumerate(flist):
         dt = dictlist[i]
-        outfile = flist[i]
         sortedlist = sorted(list(dt.items()), key=lambda x: x[0])
         try:
             fpout = open(outfile, "w")
@@ -244,7 +243,7 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                 fpout.write("%d\t%d\n" % (nseq, count))
             fpout.close()
             # plotting
-            if os.path.exists(outfile) and len(sortedlist) > 0:
+            if os.path.exists(outfile) and sortedlist:
                 cmd = [f"{binpath_plot}/plot_numseq_of_job.sh", outfile]
                 webcom.RunCmd(cmd, gen_logfile, gen_errfile)
         except IOError:
@@ -276,12 +275,12 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                 except (IndexError, ValueError):
                     pass
                 method_submission = strs[7]
-                isValidSubmitDate = True
+                is_valid_submit_date = True
                 try:
                     submit_date = webcom.datetime_str_to_time(submit_date_str)
                 except ValueError:
-                    isValidSubmitDate = False
-                if isValidSubmitDate:  # {{{
+                    is_valid_submit_date = False
+                if is_valid_submit_date:  # {{{
                     day_str = submit_date_str.split()[0]
                     (beginning_of_week, end_of_week) = myfunc.week_beg_end(submit_date)
                     week_str = beginning_of_week.strftime("%Y-%m-%d")
@@ -391,7 +390,7 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
         except IOError:
             pass
         # plotting
-        if os.path.exists(outfile) and len(li) > 0:  # have at least one record
+        if os.path.exists(outfile) and li:  # have at least one record
             # if os.path.basename(outfile).find('day') == -1:
             # extends date time series for missing dates
             freq = dataprocess.date_range_frequency(os.path.basename(outfile))
@@ -705,7 +704,8 @@ def run_statistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
 # }}}
 
 
-def main(g_params):  # {{{
+def main():  # {{{
+    """main procedure"""
     parser = argparse.ArgumentParser(description='Run server statistics',
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
                                      epilog='''\
@@ -730,6 +730,7 @@ Examples:
               file=sys.stderr)
         return 1
 
+    g_params = {}
     g_params.update(webcom.LoadJsonFromFile(jsonfile))
 
     lockname = f"{PROGNAME}.lock"
@@ -756,12 +757,5 @@ Examples:
 # }}}
 
 
-def InitGlobalParameter():  # {{{
-    g_params = {}
-    g_params['lockfile'] = ""
-    return g_params
-# }}}
-
-
 if __name__ == '__main__':
-    sys.exit(main(InitGlobalParameter()))
+    sys.exit(main())
