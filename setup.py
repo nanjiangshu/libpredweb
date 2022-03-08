@@ -21,6 +21,7 @@ setup(
             'src/stat_usage_web_server.sh',
             'src/show_jobqueuestatus.py',
             'src/job_final_process.py',
+            'src/run_server_statistics.py',
             'src/restart_qd_fe.cgi'
             ] + PLOTTING_SCRIPTS,
         author="Nanjiang Shu",
