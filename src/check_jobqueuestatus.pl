@@ -30,7 +30,7 @@ my @to_email_list = ('njshumessage@gmail.com');
 
 # run the script show_jobqueuestatus.py and send the result by email
 $title = "Webserver jobqueue status";
-$output = `python $rundir/show_jobqueuestatus.py`;
+$output = `python $rundir/show_jobqueuestatus.py frag1d predzinc`;
 # add html format
 #$output = "<html><body><p><pre>$output</pre></p></body></html>";
 foreach my $to_email(@to_email_list) {
