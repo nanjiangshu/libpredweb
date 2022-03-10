@@ -2065,18 +2065,18 @@ def CleanCachedResult(g_params):  # {{{
     myfunc.WriteFile(json.dumps(g_params, sort_keys=True), jsonfile, "w")
     lockname = f"{bsname}.lock"
     lock_file = os.path.join(g_params['path_log'], lockname)
-    loginfo("Clean cached results older than {MAX_KEEP_DAYS} days...",
+    loginfo(f"Clean cached results older than {MAX_KEEP_DAYS} days...",
             gen_logfile)
+    cmd = ["python", py_scriptfile, "-i", jsonfile,
+           "-max-keep-day", f"{MAX_KEEP_DAYS}"]
+    cmdline = " ".join(cmd)
     if ('CLEAN_CACHED_RESULT_IN_QD' in g_params
             and g_params['CLEAN_CACHED_RESULT_IN_QD']):
-        cmd = ["python", py_scriptfile, "-i", jsonfile,
-               "-max-keep-day", f"{MAX_KEEP_DAYS}"]
         RunCmd(cmd, gen_logfile, gen_errfile)
     elif not os.path.exists(lock_file):
         bash_scriptfile = f"{path_tmp}/{bsname}-{name_server}.sh"
         code_str_list = []
         code_str_list.append("#!/bin/bash")
-        cmdline = f"python {py_scriptfile} -i {jsonfile} -max-keep-day {MAX_KEEP_DAYS}"
         code_str_list.append(cmdline)
         code = "\n".join(code_str_list)
         myfunc.WriteFile(code, bash_scriptfile, mode="w", isFlush=True)
