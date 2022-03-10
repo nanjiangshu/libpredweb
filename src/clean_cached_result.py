@@ -7,7 +7,6 @@ import shutil
 import argparse
 import fcntl
 
-import time
 from datetime import datetime
 from pytz import timezone
 import tempfile
@@ -39,7 +38,7 @@ def clean_cached_result(MAX_KEEP_DAYS, g_params):  # {{{
 
     md5listfile = f"{path_log}/cache_to_delete.md5list"
     con = sqlite3.connect(tmpdb)
-    webcom.logfile(f"output the outdated md5 list to {md5listfile}", logfile)
+    webcom.loginfo(f"output the outdated md5 list to {md5listfile}", logfile)
 
     tablename = "data"
 
