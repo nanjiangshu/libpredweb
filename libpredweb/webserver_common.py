@@ -3183,7 +3183,7 @@ def get_serverstatus(request, g_params):#{{{
     timeline = ['day', 'week', 'month', 'year']
     timeline_statistics = server_usage_statistics_per_timeline(timeline)
     info['statistics_timeline'] =timeline
-    info['statistics_per_timeline'] = timeline_statistics
+    info['statistics_per_timeline'] = json.dumps(timeline_statistics)
     return info
 #}}}
 def get_results_eachseq(request, name_resultfile, name_nicetopfile, jobid, seqindex, g_params):#{{{
