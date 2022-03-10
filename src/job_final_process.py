@@ -4,15 +4,14 @@ import sys
 import os
 import shutil
 import argparse
+import fcntl
 
 import time
 from libpredweb import myfunc
 from libpredweb import webserver_common as webcom
 
-progname=os.path.basename(sys.argv[0])
+progname = os.path.basename(sys.argv[0])
 rootname_progname = os.path.splitext(progname)[0]
-lockname = os.path.realpath(__file__).replace(" ", "").replace("/", "-")
-import fcntl
 
 def JobFinalProcess(g_params):#{{{
     """Run final process of a job
@@ -169,14 +168,16 @@ Examples:
 
     g_params.update(webcom.LoadJsonFromFile(jsonfile))
 
-    lockname = "job_final_process.lock"
-    lock_file = os.path.join(g_params['path_result'], g_params['jobid'], lockname)
+    lockname = f"{rootname_progname}.lock"
+    lock_file = os.path.join(g_params['path_result'], g_params['jobid'],
+                             lockname)
     g_params['lockfile'] = lock_file
     fp = open(lock_file, 'w')
     try:
         fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except IOError:
-        webcom.loginfo("Another instance of %s is running"%(progname), g_params['gen_logfile'])
+        webcom.loginfo(f"Another instance of {progname} is running",
+                       g_params['gen_logfile'])
         return 1
 
     if 'DEBUG_LOCK_FILE' in g_params and g_params['DEBUG_LOCK_FILE']:

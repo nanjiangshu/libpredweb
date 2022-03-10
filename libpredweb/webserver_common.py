@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Description:
+  A collection of classes and functions used by web-servers
 
-# Description:
-#   A collection of classes and functions used by web-servers
-#
-# Author: Nanjiang Shu (nanjiang.shu@scilifelab.se)
-#
-# Address: Science for Life Laboratory Stockholm, Box 1031, 17121 Solna, Sweden
+Author: Nanjiang Shu (nanjiang.shu@scilifelab.se)
+
+Address: Science for Life Laboratory Stockholm, Box 1031, 17121 Solna, Sweden
+"""
 
 import os
 import sys
@@ -31,7 +32,7 @@ TZ = "Europe/Stockholm"
 FORMAT_DATETIME = "%Y-%m-%d %H:%M:%S %Z"
 ZB_SCORE_THRESHOLD = 0.45
 chde_table = {
-        'C':'CYS',
+        'C': 'CYS',
         'H': 'HIS',
         'D': 'ASP',
         'E': 'GLU',
@@ -701,6 +702,7 @@ def WriteFrag1DTextResultFile(outfile, outpath_result, maplist, runtime_in_sec, 
         print("Failed to write to file %s"%(outfile))
 #}}}
 
+
 @timeit
 def WriteSubconsTextResultFile(outfile, outpath_result, maplist,#{{{
         runtime_in_sec, base_www_url, statfile=""):
@@ -759,6 +761,7 @@ def WriteSubconsTextResultFile(outfile, outpath_result, maplist,#{{{
     except IOError:
         print("Failed to write to file %s"%(outfile))
 #}}}
+
 
 @timeit
 def WriteTOPCONSTextResultFile(outfile, outpath_result, maplist,#{{{
@@ -958,6 +961,7 @@ def WriteHTMLTableContent_TOPCONS(tablename, tabletitle, index_table_header,#{{{
     print("</tbody>", file=fpout)
     print("</table>", file=fpout)
 #}}}
+
 
 @timeit
 def WriteHTMLResultTable_TOPCONS(outfile, finished_seq_file):#{{{
@@ -2044,16 +2048,48 @@ def CleanServerFile(path_static, logfile, errfile):#{{{
     cmd = ["clean_server_file.sh", path_static]
     RunCmd(cmd, logfile, errfile)
 #}}}
+
+
 @timeit
-def CleanCachedResult(path_static, name_cachedir, logfile, errfile):#{{{
+def CleanCachedResult(g_params):  # {{{
     """Clean outdated cahced results on the server"""
-# clean tmp files
-    msg = "Clean cached results..."
-    date_str = time.strftime(FORMAT_DATETIME)
-    myfunc.WriteFile("[%s] %s\n"%(date_str, msg), logfile, "a", True)
-    cmd = ["clean_cached_result.py", "-path-static", path_static, '-name-cachedir', name_cachedir, "-max-keep-day", "480"]
-    RunCmd(cmd, logfile, errfile)
-#}}}
+    bsname = "clean_cached_result"
+    gen_logfile = g_params['gen_logfile']
+    gen_errfile = g_params['gen_errfile']
+    path_tmp = os.path.join(g_params['path_static'], "tmp")
+    name_server = g_params['name_server']
+    MAX_KEEP_DAYS = 480
+    binpath_script = os.path.join(g_params['webserver_root'], "env", "bin")
+    py_scriptfile = os.path.join(binpath_script, f"{bsname}.py")
+    jsonfile = os.path.join(path_tmp, f"{bsname}.json")
+    myfunc.WriteFile(json.dumps(g_params, sort_keys=True), jsonfile, "w")
+    lockname = f"{bsname}.lock"
+    lock_file = os.path.join(g_params['path_log'], lockname)
+    loginfo("Clean cached results older than {MAX_KEEP_DAYS} days...",
+            gen_logfile)
+    if ('CLEAN_CACHED_RESULT_IN_QD' in g_params
+            and g_params['CLEAN_CACHED_RESULT_IN_QD']):
+        cmd = ["python", py_scriptfile, "-i", jsonfile,
+               "-max-keep-day", f"{MAX_KEEP_DAYS}"]
+        RunCmd(cmd, gen_logfile, gen_errfile)
+    elif not os.path.exists(lock_file):
+        bash_scriptfile = f"{path_tmp}/{bsname}-{name_server}.sh"
+        code_str_list = []
+        code_str_list.append("#!/bin/bash")
+        cmdline = f"python {py_scriptfile} -i {jsonfile} -max-keep-day {MAX_KEEP_DAYS}"
+        code_str_list.append(cmdline)
+        code = "\n".join(code_str_list)
+        myfunc.WriteFile(code, bash_scriptfile, mode="w", isFlush=True)
+        os.chmod(bash_scriptfile, 0o755)
+        os.chdir(path_tmp)
+        cmd = ['sbatch', bash_scriptfile]
+        cmdline = " ".join(cmd)
+        verbose = False
+        if 'DEBUG' in g_params and g_params['DEBUG']:
+            verbose = True
+            loginfo(f"Run cmdline: {cmdline}", gen_logfile)
+        RunCmd(cmd, gen_logfile, gen_errfile, verbose)
+# }}}
 
 def ReadComputeNode(infile):# {{{
     """Read computenode file computenode.txt

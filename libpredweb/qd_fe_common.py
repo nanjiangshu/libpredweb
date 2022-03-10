@@ -40,9 +40,7 @@ def RunStatistics(g_params):  # {{{
     name_server = g_params['name_server']
     if 'RUN_STATISTICS_IN_QD' in g_params and g_params['RUN_STATISTICS_IN_QD']:
         cmd = ["python", py_scriptfile, "-i", jsonfile]
-        (isSubmitSuccess, t_runtime) = webcom.RunCmd(cmd,
-                                                     gen_logfile,
-                                                     gen_errfile)
+        webcom.RunCmd(cmd, gen_logfile, gen_errfile)
     elif not os.path.exists(lock_file):
         bash_scriptfile = f"{path_tmp}/{bsname}-{name_server}.sh"
         code_str_list = []
@@ -1096,6 +1094,7 @@ def GetResult(jobid, g_params):  # {{{
 def CheckIfJobFinished(jobid, numseq, to_email, g_params):  # {{{
     """check if the job is finished and write tag files
     """
+    bsname = "job_final_process"
     path_result = os.path.join(g_params['path_static'], 'result')
     rstdir = os.path.join(path_result, jobid)
     gen_logfile = g_params['gen_logfile']
@@ -1104,13 +1103,13 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):  # {{{
     g_params['jobid'] = jobid
     g_params['numseq'] = numseq
     g_params['to_email'] = to_email
-    jsonfile = os.path.join(rstdir, "job_final_process.json")
+    jsonfile = os.path.join(rstdir, f"{bsname}.json")
     myfunc.WriteFile(json.dumps(g_params, sort_keys=True), jsonfile, "w")
     binpath_script = os.path.join(g_params['webserver_root'], "env", "bin")
 
     finished_idx_file = "%s/finished_seqindex.txt"%(rstdir)
     failed_idx_file = "%s/failed_seqindex.txt"%(rstdir)
-    py_scriptfile = os.path.join(binpath_script, "job_final_process.py")
+    py_scriptfile = os.path.join(binpath_script, f"{bsname}.py")
     finished_idx_list = []
     failed_idx_list = []
     if os.path.exists(finished_idx_file):
@@ -1118,21 +1117,21 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):  # {{{
     if os.path.exists(failed_idx_file):
         failed_idx_list = list(set(myfunc.ReadIDList(failed_idx_file)))
 
-
-    lockname = "job_final_process.lock"
-    lock_file = os.path.join(g_params['path_result'], g_params['jobid'], lockname)
+    lockname = f"{bsname}.lock"
+    lock_file = os.path.join(g_params['path_result'], g_params['jobid'],
+                             lockname)
 
     num_processed = len(finished_idx_list)+len(failed_idx_list)
-    if num_processed >= numseq:# finished
+    if num_processed >= numseq:  # finished
         if ('THRESHOLD_NUMSEQ_CHECK_IF_JOB_FINISH' in g_params
                 and numseq <= g_params['THRESHOLD_NUMSEQ_CHECK_IF_JOB_FINISH']):
             cmd = ["python", py_scriptfile, "-i", jsonfile]
             (isSubmitSuccess, t_runtime) = webcom.RunCmd(cmd, gen_logfile, gen_errfile)
         elif not os.path.exists(lock_file):
-            bash_scriptfile = "%s/job_final_process,%s,%s.sh"%(rstdir, name_server, jobid)
+            bash_scriptfile = f"{rstdir}/{bsname},{name_server},{jobid}.sh"
             code_str_list = []
             code_str_list.append("#!/bin/bash")
-            cmdline = "python %s -i %s"%(py_scriptfile, jsonfile)
+            cmdline = f"python {py_scriptfile} -i {jsonfile}"
             code_str_list.append(cmdline)
             code = "\n".join(code_str_list)
             myfunc.WriteFile(code, bash_scriptfile, mode="w", isFlush=True)
