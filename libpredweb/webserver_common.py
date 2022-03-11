@@ -3170,7 +3170,7 @@ def get_serverstatus(request, g_params):#{{{
     def server_usage_statistics_per_timeline(timeline):
         timeline_statistics = {}
         for item in timeline:
-            file_path = f'/software/server/data/topcons_stat_files/stat/submit_{item}_web.stat.txt'
+            file_path = f'{path_stat}/submit_{item}_web.stat.txt'
             stat_data = []
             with open(file_path) as f:
                 for line in f:
