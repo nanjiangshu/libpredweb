@@ -1148,3 +1148,48 @@ def CheckIfJobFinished(jobid, numseq, to_email, g_params):  # {{{
             if 'DEBUG' in g_params and g_params['DEBUG']:
                 webcom.loginfo("isSubmitSuccess: %s"%(str(isSubmitSuccess)), gen_logfile)
 # }}}
+
+
+@timeit
+def CleanCachedResult(g_params):  # {{{
+    """Clean outdated cahced results on the server"""
+    bsname = "clean_cached_result"
+    gen_logfile = g_params['gen_logfile']
+    gen_errfile = g_params['gen_errfile']
+    path_tmp = os.path.join(g_params['path_static'], "tmp")
+    name_server = g_params['name_server']
+    if 'MAX_KEEP_DAYS_CACHE' in g_params:
+        MAX_KEEP_DAYS_CACHE = g_params['MAX_KEEP_DAYS_CACHE']
+    else:
+        MAX_KEEP_DAYS_CACHE = 480
+    binpath_script = os.path.join(g_params['webserver_root'], "env", "bin")
+    py_scriptfile = os.path.join(binpath_script, f"{bsname}.py")
+    jsonfile = os.path.join(path_tmp, f"{bsname}.json")
+    myfunc.WriteFile(json.dumps(g_params, sort_keys=True), jsonfile, "w")
+    lockname = f"{bsname}.lock"
+    lock_file = os.path.join(g_params['path_log'], lockname)
+    loginfo(f"Clean cached results older than {MAX_KEEP_DAYS_CACHE} days...",
+            gen_logfile)
+    cmd = ["python", py_scriptfile, "-i", jsonfile,
+           "-max-keep-day", f"{MAX_KEEP_DAYS_CACHE}"]
+    cmdline = " ".join(cmd)
+    if ('CLEAN_CACHED_RESULT_IN_QD' in g_params
+            and g_params['CLEAN_CACHED_RESULT_IN_QD']):
+        RunCmd(cmd, gen_logfile, gen_errfile)
+    elif not os.path.exists(lock_file):
+        bash_scriptfile = f"{path_tmp}/{bsname}-{name_server}.sh"
+        code_str_list = []
+        code_str_list.append("#!/bin/bash")
+        code_str_list.append(cmdline)
+        code = "\n".join(code_str_list)
+        myfunc.WriteFile(code, bash_scriptfile, mode="w", isFlush=True)
+        os.chmod(bash_scriptfile, 0o755)
+        os.chdir(path_tmp)
+        cmd = ['sbatch', bash_scriptfile]
+        cmdline = " ".join(cmd)
+        verbose = False
+        if 'DEBUG' in g_params and g_params['DEBUG']:
+            verbose = True
+            loginfo(f"Run cmdline: {cmdline}", gen_logfile)
+        RunCmd(cmd, gen_logfile, gen_errfile, verbose)
+# }}}
