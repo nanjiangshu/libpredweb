@@ -2058,17 +2058,20 @@ def CleanCachedResult(g_params):  # {{{
     gen_errfile = g_params['gen_errfile']
     path_tmp = os.path.join(g_params['path_static'], "tmp")
     name_server = g_params['name_server']
-    MAX_KEEP_DAYS = 480
+    if 'MAX_KEEP_DAYS_CACHE' in g_params:
+        MAX_KEEP_DAYS_CACHE = g_params['MAX_KEEP_DAYS_CACHE']
+    else:
+        MAX_KEEP_DAYS_CACHE = 480
     binpath_script = os.path.join(g_params['webserver_root'], "env", "bin")
     py_scriptfile = os.path.join(binpath_script, f"{bsname}.py")
     jsonfile = os.path.join(path_tmp, f"{bsname}.json")
     myfunc.WriteFile(json.dumps(g_params, sort_keys=True), jsonfile, "w")
     lockname = f"{bsname}.lock"
     lock_file = os.path.join(g_params['path_log'], lockname)
-    loginfo(f"Clean cached results older than {MAX_KEEP_DAYS} days...",
+    loginfo(f"Clean cached results older than {MAX_KEEP_DAYS_CACHE} days...",
             gen_logfile)
     cmd = ["python", py_scriptfile, "-i", jsonfile,
-           "-max-keep-day", f"{MAX_KEEP_DAYS}"]
+           "-max-keep-day", f"{MAX_KEEP_DAYS_CACHE}"]
     cmdline = " ".join(cmd)
     if ('CLEAN_CACHED_RESULT_IN_QD' in g_params
             and g_params['CLEAN_CACHED_RESULT_IN_QD']):
@@ -2372,6 +2375,7 @@ def SetColorStatus(status):#{{{
     else:
         return "black"
 #}}}
+
 
 @timeit
 def get_queue(request, g_params):#{{{
