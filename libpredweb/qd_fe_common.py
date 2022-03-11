@@ -1168,14 +1168,14 @@ def CleanCachedResult(g_params):  # {{{
     myfunc.WriteFile(json.dumps(g_params, sort_keys=True), jsonfile, "w")
     lockname = f"{bsname}.lock"
     lock_file = os.path.join(g_params['path_log'], lockname)
-    loginfo(f"Clean cached results older than {MAX_KEEP_DAYS_CACHE} days...",
-            gen_logfile)
+    webcom.loginfo(f"Clean cached results older than {MAX_KEEP_DAYS_CACHE} days",
+                   gen_logfile)
     cmd = ["python", py_scriptfile, "-i", jsonfile,
            "-max-keep-day", f"{MAX_KEEP_DAYS_CACHE}"]
     cmdline = " ".join(cmd)
     if ('CLEAN_CACHED_RESULT_IN_QD' in g_params
             and g_params['CLEAN_CACHED_RESULT_IN_QD']):
-        RunCmd(cmd, gen_logfile, gen_errfile)
+        webcom.RunCmd(cmd, gen_logfile, gen_errfile)
     elif not os.path.exists(lock_file):
         bash_scriptfile = f"{path_tmp}/{bsname}-{name_server}.sh"
         code_str_list = []
@@ -1190,6 +1190,6 @@ def CleanCachedResult(g_params):  # {{{
         verbose = False
         if 'DEBUG' in g_params and g_params['DEBUG']:
             verbose = True
-            loginfo(f"Run cmdline: {cmdline}", gen_logfile)
-        RunCmd(cmd, gen_logfile, gen_errfile, verbose)
+            webcom.loginfo(f"Run cmdline: {cmdline}", gen_logfile)
+        webcom.RunCmd(cmd, gen_logfile, gen_errfile, verbose)
 # }}}
