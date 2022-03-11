@@ -14,7 +14,8 @@ from libpredweb import myfunc
 from libpredweb import webserver_common as webcom
 from libpredweb import dataprocess
 
-PROGNAME = os.path.basename(sys.argv[0])
+progname = os.path.basename(sys.argv[0])
+rootname_progname = os.path.splitext(progname)[0]
 
 
 def run_statistics(g_params):  # {{{
@@ -726,21 +727,21 @@ Examples:
     jsonfile = args.jsonfile
 
     if not os.path.exists(jsonfile):
-        print(f"Jsonfile {jsonfile} does not exist. Exit {PROGNAME}!",
+        print(f"Jsonfile {jsonfile} does not exist. Exit {progname}!",
               file=sys.stderr)
         return 1
 
     g_params = {}
     g_params.update(webcom.LoadJsonFromFile(jsonfile))
 
-    lockname = f"{PROGNAME}.lock"
+    lockname = f"{rootname_progname}.lock"
     lock_file = os.path.join(g_params['path_log'], lockname)
     g_params['lockfile'] = lock_file
     fp = open(lock_file, 'w')
     try:
         fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except IOError:
-        webcom.loginfo(f"Another instance of {PROGNAME} is running",
+        webcom.loginfo(f"Another instance of {progname} is running",
                        g_params['gen_logfile'])
         return 1
 

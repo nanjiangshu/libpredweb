@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Description:
+  A collection of classes and functions used by web-servers
 
-# Description:
-#   A collection of classes and functions used by web-servers
-#
-# Author: Nanjiang Shu (nanjiang.shu@scilifelab.se)
-#
-# Address: Science for Life Laboratory Stockholm, Box 1031, 17121 Solna, Sweden
+Author: Nanjiang Shu (nanjiang.shu@scilifelab.se)
+
+Address: Science for Life Laboratory Stockholm, Box 1031, 17121 Solna, Sweden
+"""
 
 import os
 import sys
@@ -31,7 +32,7 @@ TZ = "Europe/Stockholm"
 FORMAT_DATETIME = "%Y-%m-%d %H:%M:%S %Z"
 ZB_SCORE_THRESHOLD = 0.45
 chde_table = {
-        'C':'CYS',
+        'C': 'CYS',
         'H': 'HIS',
         'D': 'ASP',
         'E': 'GLU',
@@ -701,6 +702,7 @@ def WriteFrag1DTextResultFile(outfile, outpath_result, maplist, runtime_in_sec, 
         print("Failed to write to file %s"%(outfile))
 #}}}
 
+
 @timeit
 def WriteSubconsTextResultFile(outfile, outpath_result, maplist,#{{{
         runtime_in_sec, base_www_url, statfile=""):
@@ -759,6 +761,7 @@ def WriteSubconsTextResultFile(outfile, outpath_result, maplist,#{{{
     except IOError:
         print("Failed to write to file %s"%(outfile))
 #}}}
+
 
 @timeit
 def WriteTOPCONSTextResultFile(outfile, outpath_result, maplist,#{{{
@@ -958,6 +961,7 @@ def WriteHTMLTableContent_TOPCONS(tablename, tabletitle, index_table_header,#{{{
     print("</tbody>", file=fpout)
     print("</table>", file=fpout)
 #}}}
+
 
 @timeit
 def WriteHTMLResultTable_TOPCONS(outfile, finished_seq_file):#{{{
@@ -2044,16 +2048,7 @@ def CleanServerFile(path_static, logfile, errfile):#{{{
     cmd = ["clean_server_file.sh", path_static]
     RunCmd(cmd, logfile, errfile)
 #}}}
-@timeit
-def CleanCachedResult(path_static, name_cachedir, logfile, errfile):#{{{
-    """Clean outdated cahced results on the server"""
-# clean tmp files
-    msg = "Clean cached results..."
-    date_str = time.strftime(FORMAT_DATETIME)
-    myfunc.WriteFile("[%s] %s\n"%(date_str, msg), logfile, "a", True)
-    cmd = ["clean_cached_result.py", "-path-static", path_static, '-name-cachedir', name_cachedir, "-max-keep-day", "480"]
-    RunCmd(cmd, logfile, errfile)
-#}}}
+
 
 def ReadComputeNode(infile):# {{{
     """Read computenode file computenode.txt
@@ -2336,6 +2331,7 @@ def SetColorStatus(status):#{{{
     else:
         return "black"
 #}}}
+
 
 @timeit
 def get_queue(request, g_params):#{{{
