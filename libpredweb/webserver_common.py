@@ -3163,6 +3163,23 @@ def get_serverstatus(request, g_params):#{{{
 
     info['startdate'] = startdate
     info['jobcounter'] = GetJobCounter(info)
+    def server_usage_statistics_per_timeline(timeline):
+        timeline_statistics = {}
+        for item in timeline:
+            file_path = f'{path_stat}/submit_{item}_web.stat.txt'
+            stat_data = []
+            with open(file_path) as f:
+                for line in f:
+                    if not line.startswith('Date'):
+                        sline = line.strip('\n')
+                        cols = sline.split('\t')
+                        stat_data.append(cols)
+            timeline_statistics[item] = stat_data
+        return timeline_statistics
+    timeline = ['day', 'week', 'month', 'year']
+    timeline_statistics = server_usage_statistics_per_timeline(timeline)
+    info['statistics_timeline'] =timeline
+    info['statistics_per_timeline'] = json.dumps(timeline_statistics)
     return info
 #}}}
 def get_results_eachseq(request, name_resultfile, name_nicetopfile, jobid, seqindex, g_params):#{{{
