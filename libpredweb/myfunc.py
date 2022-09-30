@@ -19,20 +19,21 @@ import gzip
 import time
 import datetime
 GAP = "-"
-BLOCK_SIZE = 100000 #set a good value for reading text file by block reading
-aa_three2one ={'ALA': 'A', 'ARG': 'R', 'ASN': 'N', 'ASP': 'D',
-        'CYS': 'C', 'GLU': 'E', 'GLN': 'Q', 'GLY': 'G',
-        'HIS': 'H', 'ILE': 'I', 'LEU': 'L', 'LYS': 'K',
-        'MET': 'M', 'PHE': 'F', 'PRO': 'P', 'SER': 'S',
-        'THR': 'T', 'TRP': 'W', 'TYR': 'Y', 'VAL': 'V'}
+BLOCK_SIZE = 100000  # set a good value for reading text file by block reading
+aa_three2one = {'ALA': 'A', 'ARG': 'R', 'ASN': 'N', 'ASP': 'D',
+                'CYS': 'C', 'GLU': 'E', 'GLN': 'Q', 'GLY': 'G',
+                'HIS': 'H', 'ILE': 'I', 'LEU': 'L', 'LYS': 'K',
+                'MET': 'M', 'PHE': 'F', 'PRO': 'P', 'SER': 'S',
+                'THR': 'T', 'TRP': 'W', 'TYR': 'Y', 'VAL': 'V'}
 
-def myopen(filename = "", default_fp = None, mode = "w", isRaise=False):#{{{
+
+def myopen(filename="", default_fp=None, mode="w", isRaise=False):#{{{
     """
     A wrapper of file open function
     """
     if filename != "":
         try:
-            fp = open(filename,mode)
+            fp = open(filename, mode)
             return fp
         except IOError:
             msg = "Failed to open file {} with mode {}"
@@ -1749,6 +1750,91 @@ def PosTM2Topo(posTM, seqLength, NtermState):#{{{
     top = "".join(topList)
     return top
 #}}}
+
+
+def CreateSQLiteTableAllFinished(con, tablename):  # {{{
+    """Create SQLite table for all finished data
+    """
+    with con:
+        cur = con.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS %s
+            (
+                jobid TEXT NOT NULL PRIMARY KEY,
+                status TEXT,
+                jobname TEXT,
+                ip TEXT,
+                country TEXT,
+                email TEXT,
+                numseq INTEGER,
+                method_submission TEXT,
+                submit_date TEXT,
+                start_date TEXT,
+                finish_date TEXT
+            )""" % (tablename))
+
+# }}}
+
+
+def CreateSQLiteTableAllSubmitted(con, tablename):  # {{{
+    """Create SQLite table for all submitted data
+    """
+    with con:
+        cur = con.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS %s
+            (
+                jobid TEXT NOT NULL PRIMARY KEY,
+                jobname TEXT,
+                ip TEXT,
+                email TEXT,
+                numseq INTEGER,
+                method_submission TEXT,
+                submit_date TEXT,
+            )""" % (tablename))
+
+# }}}
+
+
+def WriteSQLiteAllFinished(con, tablename, data):  # {{{
+    with con:
+        cur = con.cursor()
+        for row in data:
+            cmd = "INSERT OR REPLACE INTO %s(jobid, status, jobname, ip, country, email, numseq, method_submission, submit_date, start_date, finish_date) VALUES('%s', '%s','%s', '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s')"%(
+                    tablename,
+                    row['jobid'],
+                    row['status'],
+                    row['jobname'].replace("'", "''"),
+                    row['ip'],
+                    row['country'].replace("'", "''"),
+                    row['email'].replace("'", "''"),
+                    row['numseq'],
+                    row['method_submission'],
+                    row['submit_date'],
+                    row['start_date'],
+                    row['finish_date']
+                    )
+            cur.execute(cmd)
+# }}}
+
+
+def WriteSQLiteAllSubmitted(con, tablename, data):  # {{{
+    with con:
+        cur = con.cursor()
+        for row in data:
+            cmd = "INSERT OR REPLACE INTO %s(jobid, jobname, ip, email, numseq, method_submission, submit_date) VALUES('%s', '%s','%s',  '%s', %d, '%s', '%s')"%(
+                    tablename,
+                    row['jobid'],
+                    row['jobname'].replace("'", "''"),
+                    row['ip'],
+                    row['email'].replace("'", "''"),
+                    row['numseq'],
+                    row['method_submission'],
+                    row['submit_date']
+                    )
+            cur.execute(cmd)
+# }}}
+
 
 def IsValidEmailAddress(email):#{{{
     match = re.search(r'[\w.-]+@[\w.-]+.\w+', email)

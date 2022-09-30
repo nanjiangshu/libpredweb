@@ -126,7 +126,7 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
     finishtime_numseq_dict_wsdl = {}
 
     con_f = sqlite3.connect(db_allfinished)
-    CreateSQLiteTableAllFinished(con_f, tablename=sql_tablename)
+    myfunc.CreateSQLiteTableAllFinished(con_f, tablename=sql_tablename)
     for jobid in allfinished_job_dict:
         li = allfinished_job_dict[jobid]
         numseq = -1
@@ -177,7 +177,7 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
         row['submit_date'] = submit_date_str
         row['start_date'] = start_date_str
         row['finish_date'] = finish_date_str
-        WriteSQLiteAllFinished(con_f, tablename=sql_tablename, data=[row])
+        myfunc.WriteSQLiteAllFinished(con_f, tablename=sql_tablename, data=[row])
 # }}}
 
         if numseq != -1:
@@ -282,7 +282,7 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
 # 5. output num-submission time series with different bins
 # (day, week, month, year)
     con_s = sqlite3.connect(db_allsubmitted)
-    CreateSQLiteTableAllSubmitted(con_s, tablename=sql_tablename)
+    myfunc.CreateSQLiteTableAllSubmitted(con_s, tablename=sql_tablename)
     hdl = myfunc.ReadLineByBlock(allsubmitjoblogfile)
     # ["name" numjob, numseq, numjob_web, numseq_web,numjob_wsdl, numseq_wsdl]
     dict_submit_day = {}
@@ -363,7 +363,7 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                 row['numseq'] = numseq
                 row['submit_date'] = submit_date_str
                 row['email'] = strs[6]
-                WriteSQLiteAllSubmitted(con_s, tablename=sql_tablename, data=[row])
+                myfunc.WriteSQLiteAllSubmitted(con_s, tablename=sql_tablename, data=[row])
 # }}}
             lines = hdl.readlines()
         hdl.close()
@@ -743,84 +743,6 @@ def run_statistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
     webcom.RunCmd(cmd, gen_logfile, gen_errfile)
 
 # }}}
-
-
-def CreateSQLiteTableAllFinished(con, tablename):
-    """Create SQLite table for all finished data
-    """
-    with con:
-        cur = con.cursor()
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS %s
-            (
-                jobid TEXT NOT NULL PRIMARY KEY,
-                status TEXT,
-                jobname TEXT,
-                ip TEXT,
-                country TEXT,
-                email TEXT,
-                numseq INTEGER,
-                method_submission TEXT,
-                submit_date TEXT,
-                start_date TEXT,
-                finish_date TEXT
-            )"""%(tablename))
-
-
-def CreateSQLiteTableAllSubmitted(con, tablename):
-    """Create SQLite table for all submitted data
-    """
-    with con:
-        cur = con.cursor()
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS %s
-            (
-                jobid TEXT NOT NULL PRIMARY KEY,
-                jobname TEXT,
-                ip TEXT,
-                email TEXT,
-                numseq INTEGER,
-                method_submission TEXT,
-                submit_date TEXT,
-            )"""%(tablename))
-
-
-def WriteSQLiteAllFinished(con, tablename, data):
-    with con:
-        cur = con.cursor()
-        for row in data:
-            cmd = "INSERT OR REPLACE INTO %s(jobid, status, jobname, ip, country, email, numseq, method_submission, submit_date, start_date, finish_date) VALUES('%s', '%s','%s', '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s')"%(
-                    tablename,
-                    row['jobid'],
-                    row['status'],
-                    row['jobname'].replace("'", "''"),
-                    row['ip'],
-                    row['country'].replace("'", "''"),
-                    row['email'].replace("'", "''"),
-                    row['numseq'],
-                    row['method_submission'],
-                    row['submit_date'],
-                    row['start_date'],
-                    row['finish_date']
-                    )
-            cur.execute(cmd)
-
-
-def WriteSQLiteAllSubmitted(con, tablename, data):
-    with con:
-        cur = con.cursor()
-        for row in data:
-            cmd = "INSERT OR REPLACE INTO %s(jobid, jobname, ip, email, numseq, method_submission, submit_date) VALUES('%s', '%s','%s',  '%s', %d, '%s', '%s')"%(
-                    tablename,
-                    row['jobid'],
-                    row['jobname'].replace("'", "''"),
-                    row['ip'],
-                    row['email'].replace("'", "''"),
-                    row['numseq'],
-                    row['method_submission'],
-                    row['submit_date']
-                    )
-            cur.execute(cmd)
 
 
 def main():  # {{{
