@@ -1790,7 +1790,7 @@ def CreateSQLiteTableAllSubmitted(con, tablename):  # {{{
                 email TEXT,
                 numseq INTEGER,
                 method_submission TEXT,
-                submit_date TEXT,
+                submit_date TEXT
             )""" % (tablename))
 
 # }}}
