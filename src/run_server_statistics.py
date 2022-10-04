@@ -58,7 +58,7 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                            set(runtime_finishedjobidlist))
 
     db_allfinished = f"{path_log}/all_finished_job.sqlite3"
-    db_allsubmitted = f"{path_log}/all_finished_job.sqlite3"
+    db_allsubmitted = f"{path_log}/all_submitted_job.sqlite3"
     sql_tablename = "data"
 
     for jobid in toana_jobidlist:
@@ -127,6 +127,7 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
 
     con_f = sqlite3.connect(db_allfinished)
     myfunc.CreateSQLiteTableAllFinished(con_f, tablename=sql_tablename)
+    webcom.loginfo("create all finished sql db...\n", gen_logfile)
     for jobid in allfinished_job_dict:
         li = allfinished_job_dict[jobid]
         numseq = -1
@@ -283,6 +284,7 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
 # (day, week, month, year)
     con_s = sqlite3.connect(db_allsubmitted)
     myfunc.CreateSQLiteTableAllSubmitted(con_s, tablename=sql_tablename)
+    webcom.loginfo("create all submitted sql db...\n", gen_logfile)
     hdl = myfunc.ReadLineByBlock(allsubmitjoblogfile)
     # ["name" numjob, numseq, numjob_web, numseq_web,numjob_wsdl, numseq_wsdl]
     dict_submit_day = {}
