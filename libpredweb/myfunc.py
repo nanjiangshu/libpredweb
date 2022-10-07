@@ -1752,11 +1752,10 @@ def PosTM2Topo(posTM, seqLength, NtermState):#{{{
 #}}}
 
 
-def CreateSQLiteTableAllFinished(con, tablename):  # {{{
+def CreateSQLiteTableAllFinished(cur, tablename):  # {{{
     """Create SQLite table for all finished data
     """
-    with con:
-        cur = con.cursor()
+    if cur is not None:
         cur.execute("""
             CREATE TABLE IF NOT EXISTS %s
             (
@@ -1776,11 +1775,10 @@ def CreateSQLiteTableAllFinished(con, tablename):  # {{{
 # }}}
 
 
-def CreateSQLiteTableAllSubmitted(con, tablename):  # {{{
+def CreateSQLiteTableAllSubmitted(cur, tablename):  # {{{
     """Create SQLite table for all submitted data
     """
-    with con:
-        cur = con.cursor()
+    if cur is not None:
         cur.execute("""
             CREATE TABLE IF NOT EXISTS %s
             (
@@ -1796,9 +1794,8 @@ def CreateSQLiteTableAllSubmitted(con, tablename):  # {{{
 # }}}
 
 
-def WriteSQLiteAllFinished(con, tablename, data):  # {{{
-    with con:
-        cur = con.cursor()
+def WriteSQLiteAllFinished(cur, tablename, data):  # {{{
+    if cur is not None:
         for row in data:
             cmd = "INSERT OR REPLACE INTO %s(jobid, status, jobname, ip, country, email, numseq, method_submission, submit_date, start_date, finish_date) VALUES('%s', '%s','%s', '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s')"%(
                     tablename,
@@ -1818,11 +1815,10 @@ def WriteSQLiteAllFinished(con, tablename, data):  # {{{
 # }}}
 
 
-def WriteSQLiteAllSubmitted(con, tablename, data):  # {{{
-    with con:
-        cur = con.cursor()
+def WriteSQLiteAllSubmitted(cur, tablename, data):  # {{{
+    if cur is not None:
         for row in data:
-            cmd = "INSERT OR REPLACE INTO %s(jobid, jobname, ip, email, numseq, method_submission, submit_date) VALUES('%s', '%s','%s',  '%s', %d, '%s', '%s')"%(
+            cmd = "INSERT OR REPLACE INTO %s(jobid, jobname, ip, email, numseq, method_submission, submit_date) VALUES('%s', '%s','%s',  '%s', %d, '%s', '%s')" % (
                     tablename,
                     row['jobid'],
                     row['jobname'].replace("'", "''"),

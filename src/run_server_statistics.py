@@ -126,7 +126,10 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
     finishtime_numseq_dict_wsdl = {}
 
     con_f = sqlite3.connect(db_allfinished)
-    myfunc.CreateSQLiteTableAllFinished(con_f, tablename=sql_tablename)
+    cur_f = con_f.cursor()
+    myfunc.CreateSQLiteTableAllFinished(cur_f, tablename=sql_tablename)
+    cur_f.execute('BEGIN;')
+
     webcom.loginfo("create all finished sql db...\n", gen_logfile)
     for jobid in allfinished_job_dict:
         li = allfinished_job_dict[jobid]
@@ -178,7 +181,8 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
         row['submit_date'] = submit_date_str
         row['start_date'] = start_date_str
         row['finish_date'] = finish_date_str
-        myfunc.WriteSQLiteAllFinished(con_f, tablename=sql_tablename, data=[row])
+        myfunc.WriteSQLiteAllFinished(cur_f, tablename=sql_tablename,
+                                      data=[row])
 # }}}
 
         if numseq != -1:
@@ -238,6 +242,7 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                         finishtime_numseq_dict_wsdl[numseq] = []
                     finishtime_numseq_dict_wsdl[numseq].append(finishtime_sec)
 
+    con_f.commit()
     con_f.close()
 
     # output countjob by country
@@ -283,7 +288,10 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
 # 5. output num-submission time series with different bins
 # (day, week, month, year)
     con_s = sqlite3.connect(db_allsubmitted)
-    myfunc.CreateSQLiteTableAllSubmitted(con_s, tablename=sql_tablename)
+    cur_s = con_s.cursor()
+    myfunc.CreateSQLiteTableAllSubmitted(cur_s, tablename=sql_tablename)
+    cur_s.execute('BEGIN;')
+
     webcom.loginfo("create all submitted sql db...\n", gen_logfile)
     hdl = myfunc.ReadLineByBlock(allsubmitjoblogfile)
     # ["name" numjob, numseq, numjob_web, numseq_web,numjob_wsdl, numseq_wsdl]
@@ -365,11 +373,13 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                 row['numseq'] = numseq
                 row['submit_date'] = submit_date_str
                 row['email'] = strs[6]
-                myfunc.WriteSQLiteAllSubmitted(con_s, tablename=sql_tablename, data=[row])
+                myfunc.WriteSQLiteAllSubmitted(cur_s, tablename=sql_tablename,
+                                               data=[row])
 # }}}
             lines = hdl.readlines()
         hdl.close()
 
+    con_s.commit()
     con_s.close()
 
     li_submit_day = []
