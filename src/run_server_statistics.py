@@ -9,6 +9,7 @@ import time
 from geoip import geolite2
 import pycountry
 import numpy
+import sqlite3
 
 from libpredweb import myfunc
 from libpredweb import webserver_common as webcom
@@ -55,6 +56,10 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
     runtime_finishedjobidlist = myfunc.ReadIDList(runtimelogfile_finishedjobid)
     toana_jobidlist = list(set(allfinishedjobidlist) -
                            set(runtime_finishedjobidlist))
+
+    db_allfinished = f"{path_log}/all_finished_job.sqlite3"
+    db_allsubmitted = f"{path_log}/all_submitted_job.sqlite3"
+    sql_tablename = "data"
 
     for jobid in toana_jobidlist:
         runtimeloginfolist = []
@@ -120,6 +125,12 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
     finishtime_numseq_dict_web = {}
     finishtime_numseq_dict_wsdl = {}
 
+    con_f = sqlite3.connect(db_allfinished)
+    cur_f = con_f.cursor()
+    myfunc.CreateSQLiteTableAllFinished(cur_f, tablename=sql_tablename)
+    cur_f.execute('BEGIN;')
+
+    webcom.loginfo("create all finished sql db...\n", gen_logfile)
     for jobid in allfinished_job_dict:
         li = allfinished_job_dict[jobid]
         numseq = -1
@@ -156,6 +167,23 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
         submit_date_str = li[6]
         start_date_str = li[7]
         finish_date_str = li[8]
+
+        # Write SQL for allfinished{{{
+        row = {}
+        row['jobid'] = jobid
+        row['status'] = li[0]
+        row['jobname'] = li[1]
+        row['email'] = li[3]
+        row['ip'] = ip
+        row['country'] = country
+        row['method_submission'] = method_submission
+        row['numseq'] = numseq
+        row['submit_date'] = submit_date_str
+        row['start_date'] = start_date_str
+        row['finish_date'] = finish_date_str
+        myfunc.WriteSQLiteAllFinished(cur_f, tablename=sql_tablename,
+                                      data=[row])
+# }}}
 
         if numseq != -1:
             if numseq not in countjob_numseq_dict:
@@ -214,6 +242,9 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                         finishtime_numseq_dict_wsdl[numseq] = []
                     finishtime_numseq_dict_wsdl[numseq].append(finishtime_sec)
 
+    con_f.commit()
+    con_f.close()
+
     # output countjob by country
     outfile_countjob_by_country = f"{path_stat}/countjob_by_country.txt"
     # sort by numseq in descending order
@@ -256,6 +287,12 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
 
 # 5. output num-submission time series with different bins
 # (day, week, month, year)
+    con_s = sqlite3.connect(db_allsubmitted)
+    cur_s = con_s.cursor()
+    myfunc.CreateSQLiteTableAllSubmitted(cur_s, tablename=sql_tablename)
+    cur_s.execute('BEGIN;')
+
+    webcom.loginfo("create all submitted sql db...\n", gen_logfile)
     hdl = myfunc.ReadLineByBlock(allsubmitjoblogfile)
     # ["name" numjob, numseq, numjob_web, numseq_web,numjob_wsdl, numseq_wsdl]
     dict_submit_day = {}
@@ -327,8 +364,23 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                         dict_submit_year[year][5] += 1
                         dict_submit_year[year][6] += numseq
 # }}}
+                # Write to SQL{{{
+                row = {}
+                row['jobid'] = strs[1]
+                row['jobname'] = strs[5]
+                row['ip'] = strs[2]
+                row['method_submission'] = method_submission
+                row['numseq'] = numseq
+                row['submit_date'] = submit_date_str
+                row['email'] = strs[6]
+                myfunc.WriteSQLiteAllSubmitted(cur_s, tablename=sql_tablename,
+                                               data=[row])
+# }}}
             lines = hdl.readlines()
         hdl.close()
+
+    con_s.commit()
+    con_s.close()
 
     li_submit_day = []
     li_submit_week = []
