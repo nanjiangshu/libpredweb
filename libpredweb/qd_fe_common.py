@@ -488,13 +488,17 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):  # {{{
                             msg = "Failed to copytree  %s -> %s"%(cachedir, outpath_this_seq)
                             webcom.loginfo("%s with errmsg=%s"%(msg, str(e)), runjob_errfile)
                     elif os.path.exists(zipfile_cache):
-                        cmd = ["unzip", zipfile_cache, "-d", outpath_result]
-                        webcom.RunCmd(cmd, runjob_logfile, runjob_errfile)
-                        if os.path.exists(outpath_this_seq):
-                            shutil.rmtree(outpath_this_seq)
-                        shutil.move("%s/%s"%(outpath_result, md5_key), outpath_this_seq)
+                        if os.path.getsize(zipfile_cache) == 0:
+                            os.remove(zipfile_cache)  # remove empty archived result zip file
+                        else:
+                            cmd = ["unzip", zipfile_cache, "-d", outpath_result]
+                            webcom.RunCmd(cmd, runjob_logfile, runjob_errfile)
+                            if os.path.exists(outpath_this_seq):
+                                shutil.rmtree(outpath_this_seq)
+                            if os.path.exists(os.path.join(outpath_result, md5_key)):
+                                shutil.move(os.path.join(outpath_result, md5_key), outpath_this_seq)
 
-                    fafile_this_seq =  '%s/seq.fa'%(outpath_this_seq)
+                    fafile_this_seq = '%s/seq.fa'%(outpath_this_seq)
                     if os.path.exists(outpath_this_seq) and webcom.IsCheckPredictionPassed(outpath_this_seq, name_server):
                         myfunc.WriteFile('>%s\n%s\n'%(seqAnnoList[i], seqList[i]), fafile_this_seq, 'w', True)
                         if not os.path.exists(starttagfile): #write start tagfile
