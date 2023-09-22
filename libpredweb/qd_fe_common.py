@@ -946,7 +946,8 @@ def GetResult(jobid, g_params):  # {{{
                                 try:
                                     rtValue2 = myclient.service.deletejob(remote_jobid)
                                 except Exception as e:
-                                    msg = "Failed to deletejob(%s) on node %s with errmsg %s"%(remote_jobid, node, str(e))
+                                    msg = f"Failed to delete the job {remote_jobid} on node {node}"
+                                          f" with error: {str(e)}"
                                     webcom.loginfo(msg, gen_logfile)
                                     rtValue2 = []
                                     pass
@@ -955,16 +956,17 @@ def GetResult(jobid, g_params):  # {{{
                                 if len(rtValue2) >= 1:
                                     ss2 = rtValue2[0]
                                     if len(ss2) >= 2:
-                                        status = ss2[0]
+                                        status_job_delete = ss2[0]
                                         errmsg = ss2[1]
-                                        if status == "Succeeded":
-                                            logmsg = "Successfully deleted data on %s "\
-                                                    "for %s"%(node, remote_jobid)
+                                        if status_job_delete == "Succeeded":
+                                            logmsg = f"Successfully deleted data on {node} "
+                                                     f"for {remote_jobid}"
                                         else:
-                                            logmsg = "Failed to delete data on %s for "\
-                                                    "%s\nError message:\n%s\n"%(node, remote_jobid, errmsg)
+                                            logmsg = f"Failed to delete data on {node} for "
+                                                     f"{remote_jobid} with error: {errmsg}"
                                 else:
-                                    logmsg = "Failed to call deletejob %s via WSDL on %s\n"%(remote_jobid, node)
+                                    logmsg = f"Failed to call deletejob {remote_jobid} via WSDL on {node}\n"
+                                webcom.loginfo(logmsg, gen_logfile)
 
                                 # delete the downloaded temporary zip file and
                                 # extracted file
