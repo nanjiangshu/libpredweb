@@ -1049,6 +1049,12 @@ def GetResult(jobid, g_params):  # {{{
             # running) delete it and try to resubmit it. This solved the
             # problem of dead jobs in the remote server due to server
             # rebooting)
+            if 'DEBUG' in g_params and g_params['DEBUG']:
+                if time_in_remote_queue > g_params['MAX_TIME_IN_REMOTE_QUEUE']:
+                    webcom.loginfo(f"\ttime_in_remote_queue ({time_in_remote_queue}) >"
+                                   f" MAX_TIME_IN_REMOTE_QUEUE ({g_params['MAX_TIME_IN_REMOTE_QUEUE']})"
+                                   f" for remote_jobid ({remote_jobid})"
+                                   f" with status ({status})", gen_logfile)
             if (
                     status != "Running"
                     and status != ""
