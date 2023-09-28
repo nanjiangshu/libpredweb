@@ -593,7 +593,7 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):  # {{{
 
             if "DEBUG" in g_params and g_params['DEBUG']:
                 webcom.loginfo(f"iToRun={iToRun}, numToRun={numToRun}", gen_logfile)
-            [cnt, maxnum, queue_method] = cntSubmitJobDict[node]
+            [cnt, maxnum, queue_method, node_status] = cntSubmitJobDict[node]
             cnttry = 0
             while cnt < maxnum and iToRun < numToRun:
                 origIndex = int(toRunIndexList[iToRun])
