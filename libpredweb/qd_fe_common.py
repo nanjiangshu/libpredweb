@@ -569,22 +569,25 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):  # {{{
     if len(toRunIndexList) > 0:
         iToRun = 0
         numToRun = len(toRunIndexList)
+        iNode = -1
         for node in cntSubmitJobDict:
+            iNode += 1
             if "DEBUG" in g_params and g_params['DEBUG']:
-                webcom.loginfo("Trying to submitjob to the node=%s\n"%(str(node)), gen_logfile)
+                webcom.loginfo(f"Trying to submit job to the node {iNode}: {node}", gen_logfile)
+                webcom.loginfo(f"cntSubmitJobDict={cntSubmitJobDict}", gen_logfile)
             if iToRun >= numToRun:
                 if "DEBUG" in g_params and g_params['DEBUG']:
-                    webcom.loginfo("iToRun(%d) >= numToRun(%d). Stop SubmitJob for jobid=%s\n"%(iToRun, numToRun, jobid), gen_logfile)
+                    webcom.loginfo(f"iToRun({iToRun}) >= numToRun({numToRun}). Stop SubmitJob for jobid={jobid}", gen_logfile)
                 break
             wsdl_url = "http://%s/pred/api_submitseq/?wsdl"%(node)
             try:
                 myclient = Client(wsdl_url, cache=None, timeout=30)
-            except:
-                webcom.loginfo("Failed to access %s"%(wsdl_url), gen_logfile)
+            except Exception as e:
+                webcom.loginfo(f"Failed to access {wsdl_url}, detailed error: {e}", gen_logfile)
                 continue
 
             if "DEBUG" in g_params and g_params['DEBUG']:
-                webcom.loginfo("iToRun=%d, numToRun=%d\n"%(iToRun, numToRun), gen_logfile)
+                webcom.loginfo(f"iToRun={iToRun}, numToRun={numToRun}", gen_logfile)
             [cnt, maxnum, queue_method] = cntSubmitJobDict[node]
             cnttry = 0
             while cnt < maxnum and iToRun < numToRun:
@@ -675,13 +678,13 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):  # {{{
                     iToRun += 1
                     processedIndexSet.add(str(origIndex))
                     if 'DEBUG' in g_params and g_params['DEBUG']:
-                        webcom.loginfo("DEBUG: jobid %s processedIndexSet.add(str(%d))\n"%(jobid, origIndex), gen_logfile)
+                        webcom.loginfo(f"DEBUG: jobid {jobid} processedIndexSet.add({origIndex})", gen_logfile)
             # update cntSubmitJobDict for this node
             cntSubmitJobDict[node][0] = cnt
 
     # finally, append submitted_loginfo_list to remotequeue_idx_file 
     if 'DEBUG' in g_params and g_params['DEBUG']:
-        webcom.loginfo("DEBUG: len(submitted_loginfo_list)=%d\n"%(len(submitted_loginfo_list)), gen_logfile)
+        webcom.loginfo(f"DEBUG: len(submitted_loginfo_list)={len(submitted_loginfo_list)}", gen_logfile)
     if len(submitted_loginfo_list)>0:
         myfunc.WriteFile("\n".join(submitted_loginfo_list)+"\n", remotequeue_idx_file, "a", True)
     # update torun_idx_file
@@ -709,7 +712,7 @@ def GetResult(jobid, g_params):  # {{{
     gen_logfile = g_params['gen_logfile']
     gen_errfile = g_params['gen_errfile']
 
-    webcom.loginfo(f"GetResult for {jobid}.\n", gen_logfile)
+    webcom.loginfo(f"GetResult for {jobid}.", gen_logfile)
 
     path_static = g_params['path_static']
     path_result = os.path.join(path_static, 'result')
@@ -766,8 +769,8 @@ def GetResult(jobid, g_params):  # {{{
     # is still not finished, force recreating torun_idx_file
     if 'DEBUG' in g_params and g_params['DEBUG']:
         try:
-            webcom.loginfo("DEBUG: %s: remotequeue_idx_file=%s, size(remotequeue_idx_file)=%d, content=\"%s\"\n" %(jobid, remotequeue_idx_file, os.path.getsize(remotequeue_idx_file), myfunc.ReadFile(remotequeue_idx_file)), gen_logfile)
-        except Exception:
+            webcom.loginfo(f"DEBUG: {jobid}: remotequeue_idx_file={remotequeue_idx_file}, size(remotequeue_idx_file)={os.path.getsize(remotequeue_idx_file)}, content=\"{myfunc.ReadFile(remotequeue_idx_file)}\"", gen_logfile)
+        except Exception as e:
             pass
     if ((not os.path.exists(remotequeue_idx_file) or  # {{{
         os.path.getsize(remotequeue_idx_file) < 1)):
@@ -787,7 +790,7 @@ def GetResult(jobid, g_params):  # {{{
             numseq = int(jobinfolist[3])
 
         if 'DEBUG' in g_params and g_params['DEBUG']:
-            webcom.loginfo("DEBUG: len(completed_idx_set)=%d+%d=%d, numseq=%d\n"%(len(idlist1), len(idlist2), len(completed_idx_set), numseq), gen_logfile)
+            webcom.loginfo(f"DEBUG: len(completed_idx_set)={len(idlist1)}+{len(idlist2)}={len(completed_idx_set)}, numseq={numseq}", gen_logfile)
 
         if len(completed_idx_set) < numseq:
             all_idx_list = [str(x) for x in range(numseq)]
@@ -800,12 +803,12 @@ def GetResult(jobid, g_params):  # {{{
             myfunc.WriteFile("\n".join(torun_idx_str_list)+"\n", torun_idx_file, "w", True)
 
             if 'DEBUG' in g_params and g_params['DEBUG']:
-                webcom.loginfo("recreate torun_idx_file: jobid = %s, numseq=%d, len(completed_idx_set)=%d, len(torun_idx_str_list)=%d\n"%(jobid, numseq, len(completed_idx_set), len(torun_idx_str_list)), gen_logfile)
+                webcom.loginfo(f"recreate torun_idx_file: jobid = {jobid}, numseq={numseq}, len(completed_idx_set)={len(completed_idx_set)}, len(torun_idx_str_list)={len(torun_idx_str_list)}", gen_logfile)
         else:
             myfunc.WriteFile("", torun_idx_file, "w", True)
     else:
         if 'DEBUG' in g_params and g_params['DEBUG']:
-            webcom.loginfo("DEBUG: %s: remotequeue_idx_file %s is not empty\n" %(jobid, remotequeue_idx_file), gen_logfile)
+            webcom.loginfo(f"DEBUG: {jobid}: remotequeue_idx_file {remotequeue_idx_file} is not empty", gen_logfile)
 # }}}
 
     text = ""
@@ -848,7 +851,7 @@ def GetResult(jobid, g_params):  # {{{
         strs = line.split("\t")
         if len(strs) != 6:
             if 'DEBUG' in g_params and g_params['DEBUG']:
-                webcom.loginfo("DEBUG: len(strs)=%d (!=6), ignore\n"%(len(strs)), gen_logfile)
+                webcom.loginfo(f"DEBUG: len(strs)={len(strs)} (!=6), ignore", gen_logfile)
             continue
         origIndex = int(strs[0])
         node = strs[1]
@@ -1012,7 +1015,7 @@ def GetResult(jobid, g_params):  # {{{
                     # the job is failed for this sequence, try to resubmit
                     isFinish_remote = True
                     if 'DEBUG' in g_params and g_params['DEBUG']:
-                        webcom.loginfo("DEBUG: %s, status = %s\n"%(remote_jobid, status), gen_logfile)
+                        webcom.loginfo(f"DEBUG: {remote_jobid}, status = {status}", gen_logfile)
 
                 if status != "Wait" and not os.path.exists(starttagfile):
                     webcom.WriteDateTimeTagFile(starttagfile, runjob_logfile, runjob_errfile)
