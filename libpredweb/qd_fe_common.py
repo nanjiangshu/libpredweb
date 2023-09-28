@@ -572,11 +572,10 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):  # {{{
         iNode = -1
         for node in cntSubmitJobDict:
             iNode += 1
-            node_status = cntSubmitJobDict[node][3]
             if "DEBUG" in g_params and g_params['DEBUG']:
                 webcom.loginfo(f"Trying to submit job to the node {iNode}: {node}", gen_logfile)
                 webcom.loginfo(f"cntSubmitJobDict={cntSubmitJobDict}", gen_logfile)
-            if node_status == "OFF":
+            if cntSubmitJobDict[node][3] == "OFF":
                 webcom.loginfo(f"node {node} is offline, try again in the next loop", gen_logfile)
                 continue
             if iToRun >= numToRun:
