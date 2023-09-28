@@ -569,18 +569,21 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):  # {{{
     if len(toRunIndexList) > 0:
         iToRun = 0
         numToRun = len(toRunIndexList)
+        iNode = -1
         for node in cntSubmitJobDict:
+            iNode += 1
             if "DEBUG" in g_params and g_params['DEBUG']:
-                webcom.loginfo("Trying to submitjob to the node=%s\n"%(str(node)), gen_logfile)
+                webcom.loginfo(f"Trying to submit job to the node {iNode}: {node}\n", gen_logfile)
+                webcom.loginfo(f"\tcntSubmitJobDict={cntSubmitJobDict}\n", gen_logfile)
             if iToRun >= numToRun:
                 if "DEBUG" in g_params and g_params['DEBUG']:
-                    webcom.loginfo("iToRun(%d) >= numToRun(%d). Stop SubmitJob for jobid=%s\n"%(iToRun, numToRun, jobid), gen_logfile)
+                    webcom.loginfo(f"iToRun({iToRun}) >= numToRun({numToRun}). Stop SubmitJob for jobid={jobid}\n", gen_logfile)
                 break
             wsdl_url = "http://%s/pred/api_submitseq/?wsdl"%(node)
             try:
                 myclient = Client(wsdl_url, cache=None, timeout=30)
-            except:
-                webcom.loginfo("Failed to access %s"%(wsdl_url), gen_logfile)
+            except Exception as e:
+                webcom.loginfo(f"Failed to access {wsdl_url}, detailed error: {e}\n", gen_logfile)
                 continue
 
             if "DEBUG" in g_params and g_params['DEBUG']:
