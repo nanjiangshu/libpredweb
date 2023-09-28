@@ -333,10 +333,10 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
             if ip in g_params['blackiplist']:
                 priority = priority/1000.0
 
-            if email in g_params['vip_user_list']:
+            if email in g_params['vip_user_list'] or ip in g_params['vip_user_list']:
                 numseq_this_user = 1
                 priority = 999999999.0
-                webcom.loginfo("email %s in vip_user_list"%(email), gen_logfile)
+                webcom.loginfo("email/ip %s in vip_user_list"%(email), gen_logfile)
 
             li.append(numseq_this_user)
             li.append(priority)
