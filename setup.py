@@ -10,7 +10,7 @@ PLOTTING_SCRIPTS = glob.glob('src/plot*.sh')
 
 setup(
         name='libpredweb',
-        version='1.0.0',
+        version='1.0.1',
         scripts=[
             'src/clean_cached_result.py',
             'src/clean_server_file.sh',
