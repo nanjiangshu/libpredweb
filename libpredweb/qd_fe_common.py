@@ -572,9 +572,13 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):  # {{{
         iNode = -1
         for node in cntSubmitJobDict:
             iNode += 1
+            node_status = cntSubmitJobDict[node][3]
             if "DEBUG" in g_params and g_params['DEBUG']:
                 webcom.loginfo(f"Trying to submit job to the node {iNode}: {node}", gen_logfile)
                 webcom.loginfo(f"cntSubmitJobDict={cntSubmitJobDict}", gen_logfile)
+            if node_status == "OFF":
+                webcom.loginfo(f"node {node} is offline, try again in the next loop", gen_logfile)
+                continue
             if iToRun >= numToRun:
                 if "DEBUG" in g_params and g_params['DEBUG']:
                     webcom.loginfo(f"iToRun({iToRun}) >= numToRun({numToRun}). Stop SubmitJob for jobid={jobid}", gen_logfile)
@@ -584,6 +588,7 @@ def SubmitJob(jobid, cntSubmitJobDict, numseq_this_user, g_params):  # {{{
                 myclient = Client(wsdl_url, cache=None, timeout=30)
             except Exception as e:
                 webcom.loginfo(f"Failed to access {wsdl_url}, detailed error: {e}", gen_logfile)
+                cntSubmitJobDict[node][3] = "OFF"
                 continue
 
             if "DEBUG" in g_params and g_params['DEBUG']:

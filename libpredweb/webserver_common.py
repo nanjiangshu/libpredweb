@@ -3241,3 +3241,24 @@ def get_results_eachseq(request, name_resultfile, name_nicetopfile, jobid, seqin
     resultdict['jobcounter'] = GetJobCounter(resultdict)
     return resultdict
 #}}}
+
+def InitCounterSubmitJobDict(avail_computenode, remotequeueDict, MAX_SUBMIT_JOB_PER_NODE):
+    """Initialize the dictionary which keeps track of job submission status of all backend nodes
+    """
+    # format of cntSubmitJobDict
+    # {
+    #    'node_ip': [ num_queue_job, MAX_SUBMIT_JOB_PER_NODE, queue_method, status (on or off)
+    # }
+    # format of remotequeueDict
+    # { 'node_ip': [remotejobid, remotejobid, ...] }
+    # the initial status of each node is ON, it will be set to OFF when it
+    # is failed to acess and continue as OFF for the whole loop
+    cntSubmitJobDict = {}
+    for node in avail_computenode:
+        queue_method = avail_computenode[node]['queue_method']
+        num_queue_job = len(remotequeueDict[node])
+        if num_queue_job >= 0:
+            cntSubmitJobDict[node] = [num_queue_job, MAX_SUBMIT_JOB_PER_NODE, queue_method, "ON"]
+        else:
+            cntSubmitJobDict[node] = [0, MAX_SUBMIT_JOB_PER_NODE, queue_method, "ON"]
+    return cntSubmitJobDict
