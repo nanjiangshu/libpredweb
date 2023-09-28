@@ -58,12 +58,16 @@ def IsCacheProcessingFinished(rstdir):# {{{
 def IsHaveAvailNode(cntSubmitJobDict):#{{{
     """
     Check if there are available slots in any of the computational node
-    format of cntSubmitJobDict {'node_ip': INT, 'node_ip': INT}  
+    format of cntSubmitJobDict
+    {
+       'node_ip': [ num_queue_job, MAX_SUBMIT_JOB_PER_NODE, queue_method, status (on or off)
+    }
     """
     for node in cntSubmitJobDict:
         num_queue_job = cntSubmitJobDict[node][0]
         max_allowed_job = cntSubmitJobDict[node][1]
-        if num_queue_job < max_allowed_job:
+        node_status = cntSubmitJobDict[node][3]
+        if node_status == "ON" and num_queue_job < max_allowed_job:
             return True
     return False
 #}}}
