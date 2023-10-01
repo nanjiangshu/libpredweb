@@ -22,17 +22,17 @@ rootname_progname = os.path.splitext(progname)[0]
 def run_statistics(g_params):  # {{{
     """Server usage analysis"""
     name_server = g_params['name_server']
-    gen_logfile = g_params['gen_logfile']
-    gen_errfile = g_params['gen_errfile']
+    logfile = g_params['logfile']
+    errfile = g_params['errfile']
     webserver_root = g_params['webserver_root']
-    run_statistics_basic(webserver_root, gen_logfile, gen_errfile)
+    run_statistics_basic(webserver_root, logfile, errfile)
     if name_server.lower() == "topcons2":
-        run_statistics_topcons2(webserver_root, gen_logfile, gen_errfile)
+        run_statistics_topcons2(webserver_root, logfile, errfile)
     return 0
 # }}}
 
 
-def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
+def run_statistics_basic(webserver_root, logfile, errfile):  # {{{
     """Function for qd_fe to run usage statistics for the web-server usage
     """
     path_static = os.path.join(webserver_root, "proj", "pred", "static")
@@ -43,7 +43,7 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
 
     # 1. calculate average running time, only for those sequences with time.txt
     # show also runtime of type and runtime -vs- seqlength
-    webcom.loginfo("Run basic usage statistics...\n", gen_logfile)
+    webcom.loginfo("Run basic usage statistics...\n", logfile)
     allfinishedjoblogfile = f"{path_log}/all_finished_job.log"
     runtimelogfile = f"{path_log}/jobruntime.log"
     runtimelogfile_finishedjobid = f"{path_log}/jobruntime_finishedjobid.log"
@@ -79,22 +79,26 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                 if source == "newrun":
                     subfolder = strs[0]
                     timefile = f"{outpath_result}/{subfolder}/time.txt"
-                    if (os.path.exists(timefile)
-                            and os.path.getsize(timefile) > 0):
-                        txt = myfunc.ReadFile(timefile).strip()
-                        try:
-                            ss2 = txt.split(";")
-                            runtime_str = ss2[1]
-                            database_mode = ss2[2]
-                            runtimeloginfolist.append("\t".join(
-                                [
-                                    jobid, subfolder,
-                                    source, runtime_str, database_mode,
-                                    str_seqlen,
-                                    str_numTM, str_isHasSP
-                                ]))
-                        except IndexError:
-                            sys.stderr.write("bad timefile %s\n" % (timefile))
+                    try:
+                        if (os.path.exists(timefile)
+                                and os.path.getsize(timefile) > 0):
+                            txt = myfunc.ReadFile(timefile).strip()
+                            try:
+                                ss2 = txt.split(";")
+                                runtime_str = ss2[1]
+                                database_mode = ss2[2]
+                                runtimeloginfolist.append("\t".join(
+                                    [
+                                        jobid, subfolder,
+                                        source, runtime_str, database_mode,
+                                        str_seqlen,
+                                        str_numTM, str_isHasSP
+                                    ]))
+                            except IndexError:
+                                sys.stderr.write("bad timefile %s\n" % (timefile))
+                    except ValueError:
+                        sys.stderr.write("bad timefile %s\n" % (timefile))
+
 
         if runtimeloginfolist:
             # items for the elelment of the list
@@ -130,7 +134,7 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
     myfunc.CreateSQLiteTableAllFinished(cur_f, tablename=sql_tablename)
     cur_f.execute('BEGIN;')
 
-    webcom.loginfo("create all finished sql db...\n", gen_logfile)
+    webcom.loginfo("create all finished sql db...\n", logfile)
     for jobid in allfinished_job_dict:
         li = allfinished_job_dict[jobid]
         numseq = -1
@@ -277,13 +281,13 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
             # plotting
             if os.path.exists(outfile) and sortedlist:
                 cmd = [f"{binpath_plot}/plot_numseq_of_job.sh", outfile]
-                webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+                webcom.RunCmd(cmd, logfile, errfile)
         except IOError:
             continue
     cmd = [f"{binpath_plot}/plot_numseq_of_job_mtp.sh",
            "-web", outfile_numseqjob_web,
            "-wsdl", outfile_numseqjob_wsdl]
-    webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+    webcom.RunCmd(cmd, logfile, errfile)
 
 # 5. output num-submission time series with different bins
 # (day, week, month, year)
@@ -292,7 +296,7 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
     myfunc.CreateSQLiteTableAllSubmitted(cur_s, tablename=sql_tablename)
     cur_s.execute('BEGIN;')
 
-    webcom.loginfo("create all submitted sql db...\n", gen_logfile)
+    webcom.loginfo("create all submitted sql db...\n", logfile)
     hdl = myfunc.ReadLineByBlock(allsubmitjoblogfile)
     # ["name" numjob, numseq, numjob_web, numseq_web,numjob_wsdl, numseq_wsdl]
     dict_submit_day = {}
@@ -453,10 +457,10 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
                                         freq=freq, outfile=outfile)
             except Exception as e:
                 webcom.loginfo(f"Failed to extend data for {outfile} with errmsg: {e}",
-                               gen_errfile)
+                               errfile)
                 pass
             cmd = [f"{binpath_plot}/plot_numsubmit.sh", outfile]
-            webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+            webcom.RunCmd(cmd, logfile, errfile)
 
     # output waittime vs numseq_of_job
     # output finishtime vs numseq_of_job
@@ -546,24 +550,24 @@ def run_statistics_basic(webserver_root, gen_logfile, gen_errfile):  # {{{
         outfile = flist[i]
         if os.path.exists(outfile):
             cmd = [f"{binpath_plot}/plot_nseq_waitfinishtime.sh", outfile]
-            webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+            webcom.RunCmd(cmd, logfile, errfile)
     flist = flist2 + flist3
     for i in range(len(flist)):
         outfile = flist[i]
         if os.path.exists(outfile):
             cmd = [f"{binpath_plot}/plot_avg_waitfinishtime.sh", outfile]
-            webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+            webcom.RunCmd(cmd, logfile, errfile)
 # }}}
 
 
-def run_statistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
+def run_statistics_topcons2(webserver_root, logfile, errfile):  # {{{
     """Server usage analysis specifically for topcons2"""
     path_log = os.path.join(webserver_root, 'proj', 'pred', 'static', 'log')
     path_stat = os.path.join(path_log, 'stat')
     binpath_plot = os.path.join(webserver_root, "env", "bin")
     runtimelogfile = f"{path_log}/jobruntime.log"
 
-    webcom.loginfo("Run usage statistics for TOPCONS2...\n", gen_logfile)
+    webcom.loginfo("Run usage statistics for TOPCONS2...\n", logfile)
     # get longest predicted seq
     # get query with most TM helics
     # get query takes the longest time
@@ -728,19 +732,19 @@ def run_statistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
         pass
     if os.path.exists(outfile_avg_runtime):
         cmd = [f"{binpath_plot}/plot_avg_runtime.sh", outfile_avg_runtime]
-        webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+        webcom.RunCmd(cmd, logfile, errfile)
 
     flist = [outfile_runtime, outfile_runtime_pfam,
              outfile_runtime_cdd, outfile_runtime_uniref]
     for outfile in flist:
         if os.path.exists(outfile):
             cmd = [f"{binpath_plot}/plot_length_runtime.sh", outfile]
-            webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+            webcom.RunCmd(cmd, logfile, errfile)
 
     cmd = [f"{binpath_plot}/plot_length_runtime_mtp.sh", "-pfam",
            outfile_runtime_pfam, "-cdd", outfile_runtime_cdd, "-uniref",
            outfile_runtime_uniref, "-sep-avg"]
-    webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+    webcom.RunCmd(cmd, logfile, errfile)
 
 # 4. analysis for those predicted with signal peptide
     outfile_hasSP = f"{path_stat}/noSP_hasSP.stat.txt"
@@ -752,7 +756,7 @@ def run_statistics_topcons2(webserver_root, gen_logfile, gen_errfile):  # {{{
                                             myfunc.FloatDivision(cnt_hasSP, cntseq))
     myfunc.WriteFile(content, outfile_hasSP, "w", True)
     cmd = [f"{binpath_plot}/plot_nosp_sp.sh", outfile_hasSP]
-    webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+    webcom.RunCmd(cmd, logfile, errfile)
 
 # }}}
 
@@ -794,7 +798,7 @@ Examples:
         fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except IOError:
         webcom.loginfo(f"Another instance of {progname} is running",
-                       g_params['gen_logfile'])
+                       g_params['logfile'])
         return 1
 
     if 'DEBUG_LOCK_FILE' in g_params and g_params['DEBUG_LOCK_FILE']:
@@ -805,7 +809,7 @@ Examples:
             os.remove(lock_file)
         except OSError:
             webcom.loginfo(f"Failed to delete lock_file {lock_file}",
-                           g_params['gen_logfile'])
+                           g_params['logfile'])
     return status
 # }}}
 
