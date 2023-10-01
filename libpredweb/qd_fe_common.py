@@ -40,7 +40,7 @@ def RunStatistics(g_params):  # {{{
     g_params['errfile'] = errfile
     myfunc.WriteFile(json.dumps(g_params, sort_keys=True), jsonfile, "w")
     name_server = g_params['name_server']
-    webcom.loginfo(f"Run server statistics..", gen_logfile)
+    webcom.loginfo(f"Run server statistics..", g_params['gen_logfile'])
     if 'RUN_STATISTICS_IN_QD' in g_params and g_params['RUN_STATISTICS_IN_QD']:
         cmd = ["python", py_scriptfile, "-i", jsonfile]
         webcom.RunCmd(cmd, logfile, errfile)
