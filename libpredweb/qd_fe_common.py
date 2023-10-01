@@ -31,17 +31,19 @@ def RunStatistics(g_params):  # {{{
     lockname = f"{bsname}.lock"
     lock_file = os.path.join(g_params['path_log'], lockname)
     path_tmp = os.path.join(g_params['path_static'], "tmp")
-    gen_logfile = g_params['gen_logfile']
-    gen_errfile = g_params['gen_errfile']
+    logfile = os.path.join(g_params["path_log"], f"{bsname}.log")
+    errfile = os.path.join(g_params["path_log"], f"{bsname}.err")
     binpath_script = os.path.join(g_params['webserver_root'], "env", "bin")
     py_scriptfile = os.path.join(binpath_script, f"{bsname}.py")
     jsonfile = os.path.join(path_tmp, f"{bsname}.json")
+    g_params['logfile'] = logfile
+    g_params['errfile'] = errfile
     myfunc.WriteFile(json.dumps(g_params, sort_keys=True), jsonfile, "w")
     name_server = g_params['name_server']
     webcom.loginfo(f"Run server statistics..", gen_logfile)
     if 'RUN_STATISTICS_IN_QD' in g_params and g_params['RUN_STATISTICS_IN_QD']:
         cmd = ["python", py_scriptfile, "-i", jsonfile]
-        webcom.RunCmd(cmd, gen_logfile, gen_errfile)
+        webcom.RunCmd(cmd, logfile, errfile)
     elif not os.path.exists(lock_file):
         bash_scriptfile = f"{path_tmp}/{bsname}-{name_server}.sh"
         code_str_list = []
@@ -57,13 +59,13 @@ def RunStatistics(g_params):  # {{{
         verbose = False
         if 'DEBUG' in g_params and g_params['DEBUG']:
             verbose = True
-            webcom.loginfo(f"Run cmdline: {cmdline}", gen_logfile)
+            webcom.loginfo(f"Run cmdline: {cmdline}", logfile)
         (isSubmitSuccess, t_runtime) = webcom.RunCmd(cmd,
-                                                     gen_logfile,
-                                                     gen_errfile,
+                                                     logfile,
+                                                     errfile,
                                                      verbose)
         if 'DEBUG' in g_params and g_params['DEBUG']:
-            webcom.loginfo("isSubmitSuccess: {isSubmitSuccess}", gen_logfile)
+            webcom.loginfo("isSubmitSuccess: {isSubmitSuccess}", logfile)
 # }}}
 
 
