@@ -26,6 +26,7 @@ import json
 from geoip import geolite2
 import pycountry
 import requests
+from enum import Enum
 from .timeit import timeit
 
 TZ = "Europe/Stockholm"
@@ -41,6 +42,13 @@ chde_table = {
         'ASP': 'D',
         'GLU': 'E'
         }
+
+class JobStatus(Enum):
+    WAIT = "Wait"
+    RUNNING = "Running"
+    FINISHED = "Finished"
+    FAILED = "Failed"
+
 def IsCacheProcessingFinished(rstdir):# {{{
     """Check whether the jobdir is still under cache processing"""
     forceruntagfile = "%s/forcerun"%(rstdir)
@@ -71,30 +79,26 @@ def IsHaveAvailNode(cntSubmitJobDict):#{{{
             return True
     return False
 #}}}
-def get_job_status(jobid, numseq, path_result):#{{{
-    """Get the status of a job submitted to the web-server
-    """
-    status = "";
-    rstdir = "%s/%s"%(path_result, jobid)
-    starttagfile = "%s/%s"%(rstdir, "runjob.start")
-    finishtagfile = "%s/%s"%(rstdir, "runjob.finish")
-    failedtagfile = "%s/%s"%(rstdir, "runjob.failed")
-    remotequeue_idx_file = "%s/remotequeue_seqindex.txt"%(rstdir)
-    torun_idx_file = "%s/torun_seqindex.txt"%(rstdir) # ordered seq index to run
-    num_torun = len(myfunc.ReadIDList(torun_idx_file))
-    if os.path.exists(failedtagfile):
-        status = "Failed"
-    elif os.path.exists(finishtagfile):
-        status = "Finished"
-    elif os.path.exists(starttagfile):
-        if num_torun < numseq:
-            status = "Running"
-        else:
-            status = "Wait"
-    elif os.path.exists(rstdir):
-        status = "Wait"
-    return status
-#}}}
+def get_job_status(jobid, numseq, path_result):# {{{
+    """Get the status of a job submitted to the web-server"""
+    status = JobStatus.WAIT
+    rstdir = os.path.join(path_result, jobid)
+
+    starttagfile = os.path.join(rstdir, "runjob.start")
+    finishtagfile = os.path.join(rstdir, "runjob.finish")
+    failedtagfile = os.path.join(rstdir, "runjob.failed")
+    torun_idx_file = os.path.join(rstdir, "torun_seqindex.txt")  # ordered seq index to run
+
+    if os.path.isfile(failedtagfile):
+        status = JobStatus.FAILED
+    elif os.path.isfile(finishtagfile):
+        status = JobStatus.FINISHED
+    elif os.path.isfile(starttagfile):
+        num_torun = len(myfunc.ReadIDList(torun_idx_file))
+        status = JobStatus.RUNNING if num_torun < numseq else JobStatus.WAIT
+
+    return status.value
+# }}}
 def get_external_ip(timeout=5):# {{{
     """Return external IP of the host
     """
