@@ -2113,24 +2113,25 @@ def ReadFinishedJobLog(infile, status=""):#{{{
             for line in lines:
                 if not line or line[0] == "#":
                     continue
-                strs = line.split("\t")
-                if len(strs)>= 10:
-                    jobid = strs[0]
-                    status_this_job = strs[1]
+                items = line.split("\t")
+                if len(items)>= 10:
+                    jobid = items[0]
+                    status_this_job = items[1]
                     if status == "" or status == status_this_job:
-                        jobname = strs[2]
-                        ip = strs[3]
-                        email = strs[4]
+                        jobname = items[2]
+                        ip = items[3]
+                        email = items[4]
                         try:
-                            numseq = int(strs[5])
+                            numseq = int(items[5])
                         except:
+                            print(f"Bad format of line '{line}' in the file {infile}. 6th field '{items[5]}' is not an integer")
                             numseq = 1
-                        method_submission = strs[6]
-                        submit_date_str = strs[7]
-                        start_date_str = strs[8]
-                        finish_date_str = strs[9]
-                        if len(strs) >= 11:
-                            app_type = strs[10]
+                        method_submission = items[6]
+                        submit_date_str = items[7]
+                        start_date_str = items[8]
+                        finish_date_str = items[9]
+                        if len(items) >= 11:
+                            app_type = items[10]
                         else:
                             app_type = "None"
                         dt[jobid] = [status_this_job, jobname, ip, email,
@@ -2159,39 +2160,39 @@ def ReadRunJobLog(infile):#{{{
             for line in lines:
                 if not line or line[0] == "#":
                     continue
-                strs = line.split("\t")
-                if len(strs)>= 10:
-                    jobid = strs[0]
-                    status_this_job = strs[1]
-                    jobname = strs[2]
-                    ip = strs[3]
-                    email = strs[4]
+                items = line.split("\t")
+                if len(items)>= 10:
+                    jobid = items[0]
+                    status_this_job = items[1]
+                    jobname = items[2]
+                    ip = items[3]
+                    email = items[4]
                     numseq = 1
                     try:
-                        numseq = int(strs[5])
+                        numseq = int(items[5])
                     except:
-                        print(f"Bad format of line '{line}' in the file {infile}. 6th field is not an integer")
+                        print(f"Bad format of line '{line}' in the file {infile}. 6th field '{items[5]}' is not an integer")
                         numseq = 1
-                    method_submission = strs[6]
-                    submit_date_str = strs[7]
-                    start_date_str = strs[8]
-                    finish_date_str = strs[9]
+                    method_submission = items[6]
+                    submit_date_str = items[7]
+                    start_date_str = items[8]
+                    finish_date_str = items[9]
                     app_type = "None"
                     total_numseq_of_user = 1
                     priority = 0.0
-                    if len(strs) >= 11:
-                        app_type = strs[10]
-                    if len(strs) >= 12:
+                    if len(items) >= 11:
+                        app_type = items[10]
+                    if len(items) >= 12:
                         try:
-                            total_numseq_of_user = int(str[11])
+                            total_numseq_of_user = int(items[11])
                         except:
-                            print(f"Bad format of line '{line}' in the file {infile}. 12th field '{str[11]}' is not an integer")
+                            print(f"Bad format of line '{line}' in the file {infile}. 12th field '{items[11]}' is not an integer")
                             total_numseq_of_user = 1
-                    if len(strs) >= 13:
+                    if len(items) >= 13:
                         try:
-                            priority = float(str[12])
+                            priority = float(items[12])
                         except:
-                            print(f"Bad format of line '{line}' in the file {infile}. 13th field '{str[12]}' is not a real number")
+                            print(f"Bad format of line '{line}' in the file {infile}. 13th field '{items[12]}' is not a real number")
                             priority = 0.0
                     dt[jobid] = [status_this_job, jobname, ip, email,
                             numseq, method_submission, submit_date_str,
@@ -2220,17 +2221,17 @@ def ReadSubmittedLogFile(infile):#{{{
             for line in lines:
                 if not line or line[0] == "#":
                     continue
-                strs = line.split("\t")
-                if len(strs)>= 8:
-                    submit_date_str = strs[0]
-                    jobid = strs[1]
-                    client_ip = strs[2]
-                    numseq_str = strs[3]
-                    jobname = strs[5]
-                    email = strs[6]
-                    method_submission = strs[7]
-                    if len(strs) >= 9:
-                        app_type = strs[8]
+                items = line.split("\t")
+                if len(items)>= 8:
+                    submit_date_str = items[0]
+                    jobid = items[1]
+                    client_ip = items[2]
+                    numseq_str = items[3]
+                    jobname = items[5]
+                    email = items[6]
+                    method_submission = items[7]
+                    if len(items) >= 9:
+                        app_type = items[8]
                     else:
                         app_type = "None"
                     dt[jobid] = [submit_date_str, jobname, client_ip, email,
