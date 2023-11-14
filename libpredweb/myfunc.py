@@ -2170,7 +2170,7 @@ def ReadRunJobLog(infile):#{{{
                     try:
                         numseq = int(strs[5])
                     except:
-                        print(f"Bad format of line {line} in the file {infile}. 6th field is not an integer")
+                        print(f"Bad format of line '{line}' in the file {infile}. 6th field is not an integer")
                         numseq = 1
                     method_submission = strs[6]
                     submit_date_str = strs[7]
@@ -2185,13 +2185,13 @@ def ReadRunJobLog(infile):#{{{
                         try:
                             total_numseq_of_user = int(str[11])
                         except:
-                            print(f"Bad format of line {line} in the file {infile}. 12th field is not an integer")
+                            print(f"Bad format of line '{line}' in the file {infile}. 12th field '{str[11]}' is not an integer")
                             total_numseq_of_user = 1
                     if len(strs) >= 13:
                         try:
                             priority = float(str[12])
                         except:
-                            print(f"Bad format of line {line} in the file {infile}. 13th field is not a real number")
+                            print(f"Bad format of line '{line}' in the file {infile}. 13th field '{str[12]}' is not a real number")
                             priority = 0.0
                     dt[jobid] = [status_this_job, jobname, ip, email,
                             numseq, method_submission, submit_date_str,
