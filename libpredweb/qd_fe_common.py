@@ -74,14 +74,11 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
     """Create the index file for the jobs to be run
     """
     gen_logfile = g_params['gen_logfile']
-    # gen_errfile = g_params['gen_errfile']
     name_server = g_params['name_server']
 
     webcom.loginfo("CreateRunJoblog for server %s..."%(name_server), gen_logfile)
 
     path_static = g_params['path_static']
-    # path_cache = g_params['path_cache']
-
     path_result = os.path.join(path_static, 'result')
     path_log = os.path.join(path_static, 'log')
 
@@ -127,11 +124,11 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
             finish_date_str = ""
             rstdir = os.path.join(path_result, jobid)
 
-            numseq = 1
             try:
                 numseq = int(numseq_str)
             except ValueError:
-                pass
+                webcom.loginfo(f"bad data in {submitjoblogfile}, numseq_str={numseq_str} is not integer in line {line}.", gen_logfile)
+                numseq = 1
 
             isRstFolderExist = False
             if not isOldRstdirDeleted or os.path.exists(rstdir):
@@ -153,13 +150,19 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
             starttagfile = "%s/%s"%(rstdir, "runjob.start")
             finishtagfile = "%s/%s"%(rstdir, "runjob.finish")
             if os.path.exists(starttagfile):
-                start_date_str = myfunc.ReadFile(starttagfile).strip()
+                start_date_str = myfunc.ReadFile(starttagfile).strip().rstrip("CEST")
             if os.path.exists(finishtagfile):
-                finish_date_str = myfunc.ReadFile(finishtagfile).strip()
+                finish_date_str = myfunc.ReadFile(finishtagfile).strip().rstrip("CEST")
 
             li = [jobid, status, jobname, ip, email, numseq_str,
                     method_submission, submit_date_str, start_date_str,
                     finish_date_str]
+            jobinfofile = os.path.join(rstdir, "jobinfo")
+            app_type = "None"
+            if name_server.lower() == "scampi2":
+                app_type = webcom.GetScampiAppType(jobinfofile)
+            li.append(app_type) # 11th item
+
             if status in ["Finished", "Failed"]:
                 new_finished_list.append(li)
 
@@ -340,12 +343,12 @@ def CreateRunJoblog(loop, isOldRstdirDeleted, g_params):#{{{
                 priority = 999999999.0
                 webcom.loginfo("email/ip %s in vip_user_list"%(email), gen_logfile)
 
-            li.append(numseq_this_user)
-            li.append(priority)
+            li.append(numseq_this_user) # 12th field
+            li.append(priority)         # 13th field
 
     # sort the new_waitjob_list in descending order by priority
-    new_waitjob_list = sorted(new_waitjob_list, key=lambda x: x[11], reverse=True)
-    new_runjob_list = sorted(new_runjob_list, key=lambda x: x[11], reverse=True)
+    new_waitjob_list = sorted(new_waitjob_list, key=lambda x: x[12], reverse=True)
+    new_runjob_list = sorted(new_runjob_list, key=lambda x: x[12], reverse=True)
 
     # write to runjoblogfile
     li_str = []

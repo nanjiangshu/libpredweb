@@ -283,8 +283,16 @@ def ReadJobInfo(infile):# {{{
             dt['app_type'] = jobinfolist[8]
     return dt
 # }}}
-
-
+def GetScampiAppType(jobinfofile):# {{{
+    """Determine the APP type of Scampi, i.e. Scampi_single or Scampi_MSA based
+    on the record in the jobinfo file"""
+    jobinfo = myfunc.ReadFile(jobinfofile).strip()
+    jobinfolist = jobinfo.split("\t")
+    app_type = "None"
+    if len(jobinfolist) >= 9:
+        app_type = jobinfolist[8]
+    return app_type
+# }}}
 def GetNameServerFromNameSoftware(name_software):  # {{{
     """Get name_server from name_software"""
     name_software = name_software.lower()
@@ -3250,7 +3258,7 @@ def get_results_eachseq(request, name_resultfile, name_nicetopfile, jobid, seqin
     return resultdict
 #}}}
 
-def InitCounterSubmitJobDict(avail_computenode, remotequeueDict, MAX_SUBMIT_JOB_PER_NODE):
+def InitCounterSubmitJobDict(avail_computenode, remotequeueDict, MAX_SUBMIT_JOB_PER_NODE):# {{{
     """Initialize the dictionary which keeps track of job submission status of all backend nodes
     """
     # format of cntSubmitJobDict
@@ -3270,3 +3278,4 @@ def InitCounterSubmitJobDict(avail_computenode, remotequeueDict, MAX_SUBMIT_JOB_
         else:
             cntSubmitJobDict[node] = [0, MAX_SUBMIT_JOB_PER_NODE, queue_method, "ON"]
     return cntSubmitJobDict
+# }}}

@@ -2094,6 +2094,14 @@ def Sendmail(from_email, to_email, subject, bodytext):#{{{
 
 #}}}
 def ReadFinishedJobLog(infile, status=""):#{{{
+    """Read the finished job list file and return a dictionary
+    Format of the dictionary
+    {
+        'jobid': [] # the list has 11 items
+    }
+
+    """
+
     dt = {}
     if not os.path.exists(infile):
         return dt
@@ -2105,33 +2113,44 @@ def ReadFinishedJobLog(infile, status=""):#{{{
             for line in lines:
                 if not line or line[0] == "#":
                     continue
-                strs = line.split("\t")
-                if len(strs)>= 10:
-                    jobid = strs[0]
-                    status_this_job = strs[1]
+                items = line.split("\t")
+                if len(items)>= 10:
+                    jobid = items[0]
+                    status_this_job = items[1]
                     if status == "" or status == status_this_job:
-                        jobname = strs[2]
-                        ip = strs[3]
-                        email = strs[4]
+                        jobname = items[2]
+                        ip = items[3]
+                        email = items[4]
                         try:
-                            numseq = int(strs[5])
+                            numseq = int(items[5])
                         except:
+                            print(f"Bad format of line '{line}' in the file {infile}. 6th field '{items[5]}' is not an integer")
                             numseq = 1
-                        method_submission = strs[6]
-                        submit_date_str = strs[7]
-                        start_date_str = strs[8]
-                        finish_date_str = strs[9]
+                        method_submission = items[6]
+                        submit_date_str = items[7]
+                        start_date_str = items[8]
+                        finish_date_str = items[9]
+                        if len(items) >= 11:
+                            app_type = items[10]
+                        else:
+                            app_type = "None"
                         dt[jobid] = [status_this_job, jobname, ip, email,
                                 numseq, method_submission, submit_date_str,
-                                start_date_str, finish_date_str]
+                                start_date_str, finish_date_str, app_type]
             lines = hdl.readlines()
         hdl.close()
 
     return dt
 #}}}
 def ReadRunJobLog(infile):#{{{
+    """Read the text file runjob_log.log and return a dictionary
+    format of the dictionary:
+    {
+        'jobid': [] # the list has 13 fields
+    }
+    """
     dt = {}
-    if not os.path.exists(infile):
+    if not os.path.isfile(infile):
         return dt
 
     hdl = ReadLineByBlock(infile)
@@ -2141,35 +2160,43 @@ def ReadRunJobLog(infile):#{{{
             for line in lines:
                 if not line or line[0] == "#":
                     continue
-                strs = line.split("\t")
-                if len(strs)>= 11:
-                    jobid = strs[0]
-                    status_this_job = strs[1]
-                    jobname = strs[2]
-                    ip = strs[3]
-                    email = strs[4]
+                items = line.split("\t")
+                if len(items)>= 10:
+                    jobid = items[0]
+                    status_this_job = items[1]
+                    jobname = items[2]
+                    ip = items[3]
+                    email = items[4]
+                    numseq = 1
                     try:
-                        numseq = int(strs[5])
+                        numseq = int(items[5])
                     except:
+                        print(f"Bad format of line '{line}' in the file {infile}. 6th field '{items[5]}' is not an integer")
                         numseq = 1
-                        pass
-                    method_submission = strs[6]
-                    submit_date_str = strs[7]
-                    start_date_str = strs[8]
-                    finish_date_str = strs[9]
-                    try:
-                        total_numseq_of_user = int(str[10])
-                    except:
-                        total_numseq_of_user = 1
-                        pass
-                    try:
-                        priority = float(str[11])
-                    except:
-                        priority = 0
-                        pass
+                    method_submission = items[6]
+                    submit_date_str = items[7]
+                    start_date_str = items[8]
+                    finish_date_str = items[9]
+                    app_type = "None"
+                    total_numseq_of_user = 1
+                    priority = 0.0
+                    if len(items) >= 11:
+                        app_type = items[10]
+                    if len(items) >= 12:
+                        try:
+                            total_numseq_of_user = int(items[11])
+                        except:
+                            print(f"Bad format of line '{line}' in the file {infile}. 12th field '{items[11]}' is not an integer")
+                            total_numseq_of_user = 1
+                    if len(items) >= 13:
+                        try:
+                            priority = float(items[12])
+                        except:
+                            print(f"Bad format of line '{line}' in the file {infile}. 13th field '{items[12]}' is not a real number")
+                            priority = 0.0
                     dt[jobid] = [status_this_job, jobname, ip, email,
                             numseq, method_submission, submit_date_str,
-                            start_date_str, finish_date_str,
+                            start_date_str, finish_date_str, app_type,
                             total_numseq_of_user, priority]
             lines = hdl.readlines()
         hdl.close()
@@ -2177,6 +2204,12 @@ def ReadRunJobLog(infile):#{{{
     return dt
 #}}}
 def ReadSubmittedLogFile(infile):#{{{
+    """Read the text file submitted_seq.log and return a dictionary
+    Format of the dictionary
+    {
+        'jobid': [] # the list has 9 items
+    }
+    """
     dt = {}
     if not os.path.exists(infile):
         return dt
@@ -2188,17 +2221,21 @@ def ReadSubmittedLogFile(infile):#{{{
             for line in lines:
                 if not line or line[0] == "#":
                     continue
-                strs = line.split("\t")
-                if len(strs)>= 8:
-                    submit_date_str = strs[0]
-                    jobid = strs[1]
-                    client_ip = strs[2]
-                    numseq_str = strs[3]
-                    jobname = strs[5]
-                    email = strs[6]
-                    method_submission = strs[7]
+                items = line.split("\t")
+                if len(items)>= 8:
+                    submit_date_str = items[0]
+                    jobid = items[1]
+                    client_ip = items[2]
+                    numseq_str = items[3]
+                    jobname = items[5]
+                    email = items[6]
+                    method_submission = items[7]
+                    if len(items) >= 9:
+                        app_type = items[8]
+                    else:
+                        app_type = "None"
                     dt[jobid] = [submit_date_str, jobname, client_ip, email,
-                            numseq_str, method_submission]
+                            numseq_str, method_submission, app_type]
             lines = hdl.readlines()
         hdl.close()
 
