@@ -302,6 +302,23 @@ def GetNameServerFromNameSoftware(name_software):  # {{{
             strs.remove(aux)
     return strs[0]
 # }}}
+def ReadRemoteQueueFile(infile):# {{{
+    """Read remote queue file, and return a dictionary
+    """
+    dt = {}
+    content = myfunc.ReadFile(infile)
+    lines = content.split('\n')
+    for line in lines:
+        strs = line.split('\t')
+        if len(strs) >= 6:
+            seqindex, node, remote_jobid, _ , _, epochtime = strs[:6]
+            seqindex = "seq_" + seqindex
+            dt[seqindex] = {}
+            dt[seqindex]['node'] = node
+            dt[seqindex]['remote_jobid'] = remote_jobid
+            dt[seqindex]['submittime_epoch'] = float(epochtime)
+    return dt
+# }}}
 
 def WriteDumpedTextResultFile(name_server, outfile, outpath_result, maplist, runtime_in_sec, base_www_url, statfile=""):#{{{
     """Write the prediction result to a single text file. This function does not work for proq3
