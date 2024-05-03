@@ -14,8 +14,7 @@ progname = os.path.basename(sys.argv[0])
 rootname_progname = os.path.splitext(progname)[0]
 
 def JobFinalProcess(g_params):#{{{
-    """Run final process of a job
-    """
+    """Run final process of a job"""
     jobid = g_params['jobid']
     numseq = g_params['numseq']
     to_email = g_params['to_email']
@@ -190,12 +189,18 @@ def InitGlobalParameter():#{{{
     g_params['lockfile'] = ""
     return g_params
 #}}}
-if __name__ == '__main__' :
+
+if __name__ == '__main__':
     g_params = InitGlobalParameter()
-    status = main(g_params)
-    if os.path.exists(g_params['lockfile']):
-        try:
-            os.remove(g_params['lockfile'])
-        except:
-            webcom.loginfo("Failed to delete lockfile %s\n"%(g_params['lockfile']), g_params['gen_logfile'])
+    try:
+        status = main(g_params)
+    except Exception as e:
+        webcom.loginfo("Error occurred: " + str(e), g_params['gen_logfile'])
+        status = 1
+    finally:
+        if os.path.exists(g_params['lockfile']):
+            try:
+                os.remove(g_params['lockfile'])
+            except:
+                webcom.loginfo("Failed to delete lockfile %s\n" % (g_params['lockfile']), g_params['gen_logfile'])
     sys.exit(status)
