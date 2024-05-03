@@ -761,7 +761,7 @@ def run_statistics_topcons2(webserver_root, logfile, errfile):  # {{{
 # }}}
 
 
-def main():  # {{{
+def main(g_params):  # {{{
     """main procedure"""
     parser = argparse.ArgumentParser(description='Run server statistics',
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -787,7 +787,6 @@ Examples:
               file=sys.stderr)
         return 1
 
-    g_params = {}
     g_params.update(webcom.LoadJsonFromFile(jsonfile))
 
     lockname = f"{rootname_progname}.lock"
@@ -813,6 +812,23 @@ Examples:
     return status
 # }}}
 
+def InitGlobalParameter():#{{{
+    g_params = {}
+    g_params['lockfile'] = ""
+    return g_params
+#}}}
 
 if __name__ == '__main__':
-    sys.exit(main())
+    g_params = InitGlobalParameter()
+    try:
+        status = main(g_params)
+    except Exception as e:
+        webcom.loginfo("Error occurred: " + str(e), g_params['gen_logfile'])
+        status = 1
+    finally:
+        if os.path.exists(g_params['lockfile']):
+            try:
+                os.remove(g_params['lockfile'])
+            except:
+                webcom.loginfo("Failed to delete lockfile %s\n" % (g_params['lockfile']), g_params['gen_logfile'])
+    sys.exit(status)
