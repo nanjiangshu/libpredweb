@@ -1,14 +1,14 @@
 # libpredweb
 This is the library for the protein prediction servers used by the following repos
 
-https://github.com/NBISweden/predictprotein-webserver-topcons2
-https://github.com/NBISweden/predictprotein-webserver-proq3
-https://github.com/NBISweden/predictprotein-webserver-scampi2
-https://github.com/NBISweden/predictprotein-webserver-boctopus2
-https://github.com/NBISweden/predictprotein-webserver-pconsc3
-https://github.com/NBISweden/predictprotein-webserver-prodres
-https://github.com/NBISweden/predictprotein-webserver-subcons
-https://github.com/NBISweden/predictprotein-webserver-common-backend
+- https://github.com/NBISweden/predictprotein-webserver-topcons2
+- https://github.com/NBISweden/predictprotein-webserver-proq3
+- https://github.com/NBISweden/predictprotein-webserver-scampi2
+- https://github.com/NBISweden/predictprotein-webserver-boctopus2
+- https://github.com/NBISweden/predictprotein-webserver-pconsc3
+- https://github.com/NBISweden/predictprotein-webserver-prodres
+- https://github.com/NBISweden/predictprotein-webserver-subcons
+- https://github.com/NBISweden/predictprotein-webserver-common-backend
 
 
 ## How to install 
